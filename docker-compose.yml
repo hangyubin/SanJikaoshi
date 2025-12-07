@@ -19,11 +19,11 @@ services:
       - smart-exam-network
 
   # 后端服务
-  backend:
+  server:
     build:
-      context: ./backend
+      context: ./server
       dockerfile: Dockerfile
-    container_name: smart-exam-backend
+    container_name: smart-exam-server
     restart: always
     depends_on:
       - mysql
@@ -37,14 +37,14 @@ services:
       - smart-exam-network
 
   # 前端服务
-  frontend:
+  client:
     build:
-      context: ./frontend
+      context: ./client
       dockerfile: Dockerfile
-    container_name: smart-exam-frontend
+    container_name: smart-exam-client
     restart: always
     depends_on:
-      - backend
+      - server
     ports:
       - "80:80"
     networks:
