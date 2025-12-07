@@ -15,22 +15,20 @@ ENV MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allo
 RUN apk add --no-cache maven
 
 # 创建 Maven 配置文件，使用阿里云镜像
-RUN mkdir -p /root/.m2
-RUN cat > /root/.m2/settings.xml << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
-    <mirrors>
-        <mirror>
-            <id>aliyunmaven</id>
-            <mirrorOf>*</mirrorOf>
-            <name>阿里云公共仓库</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </mirror>
-    </mirrors>
-</settings>
-EOF
+RUN mkdir -p /root/.m2 && \
+    echo '<?xml version="1.0" encoding="UTF-8"?>' > /root/.m2/settings.xml && \
+    echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"' >> /root/.m2/settings.xml && \
+    echo '          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' >> /root/.m2/settings.xml && \
+    echo '          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">' >> /root/.m2/settings.xml && \
+    echo '    <mirrors>' >> /root/.m2/settings.xml && \
+    echo '        <mirror>' >> /root/.m2/settings.xml && \
+    echo '            <id>aliyunmaven</id>' >> /root/.m2/settings.xml && \
+    echo '            <mirrorOf>*</mirrorOf>' >> /root/.m2/settings.xml && \
+    echo '            <name>阿里云公共仓库</name>' >> /root/.m2/settings.xml && \
+    echo '            <url>https://maven.aliyun.com/repository/public</url>' >> /root/.m2/settings.xml && \
+    echo '        </mirror>' >> /root/.m2/settings.xml && \
+    echo '    </mirrors>' >> /root/.m2/settings.xml && \
+    echo '</settings>' >> /root/.m2/settings.xml
 
 # 复制pom.xml文件，下载依赖
 COPY pom.xml .
