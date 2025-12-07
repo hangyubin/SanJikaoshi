@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 数据库服务
+  mysql:
+    image: mysql:5.7
+    container_name: sanjicms-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: smart_exam
+      MYSQL_USER: smart_exam_user
+      MYSQL_PASSWORD: smart_exam_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - smart-exam-network
+  
+  # 后端服务 - 使用GHCR远程镜像
+  server:
+    image: ghcr.io/hangyubin/sanjicms/server:latest
+    container_name: sanjicms-server
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: smart_exam_user
+      SPRING_DATASOURCE_PASSWORD: smart_exam_password
+    ports:
+      - "8080:8080"
+    networks:
+      - smart-exam-network
+  
+  # 前端服务 - 使用GHCR远程镜像
+  client:
+    image: ghcr.io/hangyubin/sanjicms/client:latest
+    container_name: sanjicms-client
+    restart: always
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+    networks:
+      - smart-exam-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  smart-exam-network:
+    driver: bridge
