@@ -16,7 +16,8 @@ RUN apk add --no-cache maven
 
 # 创建 Maven 配置文件，使用阿里云镜像
 RUN mkdir -p /root/.m2
-RUN echo '<?xml version="1.0" encoding="UTF-8"?>
+RUN cat > /root/.m2/settings.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
@@ -28,7 +29,8 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?>
             <url>https://maven.aliyun.com/repository/public</url>
         </mirror>
     </mirrors>
-</settings>' > /root/.m2/settings.xml
+</settings>
+EOF
 
 # 复制pom.xml文件，下载依赖
 COPY pom.xml .
