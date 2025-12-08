@@ -37,8 +37,7 @@ jobs:
             type=ref,event=branch
             type=sha,format=short
             type=semver,pattern={{version}}
-          flavor:
-            - latest=true
+          flavor: latest=true
 
       - name: Extract metadata for frontend
         id: meta-frontend
@@ -49,8 +48,7 @@ jobs:
             type=ref,event=branch
             type=sha,format=short
             type=semver,pattern={{version}}
-          flavor:
-            - latest=true
+          flavor: latest=true
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
