@@ -18,10 +18,10 @@ services:
     networks:
       - smart-exam-network
   
-  # 后端服务 - 使用GHCR远程镜像
-  server:
-    image: ghcr.io/hangyubin/sanjicms/server:latest
-    container_name: sanjicms-server
+  # 应用服务 - 使用GHCR远程镜像（前后端合一）
+  app:
+    image: ghcr.io/hangyubin/sanjicms/app:latest
+    container_name: sanjicms-app
     restart: always
     depends_on:
       - mysql
@@ -31,18 +31,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: smart_exam_password
     ports:
       - "8080:8080"
-    networks:
-      - smart-exam-network
-  
-  # 前端服务 - 使用GHCR远程镜像
-  client:
-    image: ghcr.io/hangyubin/sanjicms/client:latest
-    container_name: sanjicms-client
-    restart: always
-    depends_on:
-      - server
-    ports:
-      - "80:80"
     networks:
       - smart-exam-network
 
