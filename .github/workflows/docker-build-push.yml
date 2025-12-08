@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
   release:
     types: [ published ]
+  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -17,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,9 +47,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile
+          file: ./server/Dockerfile
           push: true
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # 简化构建，只使用后端Dockerfile
+          build-args: |
+            APP_VERSION=${{ github.sha }}
+          # 添加调试信息
+          debug: true
