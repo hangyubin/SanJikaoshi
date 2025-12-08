@@ -44,7 +44,9 @@ jobs:
             
             // 定义要清理的镜像列表
             const images = [
-              'sanjicms/app'  // 镜像名称（与GitHub仓库名称一致）
+              'sanjicms/app',    // 前后端合一的镜像
+              'sanjicms/server',  // 后端单独的镜像
+              'sanjicms/client'   // 前端单独的镜像
             ];
             
             for (const repo of images) {
