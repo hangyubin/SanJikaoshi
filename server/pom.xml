@@ -94,6 +94,8 @@
                     <workingDirectory>../client</workingDirectory>
                     <nodeVersion>v18.19.0</nodeVersion>
                     <npmVersion>10.2.3</npmVersion>
+                    <verbose>true</verbose>
+                    <npmInstallOptions>--legacy-peer-deps</npmInstallOptions>
                 </configuration>
                 <executions>
                     <!-- 安装依赖 -->
@@ -102,6 +104,7 @@
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                     </execution>
                     <!-- 安装前端依赖 -->
                     <execution>
@@ -109,6 +112,7 @@
                         <goals>
                             <goal>npm</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <arguments>install</arguments>
                         </configuration>
@@ -119,6 +123,7 @@
                         <goals>
                             <goal>npm</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <arguments>run build</arguments>
                         </configuration>
