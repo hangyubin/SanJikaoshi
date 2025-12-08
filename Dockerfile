@@ -1,5 +1,5 @@
 # 第一阶段：构建前端
-FROM node:18-alpine AS frontend-build
+FROM node:18 AS frontend-build
 
 WORKDIR /app/client
 
