@@ -44,7 +44,7 @@ jobs:
             
             // 定义要清理的镜像列表
             const images = [
-              'smart-exam-system/app'  // 新镜像名称（使用与项目名称一致的镜像名称）
+              'sanjicms/app'  // 镜像名称（与GitHub仓库名称一致）
             ];
             
             for (const repo of images) {
