@@ -17,13 +17,13 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - smart-exam-network
-
-  # 后端服务
-  server:
+  
+  # 应用服务 - 前后端不分离
+  app:
     build:
-      context: ./server
+      context: .
       dockerfile: Dockerfile
-    container_name: smart-exam-server
+    container_name: smart-exam-app
     restart: always
     depends_on:
       - mysql
@@ -33,20 +33,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: smart_exam_password
     ports:
       - "8080:8080"
-    networks:
-      - smart-exam-network
-
-  # 前端服务
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: smart-exam-client
-    restart: always
-    depends_on:
-      - server
-    ports:
-      - "80:80"
     networks:
       - smart-exam-network
 

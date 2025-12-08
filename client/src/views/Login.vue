@@ -210,7 +210,7 @@ const handleLogin = async () => {
     loading.value = true
     
     // 发送登录请求
-    await axios.post('/api/auth/login', {
+    await axios.post('/auth/login', {
       username: loginForm.username,
       password: loginForm.password
     })
