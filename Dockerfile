@@ -7,7 +7,7 @@ WORKDIR /app/client
 COPY client/package*.json ./
 
 # 安装前端依赖
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # 复制前端源代码
 COPY client/ .
@@ -30,10 +30,7 @@ RUN apk add --no-cache maven && \
 # 复制后端源代码
 COPY server/src ./src
 
-# 从前端构建阶段复制前端构建结果到后端的static目录
-COPY --from=frontend-build /app/client/dist /app/server/src/main/resources/static
-
-# 构建后端项目
+# 构建后端项目（跳过前端构建）
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
@@ -44,8 +41,12 @@ WORKDIR /app
 # 从后端构建阶段复制后端jar文件
 COPY --from=backend-build /app/server/target/backend-0.0.1-SNAPSHOT.jar /app/app.jar
 
+# 从前端构建阶段复制前端构建结果到后端的static目录
+RUN mkdir -p /app/static
+COPY --from=frontend-build /app/client/dist /app/static
+
 # 暴露端口
 EXPOSE 8080
 
-# 启动服务
-CMD ["java", "-jar", "/app/app.jar"]
+# 启动服务，添加静态资源目录参数
+CMD ["java", "-jar", "/app/app.jar", "--spring.resources.static-locations=file:/app/static"]
