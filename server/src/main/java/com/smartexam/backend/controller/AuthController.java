@@ -73,7 +73,7 @@ public class AuthController {
             response.put("refreshToken", jwtUtils.refreshToken(token));
             response.put("username", user.getUsername());
             response.put("realName", user.getRealName());
-            response.put("role", user.getRole());
+            response.put("roles", user.getRoles());
             
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
