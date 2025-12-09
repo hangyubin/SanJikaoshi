@@ -90,15 +90,25 @@
           </div>
           
           <el-form-item>
-            <el-button
-              type="primary"
-              class="login-btn"
-              @click="handleLogin"
-              :loading="loading"
-              size="large"
-            >
-              登录
-            </el-button>
+            <div class="button-group">
+              <el-button
+                type="primary"
+                class="login-btn"
+                @click="handleLogin"
+                :loading="loading"
+                size="large"
+              >
+                登录
+              </el-button>
+              <el-button
+                type="success"
+                class="register-btn"
+                @click="handleRegisterRedirect"
+                size="large"
+              >
+                立即注册
+              </el-button>
+            </div>
           </el-form-item>
           
           <div class="register-section">
@@ -554,9 +564,16 @@ const handleRegisterRedirect = () => {
   color: #536dfe;
 }
 
+/* 按钮组 */
+.button-group {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
 /* 登录按钮 */
 .login-btn {
-  width: 100%;
+  flex: 1;
   height: 50px;
   border-radius: 12px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -565,7 +582,19 @@ const handleRegisterRedirect = () => {
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  max-width: 350px;
+}
+
+/* 注册按钮 */
+.register-btn {
+  flex: 1;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
 }
 
 .login-btn:hover {
