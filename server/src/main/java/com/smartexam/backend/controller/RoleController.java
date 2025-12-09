@@ -115,7 +115,7 @@ public class RoleController {
                 // 更新角色信息
                 existingRole.setName(role.getName());
                 existingRole.setDescription(role.getDescription());
-                existingRole.setPermissions(role.getPermissions());
+                existingRole.setMenus(role.getMenus());
                 existingRole.setStatus(role.getStatus());
                 existingRole.setUpdateTime(System.currentTimeMillis());
                 
