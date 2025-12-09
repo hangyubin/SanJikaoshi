@@ -89,34 +89,28 @@
             <el-link type="primary" :underline="false" class="forgot-password">忘记密码？</el-link>
           </div>
           
-          <el-form-item>
+          <el-form-item label="">
             <div class="button-group">
-              <el-button
-                type="primary"
-                class="login-btn"
-                @click="handleLogin"
-                :loading="loading"
-                size="large"
-              >
-                登录
-              </el-button>
-              <el-button
-                type="success"
-                class="register-btn"
-                @click="handleRegisterRedirect"
-                size="large"
-              >
-                立即注册
-              </el-button>
+              <div class="button-item">
+                <el-button
+                  class="login-btn"
+                  @click="handleLogin"
+                  :loading="loading"
+                >
+                  登录
+                </el-button>
+              </div>
+              
+              <div class="button-item">
+                <el-button
+                  class="register-btn"
+                  @click="handleRegisterRedirect"
+                >
+                  立即注册
+                </el-button>
+              </div>
             </div>
           </el-form-item>
-          
-          <div class="register-section">
-            <span>没有账号？</span>
-            <el-button type="text" @click="handleRegisterRedirect" class="register-link">
-              立即注册
-            </el-button>
-          </div>
         </el-form>
       </div>
     </div>
@@ -487,6 +481,13 @@ const handleRegisterRedirect = () => {
   margin-bottom: 8px;
 }
 
+/* 没有label的el-form-item，确保内容占满整个宽度 */
+.el-form-item.is-no-label .el-form-item__content {
+  margin-left: 0 !important;
+  width: 100%;
+  padding: 0;
+}
+
 .custom-input {
   border-radius: 12px;
   border: 1px solid #dcdfe6;
@@ -547,7 +548,7 @@ const handleRegisterRedirect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
 }
 
 .remember-me {
@@ -569,52 +570,97 @@ const handleRegisterRedirect = () => {
   display: flex;
   gap: 15px;
   width: 100%;
+  margin-top: 10px;
+  align-items: stretch;
+  padding: 0;
 }
 
-/* 登录按钮 */
-.login-btn {
+.button-item {
+  margin: 0 !important;
   flex: 1;
+  padding: 0 !important;
+  min-width: 0;
+}
+
+/* 统一按钮样式 */
+.login-btn,
+.register-btn {
+  width: 100%;
   height: 50px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+  border: 1px solid #dcdfe6;
   font-size: 16px;
   font-weight: 500;
   transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  outline: none;
+  letter-spacing: normal;
+  text-indent: 0;
+  text-transform: none;
+  overflow: visible;
+  font-family: inherit;
+  text-decoration: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 登录按钮特有样式 */
+.login-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* 注册按钮 */
+/* 注册按钮特有样式 */
 .register-btn {
-  flex: 1;
-  height: 50px;
-  border-radius: 12px;
   background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border: none;
-  font-size: 16px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  color: white;
   box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
+}
+
+/* 统一按钮悬停效果 */
+.login-btn:hover,
+.register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .login-btn:hover {
   background: linear-gradient(135deg, #536dfe 0%, #6200ea 100%);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-  transform: translateY(-2px);
 }
 
-.login-btn:active {
+.register-btn:hover {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+}
+
+/* 统一按钮点击效果 */
+.login-btn:active,
+.register-btn:active {
   transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 注册区域 */
-.register-section {
-  text-align: center;
-  margin-top: 25px;
-  font-size: 14px;
-  color: #606266;
-  width: 100%;
-  max-width: 350px;
+/* 确保Element Plus默认样式不影响 */
+.el-button.login-btn,
+.el-button.register-btn {
+  --el-button-bg-color: transparent;
+  --el-button-border-color: transparent;
+  --el-button-text-color: white;
+  --el-button-hover-bg-color: transparent;
+  --el-button-hover-border-color: transparent;
+  --el-button-hover-text-color: white;
+  --el-button-active-bg-color: transparent;
+  --el-button-active-border-color: transparent;
+  --el-button-active-text-color: white;
+  --el-button-disabled-bg-color: rgba(0, 0, 0, 0.1);
+  --el-button-disabled-border-color: rgba(0, 0, 0, 0.1);
+  --el-button-disabled-text-color: rgba(255, 255, 255, 0.5);
+  padding: 0;
+  margin: 0;
 }
 
 .register-link {

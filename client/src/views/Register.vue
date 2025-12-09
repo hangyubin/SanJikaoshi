@@ -91,25 +91,29 @@
             ></el-input>
           </el-form-item>
           
-          <el-form-item label="邮箱" prop="email">
+          <el-form-item label="手机号" prop="phone">
             <el-input
-              v-model="registerForm.email"
-              type="email"
-              placeholder="请输入邮箱"
-              prefix-icon="Message"
+              v-model="registerForm.phone"
+              placeholder="请输入手机号（可选）"
+              prefix-icon="Phone"
               size="large"
               class="custom-input"
             ></el-input>
           </el-form-item>
           
-          <el-form-item label="手机号" prop="phone">
-            <el-input
-              v-model="registerForm.phone"
-              placeholder="请输入手机号"
-              prefix-icon="Phone"
-              size="large"
-              class="custom-input"
-            ></el-input>
+          <el-form-item label="验证码" prop="code">
+            <div class="captcha-container">
+              <el-input
+                v-model="registerForm.code"
+                placeholder="输入验证码"
+                size="large"
+                class="custom-input captcha-input"
+                maxlength="4"
+              ></el-input>
+              <div class="captcha-image" @click="refreshCaptcha">
+                <div class="captcha-content">{{ captchaQuestion }}</div>
+              </div>
+            </div>
           </el-form-item>
           
           <el-form-item>
@@ -137,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -147,13 +151,36 @@ const router = useRouter()
 const registerFormRef = ref<FormInstance>()
 const loading = ref(false)
 
+// 验证码相关
+const captchaQuestion = ref<string>('')
+const captchaAnswer = ref<string>('')
+
+// 生成4位字符验证码
+const generateCaptcha = () => {
+  // 验证码字符集 - 只使用大写字母和数字，避免大小写混淆
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let captcha = ''
+  // 生成4个随机字符
+  for (let i = 0; i < 4; i++) {
+    captcha += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  // 设置验证码和答案
+  captchaQuestion.value = captcha
+  captchaAnswer.value = captcha
+}
+
+// 刷新验证码
+const refreshCaptcha = () => {
+  generateCaptcha()
+}
+
 const registerForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
   realName: '',
-  email: '',
-  phone: ''
+  phone: '',
+  code: ''
 })
 
 const registerRules = reactive<FormRules>({
@@ -178,13 +205,13 @@ const registerRules = reactive<FormRules>({
   realName: [
     { required: true, message: '请输入真实姓名', trigger: 'blur' }
   ],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-  ],
   phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { required: false, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { min: 4, max: 4, message: '验证码长度为 4 个字符', trigger: 'blur' }
   ]
 })
 
@@ -193,10 +220,18 @@ const handleRegister = async () => {
   
   try {
     await registerFormRef.value.validate()
+    
+    // 验证验证码 - 不区分大小写
+    if (registerForm.code.toUpperCase() !== captchaAnswer.value) {
+      ElMessage.error('验证码错误')
+      refreshCaptcha() // 刷新验证码
+      return
+    }
+    
     loading.value = true
     
-    // 准备注册数据，移除confirmPassword字段
-    const { confirmPassword, ...registerData } = registerForm
+    // 准备注册数据，移除confirmPassword和code字段
+    const { confirmPassword, code, ...registerData } = registerForm
     
     // 发送注册请求
     await axios.post('/auth/register', registerData)
@@ -209,13 +244,19 @@ const handleRegister = async () => {
   } catch (error: any) {
     loading.value = false
     console.error('注册失败:', error)
-    ElMessage.error(error.response?.data || '注册失败，请稍后重试')
+    ElMessage.error(error.response?.data?.message || '注册失败，请稍后重试')
+    refreshCaptcha() // 刷新验证码
   }
 }
 
 const handleLoginRedirect = () => {
   router.push('/login')
 }
+
+// 初始化验证码
+onMounted(() => {
+  generateCaptcha()
+})
 </script>
 
 <style scoped>
@@ -482,6 +523,49 @@ const handleLoginRedirect = () => {
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
   max-width: 350px;
+}
+
+/* 验证码样式 */
+.captcha-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.captcha-input {
+  flex: 1;
+}
+
+.captcha-image {
+  width: 150px;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #dcdfe6;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #303133;
+  user-select: none;
+  font-family: Arial, sans-serif;
+}
+
+.captcha-image:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  background: linear-gradient(135deg, #ecf5ff 0%, #d0ecff 100%);
+}
+
+.captcha-content {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .register-btn:hover {

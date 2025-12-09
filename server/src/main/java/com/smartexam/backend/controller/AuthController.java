@@ -95,15 +95,6 @@ public class AuthController {
             return ResponseEntity.ok(response);
         }
         
-        // 检查邮箱是否已存在
-        Optional<User> existingEmail = userRepository.findByEmail(registerUser.getEmail());
-        if (existingEmail.isPresent()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 400);
-            response.put("message", "邮箱已存在");
-            return ResponseEntity.ok(response);
-        }
-        
         // 加密密码
         registerUser.setPassword(passwordEncoder.encode(registerUser.getPassword()));
         
