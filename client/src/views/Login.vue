@@ -224,6 +224,8 @@ const handleLogin = async () => {
     loading.value = false
     console.error('登录失败:', error)
     ElMessage.error(error.response?.data?.message || '登录失败，请稍后重试')
+    // 登录失败时刷新验证码
+    refreshCaptcha()
   }
 }
 

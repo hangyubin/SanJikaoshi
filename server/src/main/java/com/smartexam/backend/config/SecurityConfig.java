@@ -48,7 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             // 公开路径，不需要认证
             .antMatchers(
-                "/", "/index.html", "/login", "/register",
+                "/", "/index.html", "/login", "/register", "/static/**",
                 "/auth/login", "/auth/register", "/auth/refresh-token"
             ).permitAll()
             // 其他所有路径都需要认证
@@ -59,7 +59,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 禁用HTTP基本认证
             .httpBasic().disable()
             // 禁用会话管理，使用无状态认证
-            .sessionManagement().disable();
+            .sessionManagement().disable()
+            // 配置错误处理，将404请求重定向到index.html
+            .exceptionHandling().defaultAuthenticationEntryPointFor(
+                (request, response, authException) -> response.sendRedirect("/index.html"),
+                request -> true
+            );
         
         // 添加JWT认证过滤器
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
