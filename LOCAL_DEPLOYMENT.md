@@ -236,9 +236,13 @@ volumes:
 
 这个配置会将MySQL的数据目录 `/var/lib/mysql` 映射到Docker卷 `mysql_data` 中，即使重新部署容器或升级镜像，数据库中的所有数据也会保留。
 
-#### 自定义MySQL Root密码
+#### 数据库账号配置
 
-现在应用直接使用MySQL的root账号访问数据库，您可以通过以下方式自定义root密码：
+现在应用支持两种数据库账号访问方式，您可以根据需要选择：
+
+### 1. 使用Root账号（默认）
+
+**自定义Root密码**：
 
 **方式一：通过环境变量（推荐）**
 
@@ -276,26 +280,67 @@ environment:
   MYSQL_DATABASE: smart_exam
 ```
 
-修改后，执行部署脚本或 `docker-compose up -d` 即可生效。
+### 2. 使用普通用户账号
 
-**方式三：使用启动脚本**
-
-如果使用一键启动脚本 `start.sh`，可以在执行前设置环境变量：
+**方式一：通过环境变量切换到普通用户**
 
 ```bash
 # Linux/macOS
-export MYSQL_ROOT_PASSWORD=my_custom_root_password
-./start.sh
+export DB_USER=smart_exam_user
+export DB_PASSWORD=smart_exam_password
+docker-compose up -d
 
 # Windows PowerShell
-$env:MYSQL_ROOT_PASSWORD="my_custom_root_password"./start.sh
+$env:DB_USER="smart_exam_user"
+$env:DB_PASSWORD="smart_exam_password"
+docker-compose up -d
 
 # Windows CMD
-set MYSQL_ROOT_PASSWORD=my_custom_root_password
-.\start.sh
+set DB_USER=smart_exam_user
+set DB_PASSWORD=smart_exam_password
+docker-compose up -d
 ```
 
-**注意**：应用服务会自动使用与MySQL相同的root密码，无需额外配置。
+**方式二：自定义普通用户账号密码**
+
+```bash
+# Linux/macOS
+export MYSQL_USER=my_custom_user
+export MYSQL_PASSWORD=my_custom_password
+export DB_USER=my_custom_user
+export DB_PASSWORD=my_custom_password
+docker-compose up -d
+```
+
+**方式三：修改docker-compose.yml文件**
+
+直接修改 `docker-compose.yml` 文件中的 `DB_USER` 和 `DB_PASSWORD` 环境变量：
+
+```yaml
+# 修改前
+environment:
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+  # 可选择使用root账号或普通用户账号
+  # 使用root账号访问数据库
+  SPRING_DATASOURCE_USERNAME: ${DB_USER:-root}
+  # 使用对应的密码
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-${MYSQL_ROOT_PASSWORD:-root}}
+
+# 修改后
+environment:
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+  # 可选择使用root账号或普通用户账号
+  # 使用普通用户账号访问数据库
+  SPRING_DATASOURCE_USERNAME: smart_exam_user
+  # 使用对应的密码
+  SPRING_DATASOURCE_PASSWORD: smart_exam_password
+```
+
+**注意**：
+- 默认使用root账号访问数据库
+- 可以通过`DB_USER`和`DB_PASSWORD`环境变量切换到普通用户
+- 普通用户账号密码可以通过`MYSQL_USER`和`MYSQL_PASSWORD`自定义
+- 应用服务会自动使用配置的账号密码连接数据库
 
 ### 4.2 应用配置
 
