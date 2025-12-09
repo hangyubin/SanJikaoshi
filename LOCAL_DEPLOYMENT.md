@@ -225,6 +225,17 @@ npm run build
 - **密码**：smart_exam_password
 - **ROOT密码**：root
 
+#### 数据持久化说明
+
+所有核心数据（包括用户注册信息、考试成绩、分析数据、题库等）都存储在MySQL数据库中，通过Docker卷实现持久化：
+
+```yaml
+volumes:
+  mysql_data:/var/lib/mysql
+```
+
+这个配置会将MySQL的数据目录 `/var/lib/mysql` 映射到Docker卷 `mysql_data` 中，即使重新部署容器或升级镜像，数据库中的所有数据也会保留。
+
 #### 修改数据库账号密码
 
 如果需要修改数据库账号密码，可以通过修改 `docker-compose.yml` 文件来实现：
