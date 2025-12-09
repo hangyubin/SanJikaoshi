@@ -24,11 +24,16 @@ COPY server/ ./server
 
 WORKDIR /app/server
 
-# 安装Maven并下载依赖
-RUN apk update && apk add --no-cache maven && \
-    mvn dependency:go-offline -B
+# 安装Maven
+RUN apk update && apk add --no-cache maven
 
-# 构建后端项目（跳过前端构建）
+# 创建Maven settings文件使用阿里云镜像源
+RUN mkdir -p /root/.m2 && echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd"><mirrors><mirror><id>alimaven</id><name>aliyun maven</name><url>https://maven.aliyun.com/repository/public</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>' > /root/.m2/settings.xml
+
+# 下载依赖（使用阿里云镜像源）
+RUN mvn dependency:go-offline -B
+
+# 构建后端项目（跳过前端构建，使用阿里云镜像源）
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
