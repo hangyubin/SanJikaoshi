@@ -1,5 +1,5 @@
 # 第一阶段：构建阶段
-FROM openjdk:11-jdk-slim-bookworm AS build
+FROM eclipse-temurin:11-jdk AS build
 
 # 设置工作目录
 WORKDIR /app
@@ -37,7 +37,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 第二阶段：运行阶段
-FROM openjdk:11-jre-slim-bookworm
+FROM eclipse-temurin:11-jre
 
 # 设置工作目录
 WORKDIR /app
