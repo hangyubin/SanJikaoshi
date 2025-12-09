@@ -11,9 +11,11 @@ services:
       MYSQL_DATABASE: smart_exam
       MYSQL_USER: smart_exam_user
       MYSQL_PASSWORD: smart_exam_password
-      # 添加MySQL字符集配置
+      # 添加MySQL字符集配置，支持中文
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+      LANG: C.UTF-8
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4;' --skip-character-set-client-handshake
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
