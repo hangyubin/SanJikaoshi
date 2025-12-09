@@ -225,9 +225,42 @@ npm run build
 - **密码**：smart_exam_password
 - **ROOT密码**：root
 
+#### 修改数据库账号密码
+
+如果需要修改数据库账号密码，可以通过修改 `docker-compose.yml` 文件来实现：
+
+1. 打开 `docker-compose.yml` 文件
+2. 在 `mysql` 服务的 `environment` 部分修改以下环境变量：
+   - `MYSQL_USER`：修改数据库用户名
+   - `MYSQL_PASSWORD`：修改数据库密码
+   - `MYSQL_ROOT_PASSWORD`：修改数据库ROOT密码
+3. 在 `app` 服务的 `environment` 部分同步修改以下环境变量：
+   - `SPRING_DATASOURCE_USERNAME`：与 `MYSQL_USER` 保持一致
+   - `SPRING_DATASOURCE_PASSWORD`：与 `MYSQL_PASSWORD` 保持一致
+
+**示例**：
+
+```yaml
+# 修改前
+environment:
+  MYSQL_ROOT_PASSWORD: root
+  MYSQL_DATABASE: smart_exam
+  MYSQL_USER: smart_exam_user
+  MYSQL_PASSWORD: smart_exam_password
+
+# 修改后
+environment:
+  MYSQL_ROOT_PASSWORD: my_new_root_password
+  MYSQL_DATABASE: smart_exam
+  MYSQL_USER: my_new_user
+  MYSQL_PASSWORD: my_new_password
+```
+
+修改后，执行部署脚本或 `docker-compose up -d` 即可生效。
+
 ### 4.2 应用配置
 
-如果需要修改应用配置，可以编辑 `server/src/main/resources/application.properties` 文件。
+如果需要修改应用配置，可以编辑 `server/src/main/resources/application.properties` 文件。但对于Docker部署，建议通过 `docker-compose.yml` 文件的 `environment` 部分注入环境变量来修改配置，这样不需要重新构建镜像。
 
 ## 5. 访问应用
 
