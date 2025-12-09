@@ -50,8 +50,6 @@ jobs:
           tags: |
             ghcr.io/${{ env.LOWERCASE_REPO }}:latest
             ghcr.io/${{ env.LOWERCASE_REPO }}:${{ github.sha }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -65,8 +63,6 @@ jobs:
           tags: |
             ghcr.io/${{ env.LOWERCASE_REPO }}/backend:latest
             ghcr.io/${{ env.LOWERCASE_REPO }}/backend:${{ github.sha }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-backend:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-backend:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -80,8 +76,6 @@ jobs:
           tags: |
             ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:latest
             ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:${{ github.sha }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-frontend:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-frontend:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -91,7 +85,9 @@ jobs:
         run: |
           echo "Docker images built and pushed successfully!"
           echo "Images available at:"
-          echo "- ghcr.io/${{ github.repository }}:latest"
-          echo "- ghcr.io/${{ github.repository }}:${{ github.sha }}"
-          echo "- ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:latest"
-          echo "- ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:${{ github.sha }}"
+          echo "- ghcr.io/hangyubin/sanjikaoshi:latest"
+          echo "- ghcr.io/hangyubin/sanjikaoshi:${{ github.sha }}"
+          echo "- ghcr.io/hangyubin/sanjikaoshi-backend:latest"
+          echo "- ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.sha }}"
+          echo "- ghcr.io/hangyubin/sanjikaoshi-frontend:latest"
+          echo "- ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.sha }}"

@@ -24,11 +24,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 设置小写仓库名称
-      - name: Set lowercase repository name
-        id: repo
-        run: echo "LOWERCASE_REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
       # 构建并保存完整应用镜像
       - name: Build and save full app image
         uses: docker/build-push-action@v5
@@ -36,9 +31,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}:latest
-            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ github.sha }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ github.event.release.tag_name }}
+            ghcr.io/hangyubin/sanjikaoshi:latest
+            ghcr.io/hangyubin/sanjikaoshi:${{ github.sha }}
+            ghcr.io/hangyubin/sanjikaoshi:${{ github.event.release.tag_name }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -50,9 +45,9 @@ jobs:
           context: ./server
           push: true
           tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:latest
-            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:${{ github.sha }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:${{ github.event.release.tag_name }}
+            ghcr.io/hangyubin/sanjikaoshi-backend:latest
+            ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.sha }}
+            ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.event.release.tag_name }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -64,9 +59,9 @@ jobs:
           context: ./client
           push: true
           tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:latest
-            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:${{ github.sha }}
-            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:${{ github.event.release.tag_name }}
+            ghcr.io/hangyubin/sanjikaoshi-frontend:latest
+            ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.sha }}
+            ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.event.release.tag_name }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -78,22 +73,22 @@ jobs:
           mkdir -p ./docker-images
           
           # 下载并保存完整应用镜像
-          docker pull ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker pull ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} --platform=linux/arm64
-          docker save -o ./docker-images/smart-exam-system-amd64.tar ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker save -o ./docker-images/smart-exam-system-arm64.tar ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker pull ghcr.io/hangyubin/sanjikaoshi:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker pull ghcr.io/hangyubin/sanjikaoshi:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker save -o ./docker-images/smart-exam-system-amd64.tar ghcr.io/hangyubin/sanjikaoshi:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker save -o ./docker-images/smart-exam-system-arm64.tar ghcr.io/hangyubin/sanjikaoshi:${{ github.event.release.tag_name }} --platform=linux/arm64
           
           # 下载并保存后端镜像
-          docker pull ghcr.io/${{ github.repository }}/backend:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker pull ghcr.io/${{ github.repository }}/backend:${{ github.event.release.tag_name }} --platform=linux/arm64
-          docker save -o ./docker-images/smart-exam-system-backend-amd64.tar ghcr.io/${{ github.repository }}/backend:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker save -o ./docker-images/smart-exam-system-backend-arm64.tar ghcr.io/${{ github.repository }}/backend:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker pull ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker pull ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker save -o ./docker-images/smart-exam-system-backend-amd64.tar ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker save -o ./docker-images/smart-exam-system-backend-arm64.tar ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.event.release.tag_name }} --platform=linux/arm64
           
           # 下载并保存前端镜像
-          docker pull ghcr.io/${{ github.repository }}/frontend:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker pull ghcr.io/${{ github.repository }}/frontend:${{ github.event.release.tag_name }} --platform=linux/arm64
-          docker save -o ./docker-images/smart-exam-system-frontend-amd64.tar ghcr.io/${{ github.repository }}/frontend:${{ github.event.release.tag_name }} --platform=linux/amd64
-          docker save -o ./docker-images/smart-exam-system-frontend-arm64.tar ghcr.io/${{ github.repository }}/frontend:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker pull ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker pull ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.event.release.tag_name }} --platform=linux/arm64
+          docker save -o ./docker-images/smart-exam-system-frontend-amd64.tar ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.event.release.tag_name }} --platform=linux/amd64
+          docker save -o ./docker-images/smart-exam-system-frontend-arm64.tar ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.event.release.tag_name }} --platform=linux/arm64
           
           # 压缩tar文件
           gzip ./docker-images/*.tar
