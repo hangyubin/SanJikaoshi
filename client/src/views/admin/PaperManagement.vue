@@ -64,32 +64,39 @@
     <!-- 搜索和筛选 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="80px" inline>
-        <el-form-item label="试卷名称">
-          <el-input v-model="searchForm.name" placeholder="请输入试卷名称"></el-input>
+        <el-form-item label="题库名称">
+          <el-input v-model="searchForm.name" placeholder="请输入题库名称"></el-input>
         </el-form-item>
-        <el-form-item label="科目">
-          <el-select v-model="searchForm.subjectId" placeholder="请选择科目">
+        <el-form-item label="题型">
+          <el-select v-model="searchForm.type" placeholder="请选择题型">
             <el-option label="全部" value=""></el-option>
-            <el-option v-for="subject in subjects" :key="subject.id" :label="subject.name" :value="subject.id"></el-option>
+            <el-option label="A1型题" :value="1"></el-option>
+            <el-option label="A2型题" :value="2"></el-option>
+            <el-option label="B1型题" :value="3"></el-option>
+            <el-option label="A3/A4型题" :value="4"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
-          <el-button type="success" @click="handleAdd">创建试卷</el-button>
+          <el-button type="success" @click="handleAdd">增加题库</el-button>
+          <el-button type="warning" @click="handleGeneratePaper">生成题库</el-button>
+          <el-button type="info" @click="handleImportClick">导入题库</el-button>
         </el-form-item>
       </el-form>
     </el-card>
     
-    <!-- 试卷表格 -->
+    <!-- 题库表格 -->
     <el-card class="table-card" style="margin-top: 20px;">
       <el-table :data="papers" stripe style="width: 100%">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
-        <el-table-column prop="name" label="试卷名称" min-width="200"></el-table-column>
-        <el-table-column prop="subject" label="科目" width="120">
+        <el-table-column prop="name" label="题库名称" min-width="200"></el-table-column>
+        <el-table-column prop="type" label="题型" width="100">
           <template #default="scope">
-            <el-tag type="primary">{{ scope.row.subject?.name || '未设置' }}</el-tag>
+            <el-tag :type="scope.row.type === 1 ? 'primary' : scope.row.type === 2 ? 'success' : scope.row.type === 3 ? 'warning' : 'info'">
+              {{ scope.row.type === 1 ? 'A1型题' : scope.row.type === 2 ? 'A2型题' : scope.row.type === 3 ? 'B1型题' : 'A3/A4型题' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="totalQuestions" label="题目数量" width="120"></el-table-column>
@@ -132,7 +139,7 @@
       </div>
     </el-card>
     
-    <!-- 创建/编辑试卷对话框 -->
+    <!-- 创建/编辑题库对话框 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
@@ -140,16 +147,11 @@
       :close-on-click-modal="false"
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="试卷名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入试卷名称"></el-input>
+        <el-form-item label="题库名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入题库名称"></el-input>
         </el-form-item>
-        <el-form-item label="科目" prop="subjectId">
-          <el-select v-model="form.subjectId" placeholder="请选择科目">
-            <el-option v-for="subject in subjects" :key="subject.id" :label="subject.name" :value="subject.id"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="试卷类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择试卷类型">
+        <el-form-item label="题型" prop="type">
+          <el-select v-model="form.type" placeholder="请选择题型">
             <el-option label="A1型题" :value="1"></el-option>
             <el-option label="A2型题" :value="2"></el-option>
             <el-option label="B1型题" :value="3"></el-option>
@@ -183,6 +185,92 @@
         </span>
       </template>
     </el-dialog>
+    
+    <!-- 生成题库对话框 -->
+    <el-dialog
+      v-model="generateDialogVisible"
+      title="生成题库"
+      width="800px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="generateForm" label-width="100px">
+        <el-form-item label="题库名称">
+          <el-input v-model="generateForm.name" placeholder="请输入题库名称"></el-input>
+        </el-form-item>
+        <el-form-item label="题型">
+          <el-select v-model="generateForm.type" placeholder="请选择题型">
+            <el-option label="全部" value=""></el-option>
+            <el-option label="A1型题" :value="1"></el-option>
+            <el-option label="A2型题" :value="2"></el-option>
+            <el-option label="B1型题" :value="3"></el-option>
+            <el-option label="A3/A4型题" :value="4"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="难度">
+          <el-select v-model="generateForm.difficulty" placeholder="请选择难度">
+            <el-option label="全部" value=""></el-option>
+            <el-option label="简单" :value="1"></el-option>
+            <el-option label="中等" :value="2"></el-option>
+            <el-option label="困难" :value="3"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="题目数量">
+          <el-input-number v-model="generateForm.questionCount" :min="5" :max="200" :step="5"></el-input-number>
+        </el-form-item>
+        <el-form-item label="生成方式">
+          <el-radio-group v-model="generateForm.generateType">
+            <el-radio label="随机生成">随机生成</el-radio>
+            <el-radio label="手动选择">手动选择</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="generateForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="generateDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleGenerateSubmit">生成题库</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    
+    <!-- 导入题库对话框 -->
+    <el-dialog
+      v-model="importDialogVisible"
+      title="导入题库"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="importForm" label-width="100px">
+        <el-form-item label="题库名称">
+          <el-input v-model="importForm.name" placeholder="请输入题库名称"></el-input>
+        </el-form-item>
+        <el-form-item label="导入文件">
+          <el-upload
+            class="upload-demo"
+            action="#"
+            :show-file-list="false"
+            :before-upload="handleImport"
+            accept=".xlsx,.xls,.json"
+          >
+            <el-button type="primary">选择文件</el-button>
+            <div class="el-upload__tip">
+              支持 XLSX、XLS、JSON 格式，文件大小不超过 10MB
+            </div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="导入说明">
+          <el-input v-model="importForm.description" type="textarea" :rows="3" placeholder="请输入导入说明"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="importDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleImportSubmit">开始导入</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -193,9 +281,8 @@ import axios from '@/utils/axios'
 import { ElMessage } from 'element-plus'
 import { DocumentCopy, EditPen, Document } from '@element-plus/icons-vue'
 
-// 试卷数据
+// 题库数据
 const papers = ref<any[]>([])
-const subjects = ref<any[]>([])
 
 // 统计数据
 const totalPaperCount = ref(85)
@@ -205,7 +292,7 @@ const a2QuestionCount = ref(700)
 
 const searchForm = reactive({
   name: '',
-  subjectId: ''
+  type: ''
 })
 
 const currentPage = ref(1)
@@ -214,13 +301,12 @@ const total = ref(0)
 
 // 对话框
 const dialogVisible = ref(false)
-const dialogTitle = ref('创建试卷')
+const dialogTitle = ref('增加题库')
 const formRef = ref<FormInstance>()
 
 const form = reactive({
   id: '',
   name: '',
-  subjectId: '',
   type: 1,
   difficulty: 2,
   totalQuestions: 50,
@@ -231,51 +317,52 @@ const form = reactive({
 
 const rules = reactive<FormRules>({
   name: [
-    { required: true, message: '请输入试卷名称', trigger: 'blur' }
-  ],
-  subjectId: [
-    { required: true, message: '请选择科目', trigger: 'change' }
+    { required: true, message: '请输入题库名称', trigger: 'blur' }
   ]
 })
 
-// 获取科目列表
-const fetchSubjects = async () => {
-  try {
-    const response = await axios.get('/api/subjects')
-    if (response.data.code === 200) {
-      subjects.value = response.data.data
-    } else {
-      ElMessage.error('获取科目列表失败')
-    }
-  } catch (error) {
-    console.error('获取科目列表失败:', error)
-    ElMessage.error('获取科目列表失败')
-  }
-}
+// 生成题库相关
+const generateDialogVisible = ref(false)
+const generateForm = reactive({
+  name: '',
+  type: '',
+  difficulty: '',
+  questionCount: 50,
+  generateType: '随机生成',
+  remark: ''
+})
 
-// 获取试卷列表
+// 导入题库相关
+const importDialogVisible = ref(false)
+const importForm = reactive({
+  name: '',
+  file: null,
+  description: ''
+})
+
+// 获取题库列表
 const fetchPapers = async () => {
   try {
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
       name: searchForm.name,
-      subjectId: searchForm.subjectId
+      type: searchForm.type
     }
     const response = await axios.get('/api/papers', { params })
     if (response.data.code === 200) {
       papers.value = response.data.data.records
       total.value = response.data.data.total
     } else {
-      ElMessage.error('获取试卷列表失败')
+      ElMessage.error('获取题库列表失败')
     }
   } catch (error) {
-    console.error('获取试卷列表失败:', error)
-    ElMessage.error('获取试卷列表失败')
+    console.error('获取题库列表失败:', error)
+    ElMessage.error('获取题库列表失败')
   }
 }
 
-// 搜索试卷
+// 搜索题库
 const handleSearch = () => {
   currentPage.value = 1
   fetchPapers()
@@ -284,19 +371,18 @@ const handleSearch = () => {
 // 重置搜索
 const handleReset = () => {
   searchForm.name = ''
-  searchForm.subjectId = ''
+  searchForm.type = ''
   currentPage.value = 1
   fetchPapers()
 }
 
-// 添加试卷
+// 增加题库
 const handleAdd = () => {
-  dialogTitle.value = '创建试卷'
+  dialogTitle.value = '增加题库'
   // 重置表单
   Object.assign(form, {
     id: '',
     name: '',
-    subjectId: '',
     type: 1,
     difficulty: 2,
     totalQuestions: 50,
@@ -307,14 +393,13 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-// 编辑试卷
+// 编辑题库
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑试卷'
+  dialogTitle.value = '编辑题库'
   // 填充表单
   Object.assign(form, {
     id: row.id,
     name: row.name,
-    subjectId: row.subject?.id || '',
     type: row.type,
     difficulty: row.difficulty,
     totalQuestions: row.totalQuestions,
@@ -325,7 +410,7 @@ const handleEdit = (row: any) => {
   dialogVisible.value = true
 }
 
-// 提交试卷
+// 提交题库
 const handleSubmit = async () => {
   if (!formRef.value) return
   
@@ -334,51 +419,165 @@ const handleSubmit = async () => {
     
     // 构建请求数据
     const requestData = {
-      ...form,
-      subject: form.subjectId ? { id: form.subjectId } : null
+      ...form
     }
     
     let response
     if (form.id) {
-      // 更新试卷
+      // 更新题库
       response = await axios.put(`/api/papers/${form.id}`, requestData)
     } else {
-      // 添加试卷
+      // 增加题库
       response = await axios.post('/api/papers', requestData)
     }
     
     if (response.data.code === 200) {
-      ElMessage.success(form.id ? '更新试卷成功' : '创建试卷成功')
+      ElMessage.success(form.id ? '更新题库成功' : '增加题库成功')
       dialogVisible.value = false
-      fetchPapers() // 重新加载试卷列表
+      fetchPapers() // 重新加载题库列表
     } else {
-      ElMessage.error(form.id ? '更新试卷失败' : '创建试卷失败')
+      ElMessage.error(form.id ? '更新题库失败' : '增加题库失败')
     }
   } catch (error) {
     console.error('表单验证失败:', error)
   }
 }
 
-// 删除试卷
+// 删除题库
 const handleDelete = async (row: any) => {
   try {
     const response = await axios.delete(`/api/papers/${row.id}`)
     if (response.data.code === 200) {
-      ElMessage.success('删除试卷成功')
-      fetchPapers() // 重新加载试卷列表
+      ElMessage.success('删除题库成功')
+      fetchPapers() // 重新加载题库列表
     } else {
-      ElMessage.error('删除试卷失败')
+      ElMessage.error('删除题库失败')
     }
   } catch (error) {
-    console.error('删除试卷失败:', error)
-    ElMessage.error('删除试卷失败')
+    console.error('删除题库失败:', error)
+    ElMessage.error('删除题库失败')
   }
 }
 
-// 查看试卷题目
+// 查看题库题目
 const handleViewQuestions = (row: any) => {
-  console.log('查看试卷题目:', row)
-  // 这里可以跳转到试卷题目管理页面
+  console.log('查看题库题目:', row)
+  // 这里可以跳转到题库题目管理页面
+}
+
+// 生成题库
+const handleGeneratePaper = () => {
+  generateDialogVisible.value = true
+  // 重置表单
+  Object.assign(generateForm, {
+    name: '',
+    type: '',
+    difficulty: '',
+    questionCount: 50,
+    generateType: '随机生成',
+    remark: ''
+  })
+}
+
+// 提交生成题库
+const handleGenerateSubmit = async () => {
+  try {
+    // 构建请求数据
+    const requestData = {
+      name: generateForm.name,
+      type: generateForm.type || undefined,
+      difficulty: generateForm.difficulty || undefined,
+      questionCount: generateForm.questionCount,
+      generateType: generateForm.generateType,
+      remark: generateForm.remark
+    }
+    
+    const response = await axios.post('/api/papers/generate', requestData)
+    if (response.data.code === 200) {
+      ElMessage.success('生成题库成功')
+      generateDialogVisible.value = false
+      fetchPapers() // 重新加载题库列表
+    } else {
+      ElMessage.error('生成题库失败')
+    }
+  } catch (error) {
+    console.error('生成题库失败:', error)
+    ElMessage.error('生成题库失败')
+  }
+}
+
+// 打开导入题库对话框
+const handleImportClick = () => {
+  importDialogVisible.value = true
+  // 重置表单
+  Object.assign(importForm, {
+    name: '',
+    file: null,
+    description: ''
+  })
+}
+
+// 处理文件选择
+const handleImport = (file: any) => {
+  // 验证文件大小
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('上传文件大小不能超过 10MB!')
+    return false
+  }
+  
+  // 验证文件类型
+  const fileType = file.type
+  const isXlsx = fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  const isXls = fileType === 'application/vnd.ms-excel'
+  const isJson = fileType === 'application/json'
+  
+  if (!isXlsx && !isXls && !isJson) {
+    ElMessage.error('请上传 XLSX、XLS 或 JSON 格式的文件!')
+    return false
+  }
+  
+  // 保存文件对象
+  importForm.file = file
+  ElMessage.success('文件选择成功')
+  return false // 阻止自动上传
+}
+
+// 提交导入题库
+const handleImportSubmit = async () => {
+  try {
+    if (!importForm.file) {
+      ElMessage.error('请先选择文件')
+      return
+    }
+    
+    if (!importForm.name) {
+      ElMessage.error('请输入题库名称')
+      return
+    }
+    
+    const formData = new FormData()
+    formData.append('file', importForm.file)
+    formData.append('name', importForm.name)
+    formData.append('description', importForm.description)
+    
+    const response = await axios.post('/api/papers/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    if (response.data.code === 200) {
+      ElMessage.success('导入题库成功')
+      importDialogVisible.value = false
+      fetchPapers() // 重新加载题库列表
+    } else {
+      ElMessage.error('导入题库失败')
+    }
+  } catch (error) {
+    console.error('导入题库失败:', error)
+    ElMessage.error('导入题库失败')
+  }
 }
 
 // 分页大小变化
@@ -396,7 +595,6 @@ const handleCurrentChange = (current: number) => {
 
 // 初始化数据
 onMounted(() => {
-  fetchSubjects()
   fetchPapers()
 })
 </script>

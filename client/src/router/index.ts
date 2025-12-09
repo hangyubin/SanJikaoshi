@@ -53,7 +53,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/admin/UserManagement.vue')
       },
       {        path: 'student-list',        name: 'StudentList',        component: () => import('../views/admin/StudentList.vue')      },      {        path: 'admin-list',        name: 'AdminList',        component: () => import('../views/admin/AdminList.vue')      },
-      {        path: 'department-management',        name: 'DepartmentManagement',        component: () => import('../views/admin/DepartmentManagement.vue')      },
+
       {        path: 'paper-management',        name: 'PaperManagement',        component: () => import('../views/admin/PaperManagement.vue')      },
 
       {        path: 'learning-resource-management',        name: 'LearningResourceManagement',        component: () => import('../views/admin/LearningResourceManagement.vue')      },

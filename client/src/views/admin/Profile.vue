@@ -46,9 +46,7 @@
             
             <el-col :span="12">
               <el-form-item label="科室" prop="department">
-                <el-select v-model="userForm.department" placeholder="请选择科室">
-                  <el-option v-for="dept in departments" :key="dept.id" :label="dept.name" :value="dept.id"></el-option>
-                </el-select>
+                <el-input v-model="userForm.department" placeholder="请输入科室"></el-input>
               </el-form-item>
               
               <el-form-item label="职称" prop="jobTitle">
@@ -145,9 +143,6 @@ const systemAvatars = ref([
   'https://cube.elemecdn.com/f/88/03b0d39583f48206768a7534e55bcpng.png',
 ])
 
-// 科室列表
-const departments = ref<any[]>([])
-
 // 用户表单
 const userForm = reactive({
   username: '',
@@ -155,7 +150,7 @@ const userForm = reactive({
   phone: '',
   avatar: '',
   gender: 0,
-  department: null,
+  department: '',
   jobTitle: ''
 })
 
@@ -170,33 +165,8 @@ const rules = reactive<FormRules>({
   ],
   gender: [
     { required: true, message: '请选择性别', trigger: 'change' }
-  ],
-  department: [
-    { required: true, message: '请选择科室', trigger: 'change' }
   ]
 })
-
-// 获取科室列表
-const fetchDepartments = async () => {
-  try {
-    // 从API获取科室列表
-    const response = await axios.get('/api/departments')
-    const { data } = response
-    if (data.code === 200) {
-      departments.value = data.data
-    }
-  } catch (error) {
-    console.error('获取科室列表失败:', error)
-    // 如果API调用失败，使用默认科室列表
-    departments.value = [
-      { id: 1, name: '内科' },
-      { id: 2, name: '外科' },
-      { id: 3, name: '儿科' },
-      { id: 4, name: '妇产科' },
-      { id: 5, name: '急诊科' },
-    ]
-  }
-}
 
 // 初始化用户数据
 const fetchUserInfo = async () => {
@@ -296,7 +266,6 @@ const confirmAvatarChange = () => {
 
 // 初始化
 onMounted(() => {
-  fetchDepartments()
   fetchUserInfo()
 })
 </script>

@@ -61,12 +61,7 @@
                 <span>用户管理</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="/dashboard/department-management">
-              <el-icon><OfficeBuilding /></el-icon>
-              <template #title>
-                <span>科室管理</span>
-              </template>
-            </el-menu-item>
+
             <el-menu-item index="/dashboard/paper-management">
               <el-icon><DocumentCopy /></el-icon>
               <template #title>
@@ -134,8 +129,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   House, Setting, User, Menu,
   DocumentCopy, Document, Timer,
-  WarningFilled, Star, OfficeBuilding,
-  FolderOpened
+  WarningFilled, Star, FolderOpened
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
