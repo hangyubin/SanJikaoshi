@@ -117,12 +117,9 @@ public class UserController {
                 
                 // 更新用户信息
                 existingUser.setRealName(user.getRealName());
-                existingUser.setEmail(user.getEmail());
                 existingUser.setPhone(user.getPhone());
                 existingUser.setDepartment(user.getDepartment());
                 existingUser.setJobTitle(user.getJobTitle());
-                existingUser.setEmployeeId(user.getEmployeeId());
-                existingUser.setYearsOfService(user.getYearsOfService());
                 existingUser.setRoles(user.getRoles());
                 existingUser.setStatus(user.getStatus());
                 existingUser.setUpdateTime(System.currentTimeMillis());
