@@ -13,7 +13,7 @@ public class LearningResource {
     
     private String title;
     private String description;
-    private String type; // 1:文档 2:视频 3:音频 4:图片
+    private Integer type; // 1:文档 2:视频 3:音频 4:图片
     private String url;
     private String fileType;
     private Long fileSize;
