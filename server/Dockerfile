@@ -1,5 +1,5 @@
 # 第一阶段：构建阶段
-FROM openjdk:11.0.16-jdk-slim-buster AS build
+FROM openjdk:11-jdk-slim-bookworm AS build
 
 # 设置工作目录
 WORKDIR /app
@@ -37,7 +37,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 第二阶段：运行阶段
-FROM openjdk:11.0.16-jre-slim-buster
+FROM openjdk:11-jre-slim-bookworm
 
 # 设置工作目录
 WORKDIR /app

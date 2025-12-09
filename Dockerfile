@@ -15,7 +15,7 @@ RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # 第二阶段：构建后端
-FROM openjdk:11.0.16-jdk-slim-buster AS backend-build
+FROM openjdk:11-jdk-slim-bookworm AS backend-build
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* &&
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
-FROM openjdk:11.0.16-jre-slim-buster
+FROM openjdk:11-jre-slim-bookworm
 
 WORKDIR /app
 
