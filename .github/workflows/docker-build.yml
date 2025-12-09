@@ -54,32 +54,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 构建并推送后端镜像（可选，如果需要单独推送后端镜像）
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./server
-          push: true
-          tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:latest
-            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # 构建并推送前端镜像（可选，如果需要单独推送前端镜像）
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./client
-          push: true
-          tags: |
-            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:latest
-            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:${{ github.sha }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       # 输出构建结果
       - name: Output build results
         run: |
@@ -87,7 +61,3 @@ jobs:
           echo "Images available at:"
           echo "- ghcr.io/hangyubin/sanjikaoshi:latest"
           echo "- ghcr.io/hangyubin/sanjikaoshi:${{ github.sha }}"
-          echo "- ghcr.io/hangyubin/sanjikaoshi-backend:latest"
-          echo "- ghcr.io/hangyubin/sanjikaoshi-backend:${{ github.sha }}"
-          echo "- ghcr.io/hangyubin/sanjikaoshi-frontend:latest"
-          echo "- ghcr.io/hangyubin/sanjikaoshi-frontend:${{ github.sha }}"
