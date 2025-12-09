@@ -11,18 +11,17 @@
         <el-form-item label="科目">
           <el-select v-model="searchForm.subjectId" placeholder="请选择科目">
             <el-option label="全部" value=""></el-option>
-            <el-option label="数学" :value="1"></el-option>
-            <el-option label="英语" :value="2"></el-option>
-            <el-option label="计算机" :value="3"></el-option>
+            <el-option v-for="subject in subjects" :key="subject.id" :label="subject.name" :value="subject.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="题目类型">
           <el-select v-model="searchForm.type" placeholder="请选择题目类型">
             <el-option label="全部" value=""></el-option>
             <el-option label="选择题" :value="1"></el-option>
-            <el-option label="判断题" :value="2"></el-option>
-            <el-option label="填空题" :value="3"></el-option>
-            <el-option label="简答题" :value="4"></el-option>
+            <el-option label="多选题" :value="2"></el-option>
+            <el-option label="判断题" :value="3"></el-option>
+            <el-option label="填空题" :value="4"></el-option>
+            <el-option label="简答题" :value="5"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="难度">
@@ -37,6 +36,18 @@
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
           <el-button type="success" @click="handleAdd">添加题目</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="warning" @click="handleGenerateTemplate">生成模板</el-button>
+          <el-upload
+            class="upload-demo"
+            action=""
+            :show-file-list="false"
+            :before-upload="handleBatchImport"
+            accept=".xlsx,.xls"
+          >
+            <el-button type="info">批量导入</el-button>
+          </el-upload>
         </el-form-item>
       </el-form>
     </el-card>
@@ -97,9 +108,7 @@
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="科目" prop="subjectId">
           <el-select v-model="form.subjectId" placeholder="请选择科目">
-            <el-option label="数学" :value="1"></el-option>
-            <el-option label="英语" :value="2"></el-option>
-            <el-option label="计算机" :value="3"></el-option>
+            <el-option v-for="subject in subjects" :key="subject.id" :label="subject.name" :value="subject.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="题目类型" prop="type">
@@ -158,45 +167,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
-// 模拟题目数据
-const questions = ref([
-  {
-    id: 1,
-    subject: '数学',
-    type: 1,
-    difficulty: 2,
-    content: '计算定积分∫₀¹x²dx = ',
-    options: ['0', '1/3', '1/2', '1'],
-    answer: 'B',
-    analysis: '根据定积分公式，∫x²dx = x³/3 + C，所以∫₀¹x²dx = 1³/3 - 0³/3 = 1/3',
-    score: 5,
-    createTime: '2025-12-01 10:00:00'
-  },
-  {
-    id: 2,
-    subject: '英语',
-    type: 2,
-    difficulty: 1,
-    content: '英语中现在完成时的构成是"have/has + 过去分词"。',
-    answer: '正确',
-    analysis: '现在完成时的构成确实是"have/has + 过去分词"，用于表示过去发生的动作对现在造成的影响或结果。',
-    score: 3,
-    createTime: '2025-12-02 14:30:00'
-  },
-  {
-    id: 3,
-    subject: '计算机',
-    type: 1,
-    difficulty: 2,
-    content: '下列哪个不是JavaScript的基本数据类型？',
-    options: ['String', 'Number', 'Boolean', 'Object'],
-    answer: 'D',
-    analysis: 'JavaScript的基本数据类型包括：String、Number、Boolean、Null、Undefined、Symbol和BigInt。Object是引用数据类型。',
-    score: 5,
-    createTime: '2025-12-03 09:15:00'
-  }
-])
+// 真实题目数据
+const questions = ref<any[]>([])
+const subjects = ref<any[]>([])
 
 const searchForm = reactive({
   content: '',
@@ -207,7 +183,7 @@ const searchForm = reactive({
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(questions.value.length)
+const total = ref(0)
 
 // 对话框
 const dialogVisible = ref(false)
@@ -220,10 +196,10 @@ const form = reactive({
   type: 1,
   difficulty: 1,
   content: '',
-  options: ['', '', '', ''],
+  options: ['', '', '', '', ''],
   answer: '',
   analysis: '',
-  score: 5
+  score: 10
 })
 
 const rules = reactive<FormRules>({
@@ -247,16 +223,19 @@ const rules = reactive<FormRules>({
   ]
 })
 
+// 获取题目类型文本
 const getQuestionType = (type: number) => {
   switch (type) {
     case 1: return '选择题'
-    case 2: return '判断题'
-    case 3: return '填空题'
-    case 4: return '简答题'
+    case 2: return '多选题'
+    case 3: return '判断题'
+    case 4: return '填空题'
+    case 5: return '简答题'
     default: return '未知类型'
   }
 }
 
+// 获取难度文本
 const getDifficultyText = (difficulty: number) => {
   switch (difficulty) {
     case 1: return '简单'
@@ -266,18 +245,115 @@ const getDifficultyText = (difficulty: number) => {
   }
 }
 
-const handleSearch = () => {
-  // 搜索逻辑
-  console.log('搜索题目', searchForm)
+// 获取科目列表
+const fetchSubjects = async () => {
+  try {
+    const response = await axios.get('/api/subjects')
+    if (response.data.code === 200) {
+      subjects.value = response.data.data
+    } else {
+      ElMessage.error('获取科目列表失败')
+    }
+  } catch (error) {
+    console.error('获取科目列表失败:', error)
+    ElMessage.error('获取科目列表失败')
+  }
 }
 
+// 获取题目列表
+const fetchQuestions = async () => {
+  try {
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      content: searchForm.content,
+      subjectId: searchForm.subjectId,
+      type: searchForm.type,
+      difficulty: searchForm.difficulty
+    }
+    const response = await axios.get('/api/questions', { params })
+    if (response.data.code === 200) {
+      questions.value = response.data.data.records
+      total.value = response.data.data.total
+    } else {
+      ElMessage.error('获取题目列表失败')
+    }
+  } catch (error) {
+    console.error('获取题目列表失败:', error)
+    ElMessage.error('获取题目列表失败')
+  }
+}
+
+// 搜索题目
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchQuestions()
+}
+
+// 重置搜索
 const handleReset = () => {
   searchForm.content = ''
   searchForm.subjectId = ''
   searchForm.type = ''
   searchForm.difficulty = ''
+  currentPage.value = 1
+  fetchQuestions()
 }
 
+// 生成题目模板
+const handleGenerateTemplate = async () => {
+  try {
+    const response = await axios.get('/api/questions/import/template', { 
+      responseType: 'blob' 
+    })
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', '题目导入模板.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('题目模板生成成功')
+  } catch (error) {
+    console.error('生成题目模板失败:', error)
+    ElMessage.error('生成题目模板失败')
+  }
+}
+
+// 批量导入题目
+const handleBatchImport = async (file: any) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await axios.post('/api/questions/import/batch', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    if (response.data.code === 200) {
+      const result = response.data.data
+      ElMessage.success(`批量导入完成：成功${result.success}条，失败${result.fail}条`)
+      if (result.fail > 0) {
+        console.log('导入失败详情:', result.errorMessages)
+      }
+      fetchQuestions() // 重新加载题目列表
+    } else {
+      ElMessage.error('批量导入失败')
+    }
+  } catch (error) {
+    console.error('批量导入失败:', error)
+    ElMessage.error('批量导入失败')
+  }
+  return false // 阻止自动上传
+}
+
+// 添加题目
 const handleAdd = () => {
   dialogTitle.value = '添加题目'
   // 重置表单
@@ -287,56 +363,123 @@ const handleAdd = () => {
     type: 1,
     difficulty: 1,
     content: '',
-    options: ['', '', '', ''],
+    options: ['', '', '', '', ''],
     answer: '',
     analysis: '',
-    score: 5
+    score: 10
   })
   dialogVisible.value = true
 }
 
+// 编辑题目
 const handleEdit = (row: any) => {
   dialogTitle.value = '编辑题目'
   // 填充表单
-  Object.assign(form, row)
+  Object.assign(form, {
+    id: row.id,
+    subjectId: row.subject?.id || '',
+    type: row.type,
+    difficulty: row.difficulty,
+    content: row.content,
+    options: row.options ? JSON.parse(row.options) : ['', '', '', '', ''],
+    answer: row.answer,
+    analysis: row.analysis,
+    score: row.score
+  })
   dialogVisible.value = true
 }
 
+// 提交题目
 const handleSubmit = async () => {
   if (!formRef.value) return
   
   try {
     await formRef.value.validate()
-    // 提交表单逻辑
-    console.log('提交题目信息', form)
-    dialogVisible.value = false
+    
+    // 构建请求数据
+    const requestData = {
+      ...form,
+      subject: form.subjectId ? { id: form.subjectId } : null
+    }
+    
+    // 处理选项
+    const optionsStr = JSON.stringify(form.options)
+    if (optionsStr !== JSON.stringify(['', '', '', '', ''])) {
+      const validOptions: any = {}
+      form.options.forEach((option: string, index: number) => {
+        if (option && option.trim()) {
+          const key = String.fromCharCode(65 + index) // A, B, C, D, E
+          validOptions[key] = option.trim()
+        }
+      })
+      // 使用类型断言解决类型不匹配问题
+      ;(requestData as any).options = Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
+    } else {
+      // 使用类型断言解决类型不匹配问题
+      ;(requestData as any).options = undefined
+    }
+    
+    let response
+    if (form.id) {
+      // 更新题目
+      response = await axios.put(`/api/questions/${form.id}`, requestData)
+    } else {
+      // 添加题目
+      response = await axios.post('/api/questions', requestData)
+    }
+    
+    if (response.data.code === 200) {
+      ElMessage.success(form.id ? '更新题目成功' : '添加题目成功')
+      dialogVisible.value = false
+      fetchQuestions() // 重新加载题目列表
+    } else {
+      ElMessage.error(form.id ? '更新题目失败' : '添加题目失败')
+    }
   } catch (error) {
     console.error('表单验证失败:', error)
   }
 }
 
-const handleDelete = (row: any) => {
-  // 删除逻辑
-  console.log('删除题目', row)
+// 删除题目
+const handleDelete = async (row: any) => {
+  try {
+    const response = await axios.delete(`/api/questions/${row.id}`)
+    if (response.data.code === 200) {
+      ElMessage.success('删除题目成功')
+      fetchQuestions() // 重新加载题目列表
+    } else {
+      ElMessage.error('删除题目失败')
+    }
+  } catch (error) {
+    console.error('删除题目失败:', error)
+    ElMessage.error('删除题目失败')
+  }
 }
 
+// 查看题目详情
 const handleView = (row: any) => {
   // 查看详情逻辑
   console.log('查看题目详情', row)
+  // 可以在这里打开详情对话框
 }
 
+// 分页大小变化
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  fetchQuestions()
 }
 
+// 当前页码变化
 const handleCurrentChange = (current: number) => {
   currentPage.value = current
+  fetchQuestions()
 }
 
+// 初始化数据
 onMounted(() => {
-  // 初始化数据
-  console.log('题目列表初始化')
+  fetchSubjects()
+  fetchQuestions()
 })
 </script>
 

@@ -116,6 +116,7 @@
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item @click="handleProfile">个人中心</el-dropdown-item>
+                  <el-dropdown-item @click="handleChangePassword">修改密码</el-dropdown-item>
                   <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -164,7 +165,12 @@ const toggleSidebar = () => {
 
 // 处理个人中心
 const handleProfile = () => {
-  console.log('个人中心')
+  router.push('/dashboard/profile')
+}
+
+// 处理修改密码
+const handleChangePassword = () => {
+  router.push('/dashboard/change-password')
 }
 
 // 处理退出登录

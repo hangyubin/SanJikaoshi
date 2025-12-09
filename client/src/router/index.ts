@@ -58,7 +58,10 @@ const routes: RouteRecordRaw[] = [
       {        path: 'certificate-management',        name: 'CertificateManagement',        component: () => import('../views/admin/CertificateManagement.vue')      },
       {        path: 'learning-resource-management',        name: 'LearningResourceManagement',        component: () => import('../views/admin/LearningResourceManagement.vue')      },
       {        path: 'question-management',        name: 'QuestionManagement',        component: () => import('../views/admin/QuestionManagement.vue')      },
-      {        path: 'task-management',        name: 'TaskManagement',        component: () => import('../views/admin/TaskManagement.vue')      },      {        path: 'settings',        name: 'Settings',        component: () => import('../views/admin/Settings.vue')      }
+      {        path: 'task-management',        name: 'TaskManagement',        component: () => import('../views/admin/TaskManagement.vue')      },      {        path: 'settings',        name: 'Settings',        component: () => import('../views/admin/Settings.vue')      },
+      // 个人中心和修改密码
+      {        path: 'profile',        name: 'Profile',        component: () => import('../views/admin/Profile.vue')      },
+      {        path: 'change-password',        name: 'ChangePassword',        component: () => import('../views/admin/ChangePassword.vue')      }
     ]
   }
 ]

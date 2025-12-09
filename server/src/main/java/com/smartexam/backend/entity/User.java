@@ -21,6 +21,10 @@ public class User {
     private String email;
     private String phone;
     
+    private String avatar;
+    private Integer gender;
+    private Integer age;
+    
     @JsonManagedReference
     @ManyToOne
     @JoinColumn(name = "department_id")
