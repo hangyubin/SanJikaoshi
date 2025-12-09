@@ -40,12 +40,8 @@ public class LearningResourceController {
         
         // 执行分页查询
         Page<LearningResource> resourcePage;
-        if (title != null || type != null || status != null) {
-            // 这里可以添加条件查询逻辑
-            resourcePage = learningResourceRepository.findAll(pageable);
-        } else {
-            resourcePage = learningResourceRepository.findAll(pageable);
-        }
+        // 暂时使用简单查询，后续可以添加复杂条件查询
+        resourcePage = learningResourceRepository.findAll(pageable);
         
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
@@ -161,7 +157,7 @@ public class LearningResourceController {
     
     // 根据资源类型获取学习资源列表
     @GetMapping("/type/{type}")
-    public ResponseEntity<?> getLearningResourcesByType(@PathVariable String type) {
+    public ResponseEntity<?> getLearningResourcesByType(@PathVariable Integer type) {
         List<LearningResource> learningResources = learningResourceRepository.findByType(type);
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);

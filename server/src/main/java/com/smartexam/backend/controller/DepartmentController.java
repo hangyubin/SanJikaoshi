@@ -40,12 +40,8 @@ public class DepartmentController {
         
         // 执行分页查询
         Page<Department> departmentPage;
-        if (name != null || code != null || status != null) {
-            // 这里可以添加条件查询逻辑
-            departmentPage = departmentRepository.findAll(pageable);
-        } else {
-            departmentPage = departmentRepository.findAll(pageable);
-        }
+        // 暂时使用简单查询，后续可以添加复杂条件查询
+        departmentPage = departmentRepository.findAll(pageable);
         
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);

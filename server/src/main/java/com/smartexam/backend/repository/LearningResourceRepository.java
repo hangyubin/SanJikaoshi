@@ -13,7 +13,7 @@ public interface LearningResourceRepository extends JpaRepository<LearningResour
     List<LearningResource> findBySubjectId(Long subjectId);
     
     // 根据资源类型查询学习资源列表
-    List<LearningResource> findByType(String type);
+    List<LearningResource> findByType(Integer type);
     
     // 根据创建者ID查询学习资源列表
     List<LearningResource> findByCreateById(Long createById);
