@@ -3,6 +3,10 @@ package com.smartexam.backend.controller;
 import com.smartexam.backend.entity.Department;
 import com.smartexam.backend.repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +23,39 @@ public class DepartmentController {
     @Autowired
     private DepartmentRepository departmentRepository;
     
-    // 获取所有科室列表
+    // 获取所有科室列表（支持分页）
     @GetMapping
-    public ResponseEntity<?> getAllDepartments() {
-        List<Department> departments = departmentRepository.findAll();
+    public ResponseEntity<?> getAllDepartments(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) Integer status) {
+        
+        // 创建排序对象
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
+        
+        // 创建分页对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+        
+        // 执行分页查询
+        Page<Department> departmentPage;
+        if (name != null || code != null || status != null) {
+            // 这里可以添加条件查询逻辑
+            departmentPage = departmentRepository.findAll(pageable);
+        } else {
+            departmentPage = departmentRepository.findAll(pageable);
+        }
+        
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "获取科室列表成功");
-        response.put("data", departments);
+        response.put("data", departmentPage.getContent());
+        response.put("total", departmentPage.getTotalElements());
+        response.put("pageNum", pageNum);
+        response.put("pageSize", pageSize);
+        response.put("pages", departmentPage.getTotalPages());
+        
         return ResponseEntity.ok(response);
     }
     

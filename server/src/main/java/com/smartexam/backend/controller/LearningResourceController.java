@@ -3,6 +3,10 @@ package com.smartexam.backend.controller;
 import com.smartexam.backend.entity.LearningResource;
 import com.smartexam.backend.repository.LearningResourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +23,39 @@ public class LearningResourceController {
     @Autowired
     private LearningResourceRepository learningResourceRepository;
     
-    // 获取所有学习资源列表
+    // 获取所有学习资源列表（支持分页）
     @GetMapping
-    public ResponseEntity<?> getAllLearningResources() {
-        List<LearningResource> learningResources = learningResourceRepository.findAll();
+    public ResponseEntity<?> getAllLearningResources(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer status) {
+        
+        // 创建排序对象
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
+        
+        // 创建分页对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+        
+        // 执行分页查询
+        Page<LearningResource> resourcePage;
+        if (title != null || type != null || status != null) {
+            // 这里可以添加条件查询逻辑
+            resourcePage = learningResourceRepository.findAll(pageable);
+        } else {
+            resourcePage = learningResourceRepository.findAll(pageable);
+        }
+        
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "获取学习资源列表成功");
-        response.put("data", learningResources);
+        response.put("data", resourcePage.getContent());
+        response.put("total", resourcePage.getTotalElements());
+        response.put("pageNum", pageNum);
+        response.put("pageSize", pageSize);
+        response.put("pages", resourcePage.getTotalPages());
+        
         return ResponseEntity.ok(response);
     }
     

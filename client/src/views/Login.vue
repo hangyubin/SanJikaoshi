@@ -189,6 +189,16 @@ onMounted(() => {
     const parsedInfo = JSON.parse(savedHospitalInfo)
     Object.assign(hospitalInfo, parsedInfo)
   }
+  
+  // 读取记住的用户信息
+  const savedUser = localStorage.getItem('rememberedUser')
+  if (savedUser) {
+    const parsedUser = JSON.parse(savedUser)
+    loginForm.username = parsedUser.username || ''
+    loginForm.password = parsedUser.password || ''
+    rememberMe.value = true
+  }
+  
   // 初始化验证码
   generateCaptcha()
 })
@@ -220,6 +230,18 @@ const handleLogin = async () => {
     })
     
     loading.value = false
+    
+    // 处理记住我功能
+    if (rememberMe.value) {
+      // 保存用户信息到本地存储
+      localStorage.setItem('rememberedUser', JSON.stringify({
+        username: loginForm.username,
+        password: loginForm.password
+      }))
+    } else {
+      // 清除记住的用户信息
+      localStorage.removeItem('rememberedUser')
+    }
     
     // 登录成功，直接跳转到dashboard
     ElMessage.success('登录成功')

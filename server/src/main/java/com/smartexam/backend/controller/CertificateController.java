@@ -3,6 +3,10 @@ package com.smartexam.backend.controller;
 import com.smartexam.backend.entity.Certificate;
 import com.smartexam.backend.repository.CertificateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +23,38 @@ public class CertificateController {
     @Autowired
     private CertificateRepository certificateRepository;
     
-    // 获取所有证书列表
+    // 获取所有证书列表（支持分页）
     @GetMapping
-    public ResponseEntity<?> getAllCertificates() {
-        List<Certificate> certificates = certificateRepository.findAll();
+    public ResponseEntity<?> getAllCertificates(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer status) {
+        
+        // 创建排序对象
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime");
+        
+        // 创建分页对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+        
+        // 执行分页查询
+        Page<Certificate> certificatePage;
+        if (name != null || status != null) {
+            // 这里可以添加条件查询逻辑
+            certificatePage = certificateRepository.findAll(pageable);
+        } else {
+            certificatePage = certificateRepository.findAll(pageable);
+        }
+        
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
         response.put("message", "获取证书列表成功");
-        response.put("data", certificates);
+        response.put("data", certificatePage.getContent());
+        response.put("total", certificatePage.getTotalElements());
+        response.put("pageNum", pageNum);
+        response.put("pageSize", pageSize);
+        response.put("pages", certificatePage.getTotalPages());
+        
         return ResponseEntity.ok(response);
     }
     
