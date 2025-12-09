@@ -236,38 +236,66 @@ volumes:
 
 这个配置会将MySQL的数据目录 `/var/lib/mysql` 映射到Docker卷 `mysql_data` 中，即使重新部署容器或升级镜像，数据库中的所有数据也会保留。
 
-#### 修改数据库账号密码
+#### 自定义MySQL Root密码
 
-如果需要修改数据库账号密码，可以通过修改 `docker-compose.yml` 文件来实现：
+现在应用直接使用MySQL的root账号访问数据库，您可以通过以下方式自定义root密码：
 
-1. 打开 `docker-compose.yml` 文件
-2. 在 `mysql` 服务的 `environment` 部分修改以下环境变量：
-   - `MYSQL_USER`：修改数据库用户名
-   - `MYSQL_PASSWORD`：修改数据库密码
-   - `MYSQL_ROOT_PASSWORD`：修改数据库ROOT密码
-3. 在 `app` 服务的 `environment` 部分同步修改以下环境变量：
-   - `SPRING_DATASOURCE_USERNAME`：与 `MYSQL_USER` 保持一致
-   - `SPRING_DATASOURCE_PASSWORD`：与 `MYSQL_PASSWORD` 保持一致
+**方式一：通过环境变量（推荐）**
 
-**示例**：
+在启动命令中通过环境变量指定root密码：
+
+```bash
+# Linux/macOS
+export MYSQL_ROOT_PASSWORD=my_custom_root_password
+docker-compose up -d
+
+# Windows PowerShell
+$env:MYSQL_ROOT_PASSWORD="my_custom_root_password"
+docker-compose up -d
+
+# Windows CMD
+set MYSQL_ROOT_PASSWORD=my_custom_root_password
+docker-compose up -d
+```
+
+**方式二：修改docker-compose.yml文件**
+
+直接修改 `docker-compose.yml` 文件中的 `MYSQL_ROOT_PASSWORD` 环境变量：
 
 ```yaml
 # 修改前
 environment:
-  MYSQL_ROOT_PASSWORD: root
+  # root账号密码，可自定义
+  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
   MYSQL_DATABASE: smart_exam
-  MYSQL_USER: smart_exam_user
-  MYSQL_PASSWORD: smart_exam_password
 
 # 修改后
 environment:
-  MYSQL_ROOT_PASSWORD: my_new_root_password
+  # root账号密码，可自定义
+  MYSQL_ROOT_PASSWORD: my_custom_root_password
   MYSQL_DATABASE: smart_exam
-  MYSQL_USER: my_new_user
-  MYSQL_PASSWORD: my_new_password
 ```
 
 修改后，执行部署脚本或 `docker-compose up -d` 即可生效。
+
+**方式三：使用启动脚本**
+
+如果使用一键启动脚本 `start.sh`，可以在执行前设置环境变量：
+
+```bash
+# Linux/macOS
+export MYSQL_ROOT_PASSWORD=my_custom_root_password
+./start.sh
+
+# Windows PowerShell
+$env:MYSQL_ROOT_PASSWORD="my_custom_root_password"./start.sh
+
+# Windows CMD
+set MYSQL_ROOT_PASSWORD=my_custom_root_password
+.\start.sh
+```
+
+**注意**：应用服务会自动使用与MySQL相同的root密码，无需额外配置。
 
 ### 4.2 应用配置
 
