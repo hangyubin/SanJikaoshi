@@ -46,9 +46,9 @@ smart-exam-system/
 
 ## 3. 本地部署方法
 
-### 3.1 方法一：使用Docker Compose（推荐）
+### 3.1 方法一：使用一键部署脚本（推荐）
 
-这是最简单的部署方式，只需要一条命令即可启动整个应用。
+我们提供了一个一键部署脚本，简化了整个部署过程。
 
 #### 步骤1：进入项目根目录
 
@@ -58,9 +58,52 @@ smart-exam-system/
 cd /path/to/smart-exam-system
 ```
 
-#### 步骤2：构建并启动服务
+#### 步骤2：赋予脚本执行权限
 
-执行以下命令，构建并启动所有服务：
+```bash
+chmod +x start.sh
+```
+
+#### 步骤3：执行部署脚本
+
+```bash
+./start.sh
+```
+
+这个脚本会自动：
+- 检查Docker和Docker Compose是否安装
+- 拉取最新的Docker镜像
+- 停止并删除旧的容器（如果存在）
+- 启动所有服务
+- 显示服务状态
+
+#### 步骤4：访问应用
+
+服务启动成功后，您可以通过以下地址访问应用：
+
+- **应用访问地址**：http://localhost:8080
+
+### 3.2 方法二：手动使用Docker Compose
+
+如果您希望手动控制部署过程，可以使用以下方法：
+
+#### 步骤1：进入项目根目录
+
+打开终端，进入项目根目录：
+
+```bash
+cd /path/to/smart-exam-system
+```
+
+#### 步骤2：拉取最新镜像
+
+```bash
+docker-compose pull
+```
+
+#### 步骤3：启动服务
+
+执行以下命令，启动所有服务：
 
 ```bash
 docker-compose up -d
@@ -68,12 +111,12 @@ docker-compose up -d
 
 这个命令会：
 - 拉取MySQL 5.7镜像
-- 构建应用镜像（使用项目根目录的Dockerfile）
+- 拉取预构建的应用镜像（ghcr.io/hangyubin/sanjikaoshi:latest）
 - 创建并启动两个容器：
   - `smart-exam-mysql`：MySQL数据库服务
   - `smart-exam-app`：应用服务（包含前端和后端）
 
-#### 步骤3：查看服务状态
+#### 步骤4：查看服务状态
 
 执行以下命令，查看服务是否正常启动：
 
@@ -89,17 +132,17 @@ smart-exam-app      "java -jar /app/app.j…"   app                 running     
 smart-exam-mysql    "docker-entrypoint.s…"   mysql               running             0.0.0.0:3306->3306/tcp
 ```
 
-#### 步骤4：访问应用
+#### 步骤5：访问应用
 
 服务启动成功后，您可以通过以下地址访问应用：
 
 - **应用访问地址**：http://localhost:8080
 
-### 3.2 方法二：手动部署（分步骤）
+### 3.3 方法三：手动部署（分步骤）
 
 如果您需要更精细地控制部署过程，可以选择手动部署。
 
-#### 3.2.1 部署数据库
+#### 3.3.1 部署数据库
 
 1. **启动MySQL容器**：
 
@@ -124,7 +167,7 @@ mysql -h localhost -P 3306 -u smart_exam_user -p
 
 输入密码 `smart_exam_password` 后，如果能成功连接，则数据库部署成功。
 
-#### 3.2.2 部署后端服务
+#### 3.3.2 部署后端服务
 
 1. **进入后端目录**：
 
@@ -146,7 +189,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 后端服务将在 `http://localhost:8080` 上运行。
 
-#### 3.2.3 部署前端服务
+#### 3.3.3 部署前端服务
 
 1. **进入前端目录**：
 

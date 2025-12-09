@@ -14,8 +14,6 @@ services:
       # 添加MySQL字符集配置
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
@@ -24,9 +22,7 @@ services:
   
   # 应用服务 - 前后端不分离
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/hangyubin/sanjikaoshi:latest
     container_name: smart-exam-app
     restart: always
     depends_on:
