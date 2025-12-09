@@ -47,7 +47,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 配置请求授权
             .authorizeRequests()
             // 公开路径，不需要认证
-            .antMatchers("/auth/login", "/auth/register", "/auth/refresh-token").permitAll()
+            .antMatchers(
+                "/", "/index.html", "/login", "/register",
+                "/auth/login", "/auth/register", "/auth/refresh-token"
+            ).permitAll()
             // 其他所有路径都需要认证
             .anyRequest().authenticated()
             .and()
@@ -66,7 +69,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) throws Exception {
         // 静态资源和Swagger文档放行
         web.ignoring().antMatchers(
-            "/static/**", "/favicon.ico", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
+            "/", "/index.html", "/login", "/register",
+            "/static/**", "/assets/**", "/favicon.ico",
+            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
         );
     }
 }
