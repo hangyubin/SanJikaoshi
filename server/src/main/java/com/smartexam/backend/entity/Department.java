@@ -1,6 +1,7 @@
 package com.smartexam.backend.entity;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ public class Department {
     private String description;
     private Integer status;
     
+    @JsonBackReference
     @OneToMany(mappedBy = "department")
     private Set<User> users;
     

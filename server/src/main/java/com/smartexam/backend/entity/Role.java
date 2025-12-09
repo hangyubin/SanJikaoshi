@@ -2,6 +2,8 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -18,9 +20,11 @@ public class Role {
     private String code;
     private String description;
     
+    @JsonBackReference
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
     
+    @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "sys_role_menu",
             joinColumns = @JoinColumn(name = "role_id"),

@@ -1,6 +1,8 @@
 package com.smartexam.backend.entity;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -18,13 +20,16 @@ public class Menu {
     private String icon;
     private Integer orderNum;
     
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Menu parent;
     
+    @JsonManagedReference
     @OneToMany(mappedBy = "parent")
     private Set<Menu> children;
     
+    @JsonBackReference
     @ManyToMany(mappedBy = "menus")
     private Set<Role> roles;
     

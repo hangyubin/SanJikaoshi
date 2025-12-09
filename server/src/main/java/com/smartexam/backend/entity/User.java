@@ -2,6 +2,7 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ public class User {
     private String email;
     private String phone;
     
+    @JsonManagedReference
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
@@ -28,6 +30,7 @@ public class User {
     private String employeeId;
     private Integer yearsOfService;
     
+    @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "sys_user_role",
             joinColumns = @JoinColumn(name = "user_id"),

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_BASE_URL || '',
+  baseURL: '/api',
   timeout: 15000
 })
 
