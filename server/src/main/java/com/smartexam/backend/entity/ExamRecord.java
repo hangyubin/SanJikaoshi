@@ -19,6 +19,15 @@ public class ExamRecord {
     @JoinColumn(name = "paper_id")
     private ExamPaper examPaper;
     
+    // 额外添加的字段以支持控制器中的方法调用
+    private Long userId;
+    private Long examPaperId;
+    private Integer score;
+    private Long examTime;
+    private Long duration;
+    private String answers;
+    private String correctAnswers;
+    
     private Integer totalScore;
     private Integer obtainedScore;
     private Integer status; // 1:未开始 2:进行中 3:已完成 4:已过期

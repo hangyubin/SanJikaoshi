@@ -70,7 +70,7 @@ public class CertificateGeneratorController {
 
             // 获取关联的证书模板
             // 这里假设试卷和证书是一对多关系，实际项目中可能需要更复杂的关联逻辑
-            List<Certificate> certificates = certificateRepository.findBySubjectId(Math.toIntExact(paper.getSubject().getId()));
+            List<Certificate> certificates = certificateRepository.findBySubjectId(paper.getSubject().getId());
             if (certificates.isEmpty()) {
                 response.put("code", 404);
                 response.put("message", "该科目暂无证书模板");

@@ -2,12 +2,13 @@ package com.smartexam.backend.repository;
 
 import com.smartexam.backend.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface QuestionRepository extends JpaRepository<Question, Long> {
+public interface QuestionRepository extends JpaRepository<Question, Long>, JpaSpecificationExecutor<Question> {
     
     // 根据科目ID查询题目列表
     List<Question> findBySubjectId(Long subjectId);

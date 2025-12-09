@@ -147,11 +147,10 @@ public class ExamPaperController {
                 ExamPaper existingPaper = optionalPaper.get();
                 
                 // 更新试卷信息
-                existingPaper.setTitle(paper.getTitle());
+                existingPaper.setName(paper.getName());
                 existingPaper.setDescription(paper.getDescription());
                 existingPaper.setSubject(paper.getSubject());
                 existingPaper.setTotalScore(paper.getTotalScore());
-                existingPaper.setQuestionCount(paper.getQuestionCount());
                 existingPaper.setDuration(paper.getDuration());
                 existingPaper.setQuestions(paper.getQuestions());
                 existingPaper.setStatus(paper.getStatus());

@@ -19,6 +19,7 @@ public class Question {
     private String options;
     private Integer score;
     private Integer difficulty; // 1:简单 2:中等 3:困难
+    private String analysis; // 解析
     
     @ManyToOne
     @JoinColumn(name = "subject_id")
