@@ -59,7 +59,7 @@ public class CertificateGeneratorController {
             }
 
             // 获取试卷信息
-            Optional<ExamPaper> optionalPaper = examPaperRepository.findById(record.getExamPaperId());
+            Optional<ExamPaper> optionalPaper = examPaperRepository.findById(record.getExamPaper().getId());
             if (!optionalPaper.isPresent()) {
                 response.put("code", 404);
                 response.put("message", "试卷不存在");
@@ -81,7 +81,7 @@ public class CertificateGeneratorController {
             Certificate certificate = certificates.get(0);
 
             // 检查用户是否已获得该证书
-            UserCertificate existingUserCertificate = userCertificateRepository.findByUserIdAndCertificateId(record.getUserId(), certificate.getId());
+            UserCertificate existingUserCertificate = userCertificateRepository.findByUserAndCertificate(record.getUser(), certificate);
             if (existingUserCertificate != null) {
                 response.put("code", 400);
                 response.put("message", "用户已获得该证书");
@@ -199,7 +199,7 @@ public class CertificateGeneratorController {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMdd");
         String dateStr = sdf.format(now);
         String randomStr = String.format("%04d", new Random().nextInt(10000));
-        return "CERT-" + dateStr + "-" + userCertificate.getUserId() + "-" + userCertificate.getCertificateId() + "-" + randomStr;
+        return "CERT-" + dateStr + "-" + userCertificate.getUser().getId() + "-" + userCertificate.getCertificate().getId() + "-" + randomStr;
     }
 
     // 检查证书有效性

@@ -126,9 +126,8 @@ public class MenuController {
             if (menu.getStatus() == null) {
                 menu.setStatus(1); // 默认启用
             }
-            if (menu.getParentId() == null) {
-                menu.setParentId(0L); // 默认顶级菜单
-            }
+            // 顶级菜单没有父菜单
+            menu.setParent(null);
             if (menu.getSort() == null) {
                 menu.setSort(0); // 默认排序
             }
@@ -159,7 +158,7 @@ public class MenuController {
                 existingMenu.setPath(menu.getPath());
                 existingMenu.setComponent(menu.getComponent());
                 existingMenu.setIcon(menu.getIcon());
-                existingMenu.setParentId(menu.getParentId());
+                existingMenu.setParent(menu.getParent());
                 existingMenu.setSort(menu.getSort());
                 existingMenu.setStatus(menu.getStatus());
                 existingMenu.setPermissions(menu.getPermissions());

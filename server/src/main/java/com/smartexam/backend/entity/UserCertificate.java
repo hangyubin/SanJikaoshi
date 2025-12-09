@@ -19,10 +19,6 @@ public class UserCertificate {
     @JoinColumn(name = "certificate_id")
     private Certificate certificate;
     
-    // 额外添加的字段以支持控制器中的方法调用
-    private Long userId;
-    private Long certificateId;
-    
     private Integer score;
     private Long issueDate;
     private Long expireDate;

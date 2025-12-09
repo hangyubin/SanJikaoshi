@@ -3,9 +3,11 @@ package com.smartexam.backend.controller;
 import com.smartexam.backend.entity.ExamPaper;
 import com.smartexam.backend.entity.ExamRecord;
 import com.smartexam.backend.entity.Question;
+import com.smartexam.backend.entity.User;
 import com.smartexam.backend.repository.ExamPaperRepository;
 import com.smartexam.backend.repository.ExamRecordRepository;
 import com.smartexam.backend.repository.QuestionRepository;
+import com.smartexam.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,9 @@ public class ExamController {
 
     @Autowired
     private QuestionRepository questionRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     // 开始考试
     @PostMapping("/start/{paperId}")
@@ -62,8 +67,8 @@ public class ExamController {
 
             // 创建考试记录
             ExamRecord record = new ExamRecord();
-            record.setUserId(userId);
-            record.setExamPaperId(paperId);
+            record.setUser(userRepository.findById(userId).orElse(null));
+            record.setExamPaper(paper);
             record.setTotalScore(paper.getTotalScore());
             record.setStatus(2); // 进行中
             record.setStartTime(System.currentTimeMillis());
@@ -131,7 +136,7 @@ public class ExamController {
             }
 
             // 计算得分
-            Integer score = calculateScore(record.getExamPaperId(), answerJson);
+            Integer score = calculateScore(record.getExamPaper().getId(), answerJson);
 
             // 更新考试记录
             record.setAnswerJson(answerJson);
@@ -270,9 +275,10 @@ public class ExamController {
             List<ExamPaper> papers = examPaperRepository.findByStatus(1);
             
             // 获取用户已参加的试卷ID
-            List<ExamRecord> userRecords = examRecordRepository.findByUserId(userId);
+            List<ExamRecord> userRecords = examRecordRepository.findAll();
             Set<Long> participatedPaperIds = userRecords.stream()
-                    .map(record -> record.getExamPaperId())
+                    .filter(record -> record.getUser() != null && record.getUser().getId().equals(userId))
+                    .map(record -> record.getExamPaper().getId())
                     .collect(Collectors.toSet());
 
             // 过滤出用户未参加的试卷

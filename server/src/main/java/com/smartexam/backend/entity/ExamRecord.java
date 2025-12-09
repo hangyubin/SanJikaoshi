@@ -20,8 +20,6 @@ public class ExamRecord {
     private ExamPaper examPaper;
     
     // 额外添加的字段以支持控制器中的方法调用
-    private Long userId;
-    private Long examPaperId;
     private Integer score;
     private Long examTime;
     private Long duration;

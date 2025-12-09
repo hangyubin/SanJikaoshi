@@ -19,7 +19,6 @@ public class Menu {
     private String component;
     private String icon;
     private Integer orderNum;
-    private Long parentId;
     private Integer sort;
     private String permissions;
     

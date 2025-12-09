@@ -167,8 +167,8 @@ public class ExamRecordController {
                 ExamRecord existingRecord = optionalRecord.get();
                 
                 // 更新考试记录信息
-                existingRecord.setUserId(record.getUserId());
-                existingRecord.setExamPaperId(record.getExamPaperId());
+                existingRecord.setUser(record.getUser());
+                existingRecord.setExamPaper(record.getExamPaper());
                 existingRecord.setScore(record.getScore());
                 existingRecord.setTotalScore(record.getTotalScore());
                 existingRecord.setAnswers(record.getAnswers());
