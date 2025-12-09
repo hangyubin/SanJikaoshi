@@ -33,8 +33,8 @@ RUN mvn dependency:go-offline -B
 # 复制源代码
 COPY src ./src
 
-# 构建项目，生成jar文件，添加详细日志
-RUN mvn clean package -DskipTests -X
+# 构建项目，生成jar文件
+RUN mvn clean package -DskipTests
 
 # 第二阶段：运行阶段
 FROM eclipse-temurin:11-jre
