@@ -18,6 +18,14 @@ public class User {
     private String email;
     private String phone;
     
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+    
+    private String jobTitle;
+    private String employeeId;
+    private Integer yearsOfService;
+    
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "sys_user_role",
             joinColumns = @JoinColumn(name = "user_id"),

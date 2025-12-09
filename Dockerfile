@@ -1,16 +1,15 @@
 # 第一阶段：构建前端
 FROM node:18 AS frontend-build
 
-WORKDIR /app/client
+WORKDIR /app
 
-# 复制前端依赖文件
-COPY client/package*.json ./
+# 复制前端目录
+COPY client/ ./client
+
+WORKDIR /app/client
 
 # 安装前端依赖
 RUN npm install --legacy-peer-deps
-
-# 复制前端源代码
-COPY client/ .
 
 # 构建前端项目
 RUN npm run build
@@ -18,17 +17,16 @@ RUN npm run build
 # 第二阶段：构建后端
 FROM eclipse-temurin:11-jdk-alpine AS backend-build
 
-WORKDIR /app/server
+WORKDIR /app
 
-# 复制后端依赖文件
-COPY server/pom.xml ./
+# 复制后端目录
+COPY server/ ./server
+
+WORKDIR /app/server
 
 # 安装Maven并下载依赖
 RUN apk add --no-cache maven && \
     mvn dependency:go-offline -B
-
-# 复制后端源代码
-COPY server/src ./src
 
 # 构建后端项目（跳过前端构建）
 RUN mvn clean package -DskipTests

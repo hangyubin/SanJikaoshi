@@ -25,13 +25,11 @@
 ### 部署
 - Docker
 - Docker Compose
-- GitHub Actions
 
 ## 项目结构
 
 ```
 smart-exam-system/
-├── .github/workflows/ # GitHub Actions工作流
 ├── server/           # 后端Spring Boot项目
 ├── client/           # 前端Vue 3 + TypeScript项目
 ├── docker-compose.yml # Docker Compose配置
@@ -179,20 +177,12 @@ npm run preview
 
 MIT License
 
-## 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- 项目地址：https://github.com/hangyubin/sanjicms
-- Issues：https://github.com/hangyubin/sanjicms/issues
-
 ## 更新日志
 
 ### v1.0.0 (2025-12-08)
 - 初始版本发布
 - 完成基本功能开发
 - 支持Docker部署
-- 支持GitHub Actions自动构建
 
 ---
 

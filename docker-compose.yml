@@ -11,10 +11,14 @@ services:
       MYSQL_DATABASE: smart_exam
       MYSQL_USER: smart_exam_user
       MYSQL_PASSWORD: smart_exam_password
+      # 添加MySQL字符集配置
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - smart-exam-network
   

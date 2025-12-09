@@ -60,10 +60,28 @@
                 <span>用户管理</span>
               </template>
             </el-menu-item>
+            <el-menu-item index="/dashboard/department-management">
+              <el-icon><OfficeBuilding /></el-icon>
+              <template #title>
+                <span>科室管理</span>
+              </template>
+            </el-menu-item>
             <el-menu-item index="/dashboard/paper-management">
               <el-icon><DocumentCopy /></el-icon>
               <template #title>
                 <span>三基题库管理</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item index="/dashboard/certificate-management">
+              <el-icon><Medal /></el-icon>
+              <template #title>
+                <span>证书管理</span>
+              </template>
+            </el-menu-item>
+            <el-menu-item index="/dashboard/learning-resource-management">
+              <el-icon><FolderOpened /></el-icon>
+              <template #title>
+                <span>学习资源管理</span>
               </template>
             </el-menu-item>
             <el-menu-item index="/dashboard/task-management">
@@ -119,7 +137,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { 
   House, Setting, User, Menu, 
   DocumentCopy, Document, Timer, 
-  WarningFilled, Star
+  WarningFilled, Star, OfficeBuilding, 
+  Medal, FolderOpened
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
