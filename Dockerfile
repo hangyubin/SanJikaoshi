@@ -15,7 +15,7 @@ RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # 第二阶段：构建后端
-FROM eclipse-temurin:11-jdk-alpine AS backend-build
+FROM amazoncorretto:11-alpine AS backend-build
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* &&
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
-FROM eclipse-temurin:11-jre-alpine
+FROM amazoncorretto:11-alpine
 
 WORKDIR /app
 
