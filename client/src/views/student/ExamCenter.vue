@@ -89,12 +89,12 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 模拟可参加的考试数据
+// 模拟可参加的考试数据（三基考试科目）
 const examList = ref([
   {
     id: 1,
-    name: '2025年春季数学期中考试',
-    subject: '数学',
+    name: '2025年秋季基本理论考试',
+    subject: '基本理论',
     totalScore: 100,
     duration: 90,
     startTime: '2025-12-10 09:00:00',
@@ -103,26 +103,46 @@ const examList = ref([
   },
   {
     id: 2,
-    name: '2025年春季英语期中考试',
-    subject: '英语',
+    name: '2025年秋季基础知识考试',
+    subject: '基础知识',
     totalScore: 100,
     duration: 120,
     startTime: '2025-12-11 09:00:00',
     endTime: '2025-12-11 11:00:00',
     status: '未开始'
+  },
+  {
+    id: 3,
+    name: '2025年秋季基本技能考试',
+    subject: '基本技能',
+    totalScore: 100,
+    duration: 150,
+    startTime: '2025-12-12 09:00:00',
+    endTime: '2025-12-12 11:30:00',
+    status: '未开始'
   }
 ])
 
-// 模拟已完成的考试数据
+// 模拟已完成的考试数据（三基考试科目）
 const finishedExams = ref([
   {
-    id: 3,
-    name: '2025年秋季物理期末考试',
-    subject: '物理',
+    id: 4,
+    name: '2025年春季基本理论考试',
+    subject: '基本理论',
     totalScore: 100,
     obtainedScore: 85,
     startTime: '2025-12-05 09:00:00',
-    endTime: '2025-12-05 10:40:00',
+    endTime: '2025-12-05 10:30:00',
+    status: '已结束'
+  },
+  {
+    id: 5,
+    name: '2025年春季基础知识考试',
+    subject: '基础知识',
+    totalScore: 100,
+    obtainedScore: 90,
+    startTime: '2025-12-06 09:00:00',
+    endTime: '2025-12-06 11:00:00',
     status: '已结束'
   }
 ])

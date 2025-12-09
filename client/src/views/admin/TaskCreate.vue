@@ -22,8 +22,8 @@
               </el-select>
             </el-form-item>
             
-            <el-form-item label="考试科目" prop="subjectId">
-              <el-select v-model="taskForm.subjectId" placeholder="请选择考试科目">
+            <el-form-item label="考试科目" prop="subjectIds">
+              <el-select v-model="taskForm.subjectIds" placeholder="请选择考试科目" multiple>
                 <el-option 
                   v-for="subject in subjects" 
                   :key="subject.id" 
@@ -44,6 +44,7 @@
                 type="datetime"
                 placeholder="选择开始时间"
                 style="width: 100%"
+                language="zh-CN"
               ></el-date-picker>
             </el-form-item>
             
@@ -53,6 +54,7 @@
                 type="datetime"
                 placeholder="选择结束时间"
                 style="width: 100%"
+                language="zh-CN"
               ></el-date-picker>
             </el-form-item>
             
@@ -114,7 +116,7 @@ const taskForm = reactive({
   id: '',
   name: '',
   type: 1,
-  subjectId: '',
+  subjectIds: [],
   duration: 60,
   startTime: '',
   endTime: '',
@@ -132,7 +134,7 @@ const taskRules = reactive<FormRules>({
   type: [
     { required: true, message: '请选择任务类型', trigger: 'change' }
   ],
-  subjectId: [
+  subjectIds: [
     { required: true, message: '请选择考试科目', trigger: 'change' }
   ],
   duration: [
@@ -171,9 +173,10 @@ const handleSubmit = async () => {
     await taskFormRef.value.validate()
     
     // 发送创建任务请求
+    // 注意：这里暂时只使用第一个选择的科目，因为Task实体目前只支持单个科目
     await axios.post('/api/tasks', {
       ...taskForm,
-      subject: { id: taskForm.subjectId }
+      subject: { id: taskForm.subjectIds[0] }
     })
     
     ElMessage.success('任务创建成功')
