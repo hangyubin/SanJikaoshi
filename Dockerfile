@@ -24,12 +24,12 @@ COPY server/ ./server
 
 WORKDIR /app/server
 
-# 安装Maven并下载依赖
+# 安装Maven并下载依赖，添加详细日志
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* && \
-    mvn dependency:go-offline -B
+    mvn dependency:go-offline -B -X
 
-# 构建后端项目（跳过前端构建）
-RUN mvn clean package -DskipTests
+# 构建后端项目（跳过前端构建），添加详细日志
+RUN mvn clean package -DskipTests -X
 
 # 第三阶段：最终镜像
 FROM eclipse-temurin:11-jre
