@@ -201,9 +201,10 @@ const initData = () => {
     }
   })
   .then(response => {
-    if (response.code === 200) {
-      departments.value = response.data
-      pagination.total = response.total || 0
+    const { data } = response
+    if (data.code === 200) {
+      departments.value = data.data
+      pagination.total = data.total || 0
     }
   })
   .catch(error => {

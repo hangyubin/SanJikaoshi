@@ -132,6 +132,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import axios from '@/utils/axios'
 
 // 表单引用
 const formRef = ref<FormInstance>()
@@ -207,8 +208,9 @@ const fetchDepartments = async () => {
   try {
     // 从API获取科室列表
     const response = await axios.get('/api/departments')
-    if (response.code === 200) {
-      departments.value = response.data
+    const { data } = response
+    if (data.code === 200) {
+      departments.value = data.data
     }
   } catch (error) {
     console.error('获取科室列表失败:', error)
@@ -226,10 +228,20 @@ const fetchDepartments = async () => {
 // 初始化用户数据
 const fetchUserInfo = async () => {
   try {
+    // 从localStorage获取用户信息
+    const savedUserInfo = localStorage.getItem('userInfo')
+    if (savedUserInfo) {
+      const userInfo = JSON.parse(savedUserInfo)
+      Object.assign(userForm, userInfo)
+      selectedSystemAvatar.value = userForm.avatar
+      return
+    }
+    
     // 从API获取用户信息
     const response = await axios.get('/api/user/profile')
-    if (response.code === 200) {
-      Object.assign(userForm, response.data)
+    const { data } = response
+    if (data.code === 200) {
+      Object.assign(userForm, data.data)
     } else {
       // 如果API调用失败，使用基本数据，不使用模拟数据
       userForm.username = 'admin'
@@ -258,7 +270,8 @@ const handleSubmit = async () => {
     
     // 发送保存用户信息请求
     const response = await axios.put('/api/user/profile', userForm)
-    if (response.code === 200) {
+    const { data } = response
+    if (data.code === 200) {
       ElMessage.success('保存成功')
     } else {
       ElMessage.error('保存失败')

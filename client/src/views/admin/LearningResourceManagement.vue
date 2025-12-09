@@ -284,8 +284,9 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 const getSubjects = () => {
   axios.get('/api/subjects')
   .then(response => {
-    if (response.code === 200) {
-      subjects.value = response.data
+    const { data } = response
+    if (data.code === 200) {
+      subjects.value = data.data
     }
   })
   .catch(error => {
@@ -304,9 +305,10 @@ const initData = () => {
     }
   })
   .then(response => {
-    if (response.code === 200) {
-      learningResources.value = response.data
-      pagination.total = response.total || 0
+    const { data } = response
+    if (data.code === 200) {
+      learningResources.value = data.data
+      pagination.total = data.total || 0
     }
   })
   .catch(error => {
