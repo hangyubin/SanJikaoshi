@@ -31,8 +31,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: smart_exam_user
       SPRING_DATASOURCE_PASSWORD: smart_exam_password
+      # 文件上传目录配置，默认为当前目录下的uploads
+      SMART_EXAM_UPLOAD_DIR: /upload
     ports:
       - "8080:8080"
+    volumes:
+      # 映射文件上传目录，可自定义宿主机路径
+      - ./uploads:/upload
     networks:
       - smart-exam-network
 
