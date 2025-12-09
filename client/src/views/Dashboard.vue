@@ -155,6 +155,14 @@ onMounted(() => {
 
 .stat-card {
   height: 120px;
+  margin-bottom: 20px;
+}
+
+/* 适配小屏幕设备 */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 20px;
+  }
 }
 
 .stat-content {
