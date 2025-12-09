@@ -150,16 +150,18 @@ const systemAvatars = ref([
   'https://cube.elemecdn.com/5/88/03b0d39583f48206768a7534e55bcpng.png',
   'https://cube.elemecdn.com/6/88/03b0d39583f48206768a7534e55bcpng.png',
   'https://cube.elemecdn.com/7/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/8/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/9/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/a/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/b/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/c/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/d/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/e/88/03b0d39583f48206768a7534e55bcpng.png',
+  'https://cube.elemecdn.com/f/88/03b0d39583f48206768a7534e55bcpng.png',
 ])
 
 // 科室列表
-const departments = ref<any[]>([
-  { id: 1, name: '内科' },
-  { id: 2, name: '外科' },
-  { id: 3, name: '儿科' },
-  { id: 4, name: '妇产科' },
-  { id: 5, name: '急诊科' },
-])
+const departments = ref<any[]>([])
 
 // 用户表单
 const userForm = reactive({
@@ -200,35 +202,47 @@ const rules = reactive<FormRules>({
   ]
 })
 
+// 获取科室列表
+const fetchDepartments = async () => {
+  try {
+    // 从API获取科室列表
+    const response = await axios.get('/api/departments')
+    if (response.code === 200) {
+      departments.value = response.data
+    }
+  } catch (error) {
+    console.error('获取科室列表失败:', error)
+    // 如果API调用失败，使用默认科室列表
+    departments.value = [
+      { id: 1, name: '内科' },
+      { id: 2, name: '外科' },
+      { id: 3, name: '儿科' },
+      { id: 4, name: '妇产科' },
+      { id: 5, name: '急诊科' },
+    ]
+  }
+}
+
 // 初始化用户数据
 const fetchUserInfo = async () => {
   try {
-    // 模拟从后端获取用户信息
-    // 实际使用时应替换为真实API调用
-    // const response = await axios.get('/api/user/profile')
-    // if (response.data.code === 200) {
-    //   Object.assign(userForm, response.data.data)
-    // }
-    
-    // 模拟数据
-    Object.assign(userForm, {
-      username: 'admin',
-      realName: '系统管理员',
-      email: 'admin@example.com',
-      phone: '13800138000',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-      gender: 1,
-      age: 30,
-      department: 1,
-      jobTitle: '主任医师',
-      employeeId: 'EMP001',
-      yearsOfService: 10
-    })
+    // 从API获取用户信息
+    const response = await axios.get('/api/user/profile')
+    if (response.code === 200) {
+      Object.assign(userForm, response.data)
+    } else {
+      // 如果API调用失败，使用基本数据，不使用模拟数据
+      userForm.username = 'admin'
+      userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    }
     
     selectedSystemAvatar.value = userForm.avatar
   } catch (error) {
     console.error('获取用户信息失败:', error)
-    ElMessage.error('获取用户信息失败')
+    // 如果API调用失败，使用基本数据，不使用模拟数据
+    userForm.username = 'admin'
+    userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    selectedSystemAvatar.value = userForm.avatar
   }
 }
 
@@ -239,18 +253,19 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     
-    // 模拟保存用户信息
-    // 实际使用时应替换为真实API调用
-    // const response = await axios.put('/api/user/profile', userForm)
-    // if (response.data.code === 200) {
-    //   ElMessage.success('保存成功')
-    // } else {
-    //   ElMessage.error('保存失败')
-    // }
+    // 保存用户信息到localStorage，确保头像等信息能够持久保存
+    localStorage.setItem('userInfo', JSON.stringify(userForm))
     
-    ElMessage.success('保存成功')
+    // 发送保存用户信息请求
+    const response = await axios.put('/api/user/profile', userForm)
+    if (response.code === 200) {
+      ElMessage.success('保存成功')
+    } else {
+      ElMessage.error('保存失败')
+    }
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('保存用户信息失败:', error)
+    ElMessage.error('保存失败')
   }
 }
 
@@ -295,6 +310,7 @@ const confirmAvatarChange = () => {
 
 // 初始化
 onMounted(() => {
+  fetchDepartments()
   fetchUserInfo()
 })
 </script>

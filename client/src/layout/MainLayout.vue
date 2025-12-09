@@ -158,6 +158,20 @@ const activeMenu = computed(() => {
 const userName = ref('管理员')
 const userAvatar = ref('')
 
+// 从localStorage获取用户信息
+const fetchUserInfo = () => {
+  const savedUserInfo = localStorage.getItem('userInfo')
+  if (savedUserInfo) {
+    const userInfo = JSON.parse(savedUserInfo)
+    if (userInfo.username) {
+      userName.value = userInfo.username
+    }
+    if (userInfo.avatar) {
+      userAvatar.value = userInfo.avatar
+    }
+  }
+}
+
 // 切换侧边栏
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
@@ -175,8 +189,19 @@ const handleChangePassword = () => {
 
 // 处理退出登录
 const handleLogout = () => {
+  localStorage.removeItem('userInfo')
   router.push('/login')
 }
+
+// 初始化用户信息
+fetchUserInfo()
+
+// 监听localStorage变化，更新用户信息
+window.addEventListener('storage', (e) => {
+  if (e.key === 'userInfo') {
+    fetchUserInfo()
+  }
+})
 </script>
 
 <style scoped>
