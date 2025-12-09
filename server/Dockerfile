@@ -1,18 +1,14 @@
 # 第一阶段：构建阶段
-FROM eclipse-temurin:11-jdk-alpine AS build
+FROM openjdk:11-jdk-slim AS build
 
 # 设置工作目录
 WORKDIR /app
-
-# 更新 Alpine Linux 的 ca-certificates 并配置 Java SSL
-RUN apk update && apk add ca-certificates && update-ca-certificates \
-    && apk add openssl
 
 # 设置 Java 运行参数以允许不安全的 SSL/TLS
 ENV MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
 
 # 安装 Maven
-RUN apk add --no-cache maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 # 创建 Maven 配置文件，使用阿里云镜像
 RUN mkdir -p /root/.m2 && \
@@ -41,13 +37,10 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 第二阶段：运行阶段
-FROM eclipse-temurin:11-jre-alpine
+FROM openjdk:11-jre-slim
 
 # 设置工作目录
 WORKDIR /app
-
-# 更新 Alpine Linux 的 ca-certificates
-RUN apk update && apk add ca-certificates && update-ca-certificates
 
 # 从构建阶段复制jar文件
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar

@@ -15,7 +15,7 @@ RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # 第二阶段：构建后端
-FROM eclipse-temurin:11-jdk-alpine AS backend-build
+FROM openjdk:11-jdk-slim AS backend-build
 
 WORKDIR /app
 
@@ -25,14 +25,14 @@ COPY server/ ./server
 WORKDIR /app/server
 
 # 安装Maven并下载依赖
-RUN apk add --no-cache maven && \
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* && \
     mvn dependency:go-offline -B
 
 # 构建后端项目（跳过前端构建）
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
-FROM eclipse-temurin:11-jre-alpine
+FROM openjdk:11-jre-slim
 
 WORKDIR /app
 
