@@ -25,7 +25,7 @@ COPY server/ ./server
 WORKDIR /app/server
 
 # 安装Maven并下载依赖
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/* && \
+RUN apk update && apk add --no-cache maven && \
     mvn dependency:go-offline -B
 
 # 构建后端项目（跳过前端构建）
