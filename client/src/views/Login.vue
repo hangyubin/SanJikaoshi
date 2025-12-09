@@ -243,6 +243,31 @@ const handleRegisterRedirect = () => {
   overflow: hidden;
 }
 
+/* 注册按钮样式 */
+.register-btn {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
+  max-width: 350px;
+  margin-top: 15px;
+}
+
+.register-btn:hover {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  box-shadow: 0 6px 20px rgba(103, 194, 58, 0.4);
+  transform: translateY(-2px);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+}
+
 /* 背景装饰 */
 .background-decoration {
   position: absolute;
