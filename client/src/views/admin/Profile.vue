@@ -39,20 +39,12 @@
                 </el-select>
               </el-form-item>
               
-              <el-form-item label="年龄" prop="age">
-                <el-input-number v-model="userForm.age" :min="1" :max="120" placeholder="年龄"></el-input-number>
-              </el-form-item>
-              
               <el-form-item label="手机号" prop="phone">
                 <el-input v-model="userForm.phone" placeholder="手机号"></el-input>
               </el-form-item>
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="邮箱" prop="email">
-                <el-input v-model="userForm.email" placeholder="邮箱" type="email"></el-input>
-              </el-form-item>
-              
               <el-form-item label="科室" prop="department">
                 <el-select v-model="userForm.department" placeholder="请选择科室">
                   <el-option v-for="dept in departments" :key="dept.id" :label="dept.name" :value="dept.id"></el-option>
@@ -61,14 +53,6 @@
               
               <el-form-item label="职称" prop="jobTitle">
                 <el-input v-model="userForm.jobTitle" placeholder="职称"></el-input>
-              </el-form-item>
-              
-              <el-form-item label="工号" prop="employeeId">
-                <el-input v-model="userForm.employeeId" placeholder="工号"></el-input>
-              </el-form-item>
-              
-              <el-form-item label="工龄" prop="yearsOfService">
-                <el-input-number v-model="userForm.yearsOfService" :min="0" placeholder="工龄"></el-input-number>
               </el-form-item>
             </el-col>
           </el-row>
@@ -168,15 +152,11 @@ const departments = ref<any[]>([])
 const userForm = reactive({
   username: '',
   realName: '',
-  email: '',
   phone: '',
   avatar: '',
   gender: 0,
-  age: null,
   department: null,
-  jobTitle: '',
-  employeeId: '',
-  yearsOfService: null
+  jobTitle: ''
 })
 
 // 表单验证规则
@@ -184,19 +164,12 @@ const rules = reactive<FormRules>({
   realName: [
     { required: true, message: '请输入真实姓名', trigger: 'blur' }
   ],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
   ],
   gender: [
     { required: true, message: '请选择性别', trigger: 'change' }
-  ],
-  age: [
-    { required: true, message: '请输入年龄', trigger: 'blur' }
   ],
   department: [
     { required: true, message: '请选择科室', trigger: 'change' }

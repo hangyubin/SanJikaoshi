@@ -55,7 +55,7 @@ const routes: RouteRecordRaw[] = [
       {        path: 'student-list',        name: 'StudentList',        component: () => import('../views/admin/StudentList.vue')      },      {        path: 'admin-list',        name: 'AdminList',        component: () => import('../views/admin/AdminList.vue')      },
       {        path: 'department-management',        name: 'DepartmentManagement',        component: () => import('../views/admin/DepartmentManagement.vue')      },
       {        path: 'paper-management',        name: 'PaperManagement',        component: () => import('../views/admin/PaperManagement.vue')      },
-      {        path: 'certificate-management',        name: 'CertificateManagement',        component: () => import('../views/admin/CertificateManagement.vue')      },
+
       {        path: 'learning-resource-management',        name: 'LearningResourceManagement',        component: () => import('../views/admin/LearningResourceManagement.vue')      },
       {        path: 'question-management',        name: 'QuestionManagement',        component: () => import('../views/admin/QuestionManagement.vue')      },
       {        path: 'task-management',        name: 'TaskManagement',        component: () => import('../views/admin/TaskManagement.vue')      },      {        path: 'settings',        name: 'Settings',        component: () => import('../views/admin/Settings.vue')      },

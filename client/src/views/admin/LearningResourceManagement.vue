@@ -3,7 +3,7 @@
     <el-card class="main-card" shadow="hover">
       <template #header>
         <div class="card-header">
-          <h2>学习资源管理</h2>
+          <h2>资源管理</h2>
           <el-button type="primary" @click="handleAdd" size="default">
             <el-icon><Plus /></el-icon>
             新增资源

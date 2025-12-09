@@ -17,11 +17,10 @@
         <el-form-item label="题目类型">
           <el-select v-model="searchForm.type" placeholder="请选择题目类型">
             <el-option label="全部" value=""></el-option>
-            <el-option label="选择题" :value="1"></el-option>
-            <el-option label="多选题" :value="2"></el-option>
-            <el-option label="判断题" :value="3"></el-option>
-            <el-option label="填空题" :value="4"></el-option>
-            <el-option label="简答题" :value="5"></el-option>
+            <el-option label="A1型题" :value="1"></el-option>
+            <el-option label="A2型题" :value="2"></el-option>
+            <el-option label="B1型题" :value="3"></el-option>
+            <el-option label="A3/A4型题" :value="4"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="难度">
@@ -60,7 +59,7 @@
         <el-table-column prop="subject" label="科目" width="120"></el-table-column>
         <el-table-column prop="type" label="类型" width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.type === 1 ? 'primary' : scope.row.type === 2 ? 'success' : scope.row.type === 3 ? 'warning' : 'danger'">
+            <el-tag :type="scope.row.type === 1 ? 'primary' : scope.row.type === 2 ? 'success' : scope.row.type === 3 ? 'warning' : 'info'">
               {{ getQuestionType(scope.row.type) }}
             </el-tag>
           </template>
@@ -113,10 +112,10 @@
         </el-form-item>
         <el-form-item label="题目类型" prop="type">
           <el-select v-model="form.type" placeholder="请选择题目类型">
-            <el-option label="选择题" :value="1"></el-option>
-            <el-option label="判断题" :value="2"></el-option>
-            <el-option label="填空题" :value="3"></el-option>
-            <el-option label="简答题" :value="4"></el-option>
+            <el-option label="A1型题" :value="1"></el-option>
+            <el-option label="A2型题" :value="2"></el-option>
+            <el-option label="B1型题" :value="3"></el-option>
+            <el-option label="A3/A4型题" :value="4"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="难度" prop="difficulty">
@@ -226,11 +225,10 @@ const rules = reactive<FormRules>({
 // 获取题目类型文本
 const getQuestionType = (type: number) => {
   switch (type) {
-    case 1: return '选择题'
-    case 2: return '多选题'
-    case 3: return '判断题'
-    case 4: return '填空题'
-    case 5: return '简答题'
+    case 1: return 'A1型题'
+    case 2: return 'A2型题'
+    case 3: return 'B1型题'
+    case 4: return 'A3/A4型题'
     default: return '未知类型'
   }
 }

@@ -244,7 +244,6 @@ public class QuestionController {
                 Question existingQuestion = optionalQuestion.get();
                 
                 // 更新题目信息
-                existingQuestion.setTitle(question.getTitle());
                 existingQuestion.setContent(question.getContent());
                 existingQuestion.setOptions(question.getOptions());
                 existingQuestion.setAnswer(question.getAnswer());

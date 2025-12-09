@@ -18,12 +18,10 @@ public class User {
     private String username;
     private String password;
     private String realName;
-    private String email;
     private String phone;
     
     private String avatar;
     private Integer gender;
-    private Integer age;
     
     @JsonManagedReference
     @ManyToOne
@@ -31,8 +29,6 @@ public class User {
     private Department department;
     
     private String jobTitle;
-    private String employeeId;
-    private Integer yearsOfService;
     
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
