@@ -4,7 +4,8 @@
       <!-- 侧边栏 -->
       <el-aside :width="isSidebarCollapsed ? '64px' : '200px'" class="sidebar" :class="{ 'collapsed': isSidebarCollapsed }">
         <div class="logo" :class="{ 'collapsed': isSidebarCollapsed }">
-          <h2 v-if="!isSidebarCollapsed">医疗卫生系统三基考试培训</h2>
+          <img src="/logo.svg" alt="Logo" class="logo-img" />
+          <h2 v-if="!isSidebarCollapsed">智能考试系统</h2>
         </div>
         <el-menu
           :default-active="activeMenu"
@@ -195,7 +196,7 @@ const handleLogout = () => {
 
 .logo {
   text-align: center;
-  padding: 20px 0;
+  padding: 0 20px;
   background-color: #409eff;
   color: white;
   transition: all 0.3s;
@@ -203,16 +204,32 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
 }
 
 .logo.collapsed {
   padding: 0;
 }
 
+.logo-img {
+  height: 40px;
+  width: auto;
+  transition: all 0.3s;
+}
+
+.logo.collapsed .logo-img {
+  height: 32px;
+}
+
 .logo h2 {
   margin: 0;
   font-size: 18px;
   transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.logo.collapsed h2 {
+  display: none;
 }
 
 .header {
