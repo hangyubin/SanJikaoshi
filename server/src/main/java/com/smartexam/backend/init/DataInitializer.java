@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import java.util.Optional;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Transactional // 添加事务注解，确保在事务中执行
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired

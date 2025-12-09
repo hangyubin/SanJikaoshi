@@ -36,6 +36,11 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
         if: env.DOCKER_HUB_USERNAME != '' && env.DOCKER_HUB_TOKEN != ''
 
+      # 设置小写仓库名称
+      - name: Set lowercase repository name
+        id: repo
+        run: echo "LOWERCASE_REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       # 构建并推送 Docker 镜像
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -43,8 +48,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ env.LOWERCASE_REPO }}:latest
+            ghcr.io/${{ env.LOWERCASE_REPO }}:${{ github.sha }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:latest
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
@@ -58,8 +63,8 @@ jobs:
           context: ./server
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/backend:latest
-            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:latest
+            ghcr.io/${{ env.LOWERCASE_REPO }}/backend:${{ github.sha }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-backend:latest
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-backend:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
@@ -73,8 +78,8 @@ jobs:
           context: ./client
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/frontend:latest
-            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
+            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:latest
+            ghcr.io/${{ env.LOWERCASE_REPO }}/frontend:${{ github.sha }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-frontend:latest
             ${{ secrets.DOCKER_HUB_USERNAME }}/smart-exam-system-frontend:${{ github.sha }}
           platforms: linux/amd64,linux/arm64

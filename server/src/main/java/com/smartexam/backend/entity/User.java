@@ -1,10 +1,12 @@
 package com.smartexam.backend.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import javax.persistence.*;
 import java.util.Set;
 
 @Data
+@EqualsAndHashCode(exclude = {"roles", "department"}) // 排除关联字段
 @Entity
 @Table(name = "sys_user")
 public class User {

@@ -1,12 +1,14 @@
 package com.smartexam.backend.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import javax.persistence.*;
 import java.util.Set;
 
 @Data
 @Entity
 @Table(name = "sys_role")
+@EqualsAndHashCode(exclude = {"users", "menus"}) // 排除延迟加载的集合字段
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
