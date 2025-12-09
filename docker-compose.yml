@@ -24,7 +24,8 @@ services:
   
   # 应用服务 - 前后端不分离
   app:
-    image: ghcr.io/hangyubin/sanjikaoshi:latest
+    # 默认使用GitHub Packages镜像，可通过环境变量自定义
+    image: ${DOCKER_IMAGE:-ghcr.io/hangyubin/sanjikaoshi:latest}
     container_name: smart-exam-app
     restart: always
     depends_on:
