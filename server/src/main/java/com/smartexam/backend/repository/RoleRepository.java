@@ -16,4 +16,11 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
      * @return 角色对象
      */
     Role findByCode(String code);
+    
+    /**
+     * 根据状态查询角色列表
+     * @param status 角色状态
+     * @return 角色列表
+     */
+    List<Role> findByStatus(Integer status);
 }
