@@ -58,12 +58,12 @@ public class TaskController {
         }
     }
 
-    // 根据创建者ID获取任务列表
+    // 根据创建者ID获取任务列表（使用分配者ID作为创建者ID）
     @GetMapping("/creator/{createById}")
     public ResponseEntity<?> getTasksByCreateById(@PathVariable Long createById) {
         Map<String, Object> response = new HashMap<>();
         try {
-            List<Task> tasks = taskRepository.findByCreateById(createById);
+            List<Task> tasks = taskRepository.findByAssignById(createById);
             response.put("code", 200);
             response.put("message", "查询成功");
             response.put("data", tasks);
