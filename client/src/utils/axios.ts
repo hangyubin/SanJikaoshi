@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: '',
+  baseURL: '/api',
   timeout: 15000
 })
 
@@ -54,11 +54,14 @@ service.interceptors.response.use(
     }
   },
   (error) => {
-    ElMessage({
-      message: error.message,
-      type: 'error',
-      duration: 3 * 1000
-    })
+    // 只在有response时显示错误消息，避免开发环境下显示不必要的错误
+    if (error.response) {
+      ElMessage({
+        message: error.response.data?.message || '请求失败',
+        type: 'error',
+        duration: 3 * 1000
+      })
+    }
     return Promise.reject(error)
   }
 )
