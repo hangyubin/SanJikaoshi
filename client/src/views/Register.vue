@@ -15,7 +15,7 @@
           <el-icon class="hospital-icon"><User /></el-icon>
         </div>
         <h2 class="hospital-name">衡南县第四人民医院</h2>
-        <p class="hospital-desc">致力于为医务人员提供高质量的三基考试培训</p>
+        <p class="hospital-desc">致力于为医务人员提供高质量的三基学习服务</p>
         <div class="hospital-features">
           <div class="feature-item">
             <el-icon><Star /></el-icon>
@@ -35,8 +35,8 @@
       <!-- 右侧注册表单 -->
       <div class="register-form-section">
         <div class="register-header">
-          <h2 class="register-title">医疗卫生系统三基考试培训</h2>
-          <p class="register-subtitle">专业、权威、高效的医务三基考试培训平台</p>
+          <h2 class="register-title">卫生系统三基在线学习平台</h2>
+          <p class="register-subtitle">专业、权威、高效的医务人员三基学习平台</p>
         </div>
         
         <el-form
@@ -233,8 +233,15 @@ const handleRegister = async () => {
     // 准备注册数据，移除confirmPassword和code字段
     const { confirmPassword, code, ...registerData } = registerForm
     
-    // 发送注册请求
-    await axios.post('/auth/register', registerData)
+    console.log('发送的注册数据:', registerData)
+    console.log('注册数据类型:', typeof registerData)
+    
+    // 发送注册请求，显式设置Content-Type
+    await axios.post('/api/auth/register', registerData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     
     loading.value = false
     ElMessage.success('注册成功')
@@ -244,7 +251,14 @@ const handleRegister = async () => {
   } catch (error: any) {
     loading.value = false
     console.error('注册失败:', error)
-    ElMessage.error(error.response?.data?.message || '注册失败，请稍后重试')
+    console.error('错误详情:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.response?.headers
+    })
+    ElMessage.error(error.response?.data?.message || `注册失败，状态码: ${error.response?.status}`)
     refreshCaptcha() // 刷新验证码
   }
 }

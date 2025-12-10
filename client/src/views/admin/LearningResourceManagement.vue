@@ -298,7 +298,7 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 
 // 获取科目列表 - 暂时保留，但将在后续改为固定值
 const getSubjects = () => {
-  axios.get('/subjects')
+  axios.get('/api/subjects')
   .then(response => {
     const { data } = response
     if (data.code === 200) {
@@ -313,7 +313,7 @@ const getSubjects = () => {
 // 初始化数据
 const initData = () => {
   loading.value = true
-  axios.get('/learning-resources', {
+  axios.get('/api/learning-resources', {
     params: {
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
@@ -532,14 +532,14 @@ const handleSubmit = () => {
         
         let request
         if (dialogType.value === 'add') {
-          request = axios.post('/learning-resources/upload', formData, {
+          request = axios.post('/api/learning-resources/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           })
         } else {
           formData.append('id', form.id)
-          request = axios.put('/learning-resources/upload', formData, {
+          request = axios.put('/api/learning-resources/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
@@ -567,7 +567,7 @@ const handleSubmit = () => {
         // 没有文件，直接提交表单
         let request
         if (dialogType.value === 'add') {
-          request = axios.post('/learning-resources', {
+          request = axios.post('/api/learning-resources', {
             ...form,
             subject: { id: form.subjectId }
           })

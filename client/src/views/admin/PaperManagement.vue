@@ -70,18 +70,17 @@
         <el-form-item label="题型">
           <el-select v-model="searchForm.type" placeholder="请选择题型">
             <el-option label="全部" value=""></el-option>
-            <el-option label="A1型题" :value="1"></el-option>
-            <el-option label="A2型题" :value="2"></el-option>
-            <el-option label="B1型题" :value="3"></el-option>
-            <el-option label="A3/A4型题" :value="4"></el-option>
+            <el-option label="单选题" :value="1"></el-option>
+            <el-option label="多选题" :value="2"></el-option>
+            <el-option label="是非题" :value="3"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
           <el-button type="success" @click="handleAdd">增加题库</el-button>
-          <el-button type="warning" @click="handleGeneratePaper">生成题库</el-button>
           <el-button type="info" @click="handleImportClick">导入题库</el-button>
+          <el-button type="danger" @click="handleDownloadTemplate">下载模板</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -95,7 +94,7 @@
         <el-table-column prop="type" label="题型" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.type === 1 ? 'primary' : scope.row.type === 2 ? 'success' : scope.row.type === 3 ? 'warning' : 'info'">
-              {{ scope.row.type === 1 ? 'A1型题' : scope.row.type === 2 ? 'A2型题' : scope.row.type === 3 ? 'B1型题' : 'A3/A4型题' }}
+              {{ scope.row.type === 1 ? '单选题' : scope.row.type === 2 ? '多选题' : '是非题' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -154,10 +153,9 @@
         </el-form-item>
         <el-form-item label="题型" prop="type">
           <el-select v-model="form.type" placeholder="请选择题型">
-            <el-option label="A1型题" :value="1"></el-option>
-            <el-option label="A2型题" :value="2"></el-option>
-            <el-option label="B1型题" :value="3"></el-option>
-            <el-option label="A3/A4型题" :value="4"></el-option>
+            <el-option label="单选题" :value="1"></el-option>
+            <el-option label="多选题" :value="2"></el-option>
+            <el-option label="是非题" :value="3"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="难度" prop="difficulty">
@@ -182,54 +180,7 @@
       </template>
     </el-dialog>
     
-    <!-- 生成题库对话框 -->
-    <el-dialog
-      v-model="generateDialogVisible"
-      title="生成题库"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="generateForm" label-width="100px">
-        <el-form-item label="题库名称">
-          <el-input v-model="generateForm.name" placeholder="请输入题库名称"></el-input>
-        </el-form-item>
-        <el-form-item label="题型">
-          <el-select v-model="generateForm.type" placeholder="请选择题型">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="A1型题" :value="1"></el-option>
-            <el-option label="A2型题" :value="2"></el-option>
-            <el-option label="B1型题" :value="3"></el-option>
-            <el-option label="A3/A4型题" :value="4"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="难度">
-          <el-select v-model="generateForm.difficulty" placeholder="请选择难度">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="简单" :value="1"></el-option>
-            <el-option label="中等" :value="2"></el-option>
-            <el-option label="困难" :value="3"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="题目数量">
-          <el-input-number v-model="generateForm.questionCount" :min="5" :max="200" :step="5"></el-input-number>
-        </el-form-item>
-        <el-form-item label="生成方式">
-          <el-radio-group v-model="generateForm.generateType">
-            <el-radio label="随机生成">随机生成</el-radio>
-            <el-radio label="手动选择">手动选择</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="generateForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="generateDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleGenerateSubmit">生成题库</el-button>
-        </span>
-      </template>
-    </el-dialog>
+
     
     <!-- 导入题库对话框 -->
     <el-dialog
@@ -315,16 +266,7 @@ const rules = reactive<FormRules>({
   ]
 })
 
-// 生成题库相关
-const generateDialogVisible = ref(false)
-const generateForm = reactive({
-  name: '',
-  type: '',
-  difficulty: '',
-  questionCount: 50,
-  generateType: '随机生成',
-  remark: ''
-})
+
 
 // 导入题库相关
 const importDialogVisible = ref(false)
@@ -344,7 +286,7 @@ const fetchPapers = async () => {
       type: searchForm.type
     }
     // 修复API地址，去掉/api前缀
-    const response = await axios.get('/papers', { params })
+    const response = await axios.get('/api/papers', { params })
     if (response.data.code === 200) {
       // 适应后端返回的格式
       if (response.data.data.records) {
@@ -423,11 +365,11 @@ const handleSubmit = async () => {
     
     let response
     if (form.id) {
-      // 更新题库，去掉/api前缀
-      response = await axios.put(`/papers/${form.id}`, requestData)
+      // 更新题库
+      response = await axios.put(`/api/papers/${form.id}`, requestData)
     } else {
       // 增加题库，去掉/api前缀
-      response = await axios.post('/papers', requestData)
+      response = await axios.post('/api/papers', requestData)
     }
     
     if (response.data.code === 200) {
@@ -445,8 +387,8 @@ const handleSubmit = async () => {
 // 删除题库
 const handleDelete = async (row: any) => {
   try {
-    // 去掉/api前缀
-    const response = await axios.delete(`/papers/${row.id}`)
+    // 删除题库
+    const response = await axios.delete(`/api/papers/${row.id}`)
     if (response.data.code === 200) {
       ElMessage.success('删除题库成功')
       fetchPapers() // 重新加载题库列表
@@ -465,47 +407,7 @@ const handleViewQuestions = (row: any) => {
   // 这里可以跳转到题库题目管理页面
 }
 
-// 生成题库
-const handleGeneratePaper = () => {
-  generateDialogVisible.value = true
-  // 重置表单
-  Object.assign(generateForm, {
-    name: '',
-    type: '',
-    difficulty: '',
-    questionCount: 50,
-    generateType: '随机生成',
-    remark: ''
-  })
-}
 
-// 提交生成题库
-const handleGenerateSubmit = async () => {
-  try {
-    // 构建请求数据
-    const requestData = {
-      name: generateForm.name,
-      type: generateForm.type || undefined,
-      difficulty: generateForm.difficulty || undefined,
-      questionCount: generateForm.questionCount,
-      generateType: generateForm.generateType,
-      remark: generateForm.remark
-    }
-    
-    // 去掉/api前缀
-    const response = await axios.post('/papers/generate', requestData)
-    if (response.data.code === 200) {
-      ElMessage.success('生成题库成功')
-      generateDialogVisible.value = false
-      fetchPapers() // 重新加载题库列表
-    } else {
-      ElMessage.error('生成题库失败')
-    }
-  } catch (error) {
-    console.error('生成题库失败:', error)
-    ElMessage.error('生成题库失败')
-  }
-}
 
 // 打开导入题库对话框
 const handleImportClick = () => {
@@ -516,6 +418,30 @@ const handleImportClick = () => {
     file: null,
     description: ''
   })
+}
+
+// 下载题库模板
+const handleDownloadTemplate = async () => {
+  try {
+    const response = await axios.get('/api/papers/import/template', {
+      responseType: 'blob'
+    })
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', '题库导入模板.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('题库模板下载成功')
+  } catch (error) {
+    console.error('下载题库模板失败:', error)
+    ElMessage.error('下载题库模板失败')
+  }
 }
 
 // 处理文件选择
@@ -563,7 +489,7 @@ const handleImportSubmit = async () => {
     formData.append('description', importForm.description)
     
     // 去掉/api前缀
-    const response = await axios.post('/papers/import', formData, {
+    const response = await axios.post('/api/papers/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

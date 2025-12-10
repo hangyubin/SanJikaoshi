@@ -166,7 +166,7 @@ const subjects = ref([
   {
     id: 1,
     name: '基本理论',
-    description: '医疗卫生系统三基考试-基本理论部分',
+    description: '卫生系统三基-基本理论部分',
     questionCount: 850,
     avgDifficulty: '中等',
     code: 'BASIC_THEORY'
@@ -174,7 +174,7 @@ const subjects = ref([
   {
     id: 2,
     name: '基础知识',
-    description: '医疗卫生系统三基考试-基础知识部分',
+    description: '卫生系统三基-基础知识部分',
     questionCount: 920,
     avgDifficulty: '中等偏难',
     code: 'BASIC_KNOWLEDGE'
@@ -182,7 +182,7 @@ const subjects = ref([
   {
     id: 3,
     name: '基本技能',
-    description: '医疗卫生系统三基考试-基本技能部分',
+    description: '卫生系统三基-基本技能部分',
     questionCount: 780,
     avgDifficulty: '偏难',
     code: 'BASIC_SKILLS'

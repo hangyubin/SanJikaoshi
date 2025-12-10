@@ -390,7 +390,7 @@ const fetchUserInfo = () => {
 // 获取最新资源
 const fetchLatestResources = () => {
   resourcesLoading.value = true
-  axios.get('/learning-resources/latest', {
+  axios.get('/api/learning-resources/latest', {
     params: { limit: 5 }
   })
   .then(response => {
@@ -401,6 +401,54 @@ const fetchLatestResources = () => {
   })
   .catch(error => {
     console.error('获取最新资源失败:', error)
+    // 后端服务不可用时，使用模拟数据
+    latestResources.value = [
+      {
+        id: 1,
+        title: '三基理论知识培训课件',
+        fileType: 'pdf',
+        size: 1024 * 1024 * 5,
+        url: '',
+        department: '内科',
+        createTime: '2025-12-10 14:30:00'
+      },
+      {
+        id: 2,
+        title: '临床技能操作视频',
+        fileType: 'mp4',
+        size: 1024 * 1024 * 50,
+        url: '',
+        department: '外科',
+        createTime: '2025-12-09 09:15:00'
+      },
+      {
+        id: 3,
+        title: '医学影像学诊断图谱',
+        fileType: 'pdf',
+        size: 1024 * 1024 * 15,
+        url: '',
+        department: '影像科',
+        createTime: '2025-12-08 16:45:00'
+      },
+      {
+        id: 4,
+        title: '心电图解读教程',
+        fileType: 'doc',
+        size: 1024 * 1024 * 2,
+        url: '',
+        department: '心内科',
+        createTime: '2025-12-07 11:20:00'
+      },
+      {
+        id: 5,
+        title: '手术室护理规范',
+        fileType: 'docx',
+        size: 1024 * 1024 * 3,
+        url: '',
+        department: '护理部',
+        createTime: '2025-12-06 13:50:00'
+      }
+    ]
   })
   .finally(() => {
     resourcesLoading.value = false

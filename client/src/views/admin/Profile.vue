@@ -27,7 +27,7 @@
                 <el-input v-model="userForm.username" placeholder="用户名"></el-input>
               </el-form-item>
               
-              <el-form-item label="真实姓名" prop="realName">
+              <el-form-item label="真实姓名" prop="realName" disabled>
                 <el-input v-model="userForm.realName" placeholder="真实姓名"></el-input>
               </el-form-item>
               
@@ -197,7 +197,7 @@ const fetchUserInfo = async () => {
     }
     
     // 从API获取用户信息
-      const response = await axios.get('/user/profile')
+      const response = await axios.get('/api/user/profile')
       const { data } = response
       if (data.code === 200) {
         Object.assign(userForm, data.data)
@@ -228,7 +228,7 @@ const handleSubmit = async () => {
     localStorage.setItem('userInfo', JSON.stringify(userForm))
     
     // 发送保存用户信息请求
-    const response = await axios.put('/user/profile', userForm)
+    const response = await axios.put('/api/user/profile', userForm)
     const { data } = response
     if (data.code === 200) {
       ElMessage.success('保存成功')

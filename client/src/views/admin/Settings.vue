@@ -82,7 +82,7 @@ const loading = ref(false)
 // 医院信息表单
 const hospitalForm = reactive({
   name: '衡南县第四人民医院',
-  description: '致力于为医疗人员提供高质量的三基考试培训',
+  description: '致力于为医疗人员提供高质量的三基学习服务',
   icon: 'User'
 })
 

@@ -35,8 +35,8 @@
       <!-- 右侧登录表单 -->
       <div class="login-form-section">
         <div class="login-header">
-          <h2 class="login-title">医疗卫生系统三基考试培训</h2>
-          <p class="login-subtitle">专业、权威、高效的医务三基考试培训平台</p>
+          <h2 class="login-title">卫生系统三基在线学习平台</h2>
+          <p class="login-subtitle">专业、权威、高效的医务人员三基学习平台</p>
         </div>
         
         <el-form
@@ -132,7 +132,7 @@ const loading = ref(false)
 // 医院信息
 const hospitalInfo = reactive({
   name: '衡南县第四人民医院',
-  description: '致力于为医务人员提供高质量的三基考试培训',
+  description: '致力于为医务人员提供高质量的三基学习服务',
   icon: 'User'
 })
 
@@ -224,7 +224,7 @@ const handleLogin = async () => {
     loading.value = true
     
     // 发送登录请求
-    await axios.post('/auth/login', {
+    await axios.post('/api/auth/login', {
       username: loginForm.username,
       password: loginForm.password
     })

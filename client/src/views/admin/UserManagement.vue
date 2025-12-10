@@ -22,7 +22,7 @@
         <el-card class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <p class="stat-label">学生人数</p>
+              <p class="stat-label">普通用户人数</p>
               <h3 class="stat-value">{{ studentCount }}</h3>
             </div>
             <div class="stat-icon student-icon">
@@ -56,8 +56,8 @@
             <div class="nav-content">
               <el-icon class="nav-icon"><Avatar /></el-icon>
               <div class="nav-info">
-                <h4>学生管理</h4>
-                <p>查看和管理所有学生用户</p>
+                <h4>用户管理</h4>
+                <p>查看和管理所有用户</p>
               </div>
             </div>
           </el-card>

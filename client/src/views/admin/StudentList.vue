@@ -1,6 +1,6 @@
 <template>
-  <div class="student-list">
-    <h1>学生列表</h1>
+  <div class="user-list">
+    <h1>用户列表</h1>
     
     <!-- 搜索和筛选 -->
     <el-card class="search-card">
@@ -21,14 +21,14 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
-          <el-button type="success" @click="handleAdd">添加学生</el-button>
+          <el-button type="success" @click="handleAdd">添加用户</el-button>
         </el-form-item>
       </el-form>
     </el-card>
     
-    <!-- 学生表格 -->
+    <!-- 用户表格 -->
     <el-card class="table-card" style="margin-top: 20px;">
-      <el-table :data="students" stripe style="width: 100%">
+      <el-table :data="users" stripe style="width: 100%">
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" width="120"></el-table-column>
@@ -46,12 +46,39 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
+        <el-table-column prop="role" label="角色" width="120">
+          <template #default="scope">
+            <el-tag :type="scope.row.role === 'admin' ? 'primary' : 'success'">
+              {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="updateTime" label="更新时间" width="180"></el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="300">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
             <el-button type="info" size="small" @click="handleView(scope.row)">查看详情</el-button>
+            <template v-if="scope.row.role === 'user'">
+              <el-button 
+                type="warning" 
+                size="small" 
+                @click="handlePromote(scope.row)"
+                :disabled="scope.row.username === 'admin'"
+              >
+                提权
+              </el-button>
+            </template>
+            <template v-else>
+              <el-button 
+                type="success" 
+                size="small" 
+                @click="handleDemote(scope.row)"
+                :disabled="scope.row.username === 'admin'"
+              >
+                降权
+              </el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -70,7 +97,7 @@
       </div>
     </el-card>
     
-    <!-- 添加/编辑学生对话框 -->
+    <!-- 添加/编辑用户对话框 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
@@ -95,6 +122,12 @@
         <el-form-item label="状态" prop="status">
           <el-switch v-model="form.status" active-value="1" inactive-value="0"></el-switch>
         </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="form.role" placeholder="请选择角色">
+            <el-option label="普通用户" value="user"></el-option>
+            <el-option label="管理员" value="admin"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -109,36 +142,40 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
-// 模拟学生数据
-const students = ref([
+// 模拟用户数据
+const users = ref([
   {
     id: 1,
-    username: 'student1',
+    username: 'user1',
     realName: '张三',
     email: 'zhangsan@example.com',
     phone: '13800138001',
     status: '1',
+    role: 'user',
     createTime: '2025-12-01 10:00:00',
     updateTime: '2025-12-02 14:30:00'
   },
   {
     id: 2,
-    username: 'student2',
+    username: 'user2',
     realName: '李四',
     email: 'lisi@example.com',
     phone: '13800138002',
     status: '1',
+    role: 'user',
     createTime: '2025-12-01 11:00:00',
     updateTime: '2025-12-03 09:15:00'
   },
   {
     id: 3,
-    username: 'student3',
+    username: 'admin1',
     realName: '王五',
     email: 'wangwu@example.com',
     phone: '13800138003',
     status: '0',
+    role: 'admin',
     createTime: '2025-12-02 14:00:00',
     updateTime: '2025-12-04 16:45:00'
   }
@@ -152,11 +189,11 @@ const searchForm = reactive({
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(students.value.length)
+const total = ref(users.value.length)
 
 // 对话框
 const dialogVisible = ref(false)
-const dialogTitle = ref('添加学生')
+const dialogTitle = ref('添加用户')
 const formRef = ref<FormInstance>()
 
 const form = reactive({
@@ -166,7 +203,8 @@ const form = reactive({
   realName: '',
   email: '',
   phone: '',
-  status: '1'
+  status: '1',
+  role: 'user'
 })
 
 const rules = reactive<FormRules>({
@@ -193,7 +231,7 @@ const rules = reactive<FormRules>({
 
 const handleSearch = () => {
   // 搜索逻辑
-  console.log('搜索学生', searchForm)
+  console.log('搜索用户', searchForm)
 }
 
 const handleReset = () => {
@@ -203,22 +241,23 @@ const handleReset = () => {
 }
 
 const handleAdd = () => {
-  dialogTitle.value = '添加学生'
+  dialogTitle.value = '添加用户'
   // 重置表单
-  Object.assign(form, {
-    id: '',
-    username: '',
-    password: '',
-    realName: '',
-    email: '',
-    phone: '',
-    status: '1'
-  })
+    Object.assign(form, {
+      id: '',
+      username: '',
+      password: '',
+      realName: '',
+      email: '',
+      phone: '',
+      status: '1',
+      role: 'user' // 默认角色为普通用户
+    })
   dialogVisible.value = true
 }
 
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑学生'
+  dialogTitle.value = '编辑用户'
   // 填充表单
   Object.assign(form, row)
   dialogVisible.value = true
@@ -230,7 +269,7 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     // 提交表单逻辑
-    console.log('提交学生信息', form)
+    console.log('提交用户信息', form)
     dialogVisible.value = false
   } catch (error) {
     console.error('表单验证失败:', error)
@@ -239,17 +278,53 @@ const handleSubmit = async () => {
 
 const handleDelete = (row: any) => {
   // 删除逻辑
-  console.log('删除学生', row)
+  console.log('删除用户', row)
 }
 
 const handleView = (row: any) => {
   // 查看详情逻辑
-  console.log('查看学生详情', row)
+  console.log('查看用户详情', row)
 }
 
 const handleStatusChange = (row: any) => {
   // 状态变更逻辑
-  console.log('变更学生状态', row)
+  console.log('变更用户状态', row)
+}
+
+const handlePromote = (row: any) => {
+  ElMessageBox.confirm('确定要将该用户提权为管理员吗？', '提权确认', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 更新角色
+      row.role = 'admin'
+      ElMessage.success('提权成功，该用户已成为管理员')
+      // 这里可以添加调用后端API的逻辑，将用户添加到管理员列表
+      console.log('用户提权成功', row)
+    })
+    .catch(() => {
+      ElMessage.info('已取消提权操作')
+    })
+}
+
+const handleDemote = (row: any) => {
+  ElMessageBox.confirm('确定要将该管理员降为普通用户吗？', '降权确认', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 更新角色
+      row.role = 'user'
+      ElMessage.success('降权成功，该管理员已成为普通用户')
+      // 这里可以添加调用后端API的逻辑，将用户从管理员列表移除
+      console.log('管理员降权成功', row)
+    })
+    .catch(() => {
+      ElMessage.info('已取消降权操作')
+    })
 }
 
 const handleSizeChange = (size: number) => {
@@ -263,12 +338,12 @@ const handleCurrentChange = (current: number) => {
 
 onMounted(() => {
   // 初始化数据
-  console.log('学生列表初始化')
+  console.log('用户列表初始化')
 })
 </script>
 
 <style scoped>
-.student-list {
+.user-list {
   padding: 20px 0;
 }
 

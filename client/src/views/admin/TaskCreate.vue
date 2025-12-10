@@ -228,10 +228,9 @@ const selectedPaper = ref<any>(null)
 
 // 题型列表
 const questionTypes = ref([
-  { label: 'A1型题', value: 1 },
-  { label: 'A2型题', value: 2 },
-  { label: 'B1型题', value: 3 },
-  { label: 'A3/A4型题', value: 4 }
+  { label: '单选题', value: 1 },
+  { label: '多选题', value: 2 },
+  { label: '是非题', value: 3 }
 ])
 
 // 选择的题型
@@ -294,7 +293,7 @@ const subjects = ref([
 // 获取题库列表
 const fetchPapers = async () => {
   try {
-    const response = await axios.get('/papers')
+    const response = await axios.get('/api/papers')
     if (response.data.code === 200) {
       papers.value = response.data.data.records || response.data.data || []
     }
@@ -307,7 +306,7 @@ const fetchPapers = async () => {
 // 获取科室列表
 const fetchDepartments = async () => {
   try {
-    const response = await axios.get('/departments')
+    const response = await axios.get('/api/departments')
     if (response.data.code === 200) {
       departments.value = response.data.data || []
     }
@@ -323,7 +322,7 @@ const fetchParticipants = async () => {
     const params = {
       departmentIds: taskForm.departmentIds.length > 0 ? taskForm.departmentIds : undefined
     }
-    const response = await axios.get('/users/participants', { params })
+    const response = await axios.get('/api/users/participants', { params })
     if (response.data.code === 200) {
       participants.value = response.data.data || []
     }
@@ -361,7 +360,7 @@ const handleSubmit = async () => {
     }
     
     // 发送创建任务请求
-    await axios.post('/tasks', requestData)
+    await axios.post('/api/tasks', requestData)
     
     ElMessage.success('任务创建成功')
     router.push('/dashboard/task-management')
