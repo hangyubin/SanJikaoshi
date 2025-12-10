@@ -20,15 +20,18 @@ public class SimpleController {
      */
     @GetMapping("/")
     public String index() {
-        return "forward:/index.html";
+        // 直接返回静态资源index.html，避免无限循环
+        return "index.html";
     }
 
     /**
      * 处理前端路由，支持Vue Router的history模式，匹配所有路径
+     * 排除index.html和静态资源
      */
     @GetMapping(value = "/**", produces = "text/html")
     public String forwardToIndex() {
-        return "forward:/index.html";
+        // 直接返回静态资源index.html，避免无限循环
+        return "index.html";
     }
 
     @GetMapping("/api/hello")
