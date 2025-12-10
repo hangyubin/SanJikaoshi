@@ -119,12 +119,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-
-// 路由实例
-const router = useRouter()
 
 // 表单引用
 const formRef = ref<FormInstance>()

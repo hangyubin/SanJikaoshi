@@ -287,19 +287,15 @@ const fetchPapers = async () => {
     }
     // 修复API地址，去掉/api前缀
     const response = await axios.get('/papers', { params })
-    if (response.code === 200) {
-      // 适应后端返回的格式
-      if (response.data.records) {
-        // 如果是分页格式
-        papers.value = response.data.records
-        total.value = response.response.total
-      } else {
-        // 如果是直接列表格式
-        papers.value = response.data
-        total.value = response.data.length
-      }
+    // 适应后端返回的格式
+    if (response.data.records) {
+      // 如果是分页格式
+      papers.value = response.data.records
+      total.value = response.data.total
     } else {
-      ElMessage.error('获取题库列表失败')
+      // 如果是直接列表格式
+      papers.value = response.data
+      total.value = response.data.length
     }
   } catch (error) {
     console.error('获取题库列表失败:', error)
@@ -363,22 +359,17 @@ const handleSubmit = async () => {
       ...form
     }
     
-    let response
     if (form.id) {
       // 更新题库
-      response = await axios.put(`/papers/${form.id}`, requestData)
+      await axios.put(`/papers/${form.id}`, requestData)
     } else {
       // 增加题库，去掉/api前缀
-      response = await axios.post('/papers', requestData)
+      await axios.post('/papers', requestData)
     }
     
-    if (response.code === 200) {
-      ElMessage.success(form.id ? '更新题库成功' : '增加题库成功')
-      dialogVisible.value = false
-      fetchPapers() // 重新加载题库列表
-    } else {
-      ElMessage.error(form.id ? '更新题库失败' : '增加题库失败')
-    }
+    ElMessage.success(form.id ? '更新题库成功' : '增加题库成功')
+    dialogVisible.value = false
+    fetchPapers() // 重新加载题库列表
   } catch (error) {
     console.error('表单验证失败:', error)
   }
@@ -388,13 +379,9 @@ const handleSubmit = async () => {
 const handleDelete = async (row: any) => {
   try {
     // 删除题库
-    const response = await axios.delete(`/papers/${row.id}`)
-    if (response.code === 200) {
-      ElMessage.success('删除题库成功')
-      fetchPapers() // 重新加载题库列表
-    } else {
-      ElMessage.error('删除题库失败')
-    }
+    await axios.delete(`/papers/${row.id}`)
+    ElMessage.success('删除题库成功')
+    fetchPapers() // 重新加载题库列表
   } catch (error) {
     console.error('删除题库失败:', error)
     ElMessage.error('删除题库失败')
