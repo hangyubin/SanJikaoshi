@@ -26,7 +26,7 @@ public class SimpleController {
     /**
      * 处理前端路由，支持Vue Router的history模式，匹配所有路径
      */
-    @GetMapping("/**/{path:[^\.]*}")
+    @GetMapping("/**/{path:[^\\.]*}")
     public String forwardToIndex() {
         return "forward:/index.html";
     }
