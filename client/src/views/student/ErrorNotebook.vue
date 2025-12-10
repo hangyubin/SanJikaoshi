@@ -185,11 +185,9 @@ const fetchErrorQuestions = () => {
       type: filterForm.value.questionType
     }
   })
-  .then(response => {
-    if (response.code === 200) {
-      errorQuestions.value = response.data || []
-      total.value = response.data.length || 0
-    }
+  .then(res => {
+    errorQuestions.value = res.data || []
+    total.value = res.data.length || 0
   })
   .catch(error => {
     console.error('获取错题列表失败:', error)

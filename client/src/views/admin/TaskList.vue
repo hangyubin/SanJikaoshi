@@ -415,12 +415,9 @@ const handlePublishTask = (row: any) => {
   }
   
   axios.put(`/tasks/${row.id}/publish`)
-  .then(response => { if (response.code === 200) {
+  .then(res => {
       ElMessage.success('任务发布成功')
       initData()
-    } else {
-      ElMessage.error(data.message || '发布失败')
-    }
   })
   .catch(error => {
     console.error('发布任务失败:', error)
@@ -440,13 +437,10 @@ const handleSubmitEdit = () => {
         ...editTaskForm,
         subject: { id: editTaskForm.subjectId }
       })
-      .then(response => { if (response.code === 200) {
+      .then(res => {
           ElMessage.success('任务编辑成功')
           dialogVisible.value = false
           initData()
-        } else {
-          ElMessage.error(data.message || '编辑失败')
-        }
       })
       .catch(error => {
         console.error('编辑任务失败:', error)

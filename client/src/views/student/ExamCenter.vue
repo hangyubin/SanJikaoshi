@@ -87,7 +87,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
@@ -105,10 +104,8 @@ const fetchAvailableExams = () => {
   // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
   const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
   axios.get(`/exam/available/${userId}`)
-    .then(response => {
-      if (response.code === 200) {
-        examList.value = response.data || []
-      }
+    .then(res => {
+      examList.value = res.data || []
     })
     .catch(error => {
       console.error('获取可参加的考试列表失败:', error)
@@ -126,10 +123,8 @@ const fetchFinishedExams = () => {
   // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
   const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
   axios.get(`/exam/user/${userId}`)
-    .then(response => {
-      if (response.code === 200) {
-        finishedExams.value = response.data || []
-      }
+    .then(res => {
+      finishedExams.value = res.data || []
     })
     .catch(error => {
       console.error('获取已完成的考试列表失败:', error)

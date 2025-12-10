@@ -225,9 +225,8 @@ const resetSetting = () => {
 const fetchSubjects = () => {
   loading.value = true
   axios.get('/subjects')
-    .then(response => { if (response.code === 200) {
-        subjects.value = response.data || []
-      }
+    .then(res => {
+        subjects.value = res || []
     })
     .catch(error => {
       console.error('获取科目列表失败:', error)

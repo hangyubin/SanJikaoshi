@@ -134,10 +134,9 @@ const getQuestionType = (type: number) => {
 const fetchExamDetail = () => {
   loading.value = true
   axios.get(`/exams/${examId.value}`)
-    .then(response => { if (response.code === 200) {
-        examInfo.value = response.data.examInfo || examInfo.value
-        questions.value = response.data.questions || []
-      }
+    .then(res => {
+      examInfo.value = res.examInfo || examInfo.value
+      questions.value = res.questions || []
     })
     .catch(error => {
       console.error('获取考试详情失败:', error)
