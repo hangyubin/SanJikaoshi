@@ -173,7 +173,7 @@ const fetchUsers = () => {
   })
   .then(res => {
     users.value = res.data.users || []
-    total.value = res.total || 0
+    total.value = res.data.total || 0
   })
   .catch(error => {
     console.error('获取用户列表失败:', error)

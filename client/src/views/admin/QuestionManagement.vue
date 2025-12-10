@@ -244,12 +244,8 @@ const getDifficultyText = (difficulty: number) => {
 // 获取科目列表
 const fetchSubjects = async () => {
   try {
-    const response = await axios.get('/subjects')
-    if (response.code === 200) {
-      subjects.value = response.data
-    } else {
-      ElMessage.error('获取科目列表失败')
-    }
+    const res = await axios.get('/subjects')
+    subjects.value = res.data
   } catch (error) {
     console.error('获取科目列表失败:', error)
     ElMessage.error('获取科目列表失败')
@@ -267,13 +263,9 @@ const fetchQuestions = async () => {
       type: searchForm.type,
       difficulty: searchForm.difficulty
     }
-    const response = await axios.get('/questions', { params })
-    if (response.code === 200) {
-      questions.value = response.data.records
-      total.value = response.response.total
-    } else {
-      ElMessage.error('获取题目列表失败')
-    }
+    const res = await axios.get('/questions', { params })
+    questions.value = res.data.records
+    total.value = res.data.total
   } catch (error) {
     console.error('获取题目列表失败:', error)
     // 清除模拟数据，只使用真实API调用
@@ -331,22 +323,18 @@ const handleBatchImport = async (file: any) => {
     formData.append('file', file)
     
     // 修复API地址，去掉/api前缀
-    const response = await axios.post('/questions/import/batch', formData, {
+    const res = await axios.post('/questions/import/batch', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
     
-    if (response.code === 200) {
-      const result = response.data
-      ElMessage.success(`批量导入完成：成功${result.success}条，失败${result.fail}条`)
-      if (result.fail > 0) {
-        console.log('导入失败详情:', result.errorMessages)
-      }
-      fetchQuestions() // 重新加载题目列表
-    } else {
-      ElMessage.error('批量导入失败')
+    const result = res.data
+    ElMessage.success(`批量导入完成：成功${result.success}条，失败${result.fail}条`)
+    if (result.fail > 0) {
+      console.log('导入失败详情:', result.errorMessages)
     }
+    fetchQuestions() // 重新加载题目列表
   } catch (error) {
     console.error('批量导入失败:', error)
     ElMessage.error('批量导入失败')
@@ -414,13 +402,12 @@ const handleSubmit = async () => {
     // 使用类型断言解决类型不匹配问题
     ;(requestData as any).options = Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
     
-    let response
     if (form.id) {
       // 更新题目
-      response = await axios.put(`/questions/${form.id}`, requestData)
+      await axios.put(`/questions/${form.id}`, requestData)
     } else {
       // 添加题目，去掉/api前缀
-      response = await axios.post('/questions', requestData)
+      await axios.post('/questions', requestData)
     }
     
     ElMessage.success(form.id ? '更新题目成功' : '添加题目成功')

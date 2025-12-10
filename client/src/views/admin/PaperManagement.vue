@@ -489,19 +489,15 @@ const handleImportSubmit = async () => {
     formData.append('description', importForm.description)
     
     // 去掉/api前缀
-    const response = await axios.post('/papers/import', formData, {
+    await axios.post('/papers/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
     
-    if (response.code === 200) {
-      ElMessage.success('导入题库成功')
-      importDialogVisible.value = false
-      fetchPapers() // 重新加载题库列表
-    } else {
-      ElMessage.error('导入题库失败')
-    }
+    ElMessage.success('导入题库成功')
+    importDialogVisible.value = false
+    fetchPapers() // 重新加载题库列表
   } catch (error) {
     console.error('导入题库失败:', error)
     ElMessage.error('导入题库失败')

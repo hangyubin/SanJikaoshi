@@ -122,7 +122,6 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import axios from '@/utils/axios'
 
 // 路由实例
 const router = useRouter()
@@ -245,16 +244,6 @@ const handleSubmit = async () => {
     // 保存用户信息到localStorage，确保头像等信息能够持久保存
     localStorage.setItem('userInfo', JSON.stringify(userForm))
     
-    // 只发送需要更新的字段，不发送不可编辑的字段
-    const updateData = {
-      realName: userForm.realName, // 虽然realName不可编辑，但保留在表单中显示
-      phone: userForm.phone,
-      gender: userForm.gender,
-      department: userForm.department,
-      jobTitle: userForm.jobTitle,
-      status: 1 // 保持用户状态为启用
-    }
-    
     // 由于当前没有后端的个人信息更新API，我们只更新localStorage
     // 这里可以添加一个模拟的成功消息
     ElMessage.success('保存成功')
@@ -269,11 +258,7 @@ const handleReset = () => {
   fetchUserInfo()
 }
 
-// 跳转到修改密码页面
-const handleChangePassword = () => {
-  // 使用编程式导航跳转到修改密码页面
-  router.push('/dashboard/change-password')
-}
+
 
 // 处理头像上传
 const handleAvatarUpload = (file: File) => {
