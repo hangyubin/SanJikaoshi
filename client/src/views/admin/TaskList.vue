@@ -314,7 +314,7 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 const getSubjects = () => {
   axios.get('/subjects')
   .then(res => {
-      subjects.value = res
+      subjects.value = res.data
     })
   .catch(error => {
     console.error('获取科目列表失败:', error)
@@ -333,7 +333,7 @@ const initData = () => {
   })
   .then(res => {
       tasks.value = res.data
-      pagination.total = res.total || 0
+      pagination.total = res.data.total || 0
     })
   .catch(error => {
     console.error('获取任务列表失败:', error)

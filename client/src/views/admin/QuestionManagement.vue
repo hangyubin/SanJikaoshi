@@ -423,13 +423,9 @@ const handleSubmit = async () => {
       response = await axios.post('/questions', requestData)
     }
     
-    if (response.code === 200) {
-      ElMessage.success(form.id ? '更新题目成功' : '添加题目成功')
-      dialogVisible.value = false
-      fetchQuestions() // 重新加载题目列表
-    } else {
-      ElMessage.error(form.id ? '更新题目失败' : '添加题目失败')
-    }
+    ElMessage.success(form.id ? '更新题目成功' : '添加题目成功')
+    dialogVisible.value = false
+    fetchQuestions() // 重新加载题目列表
   } catch (error) {
     console.error('表单验证失败:', error)
     ElMessage.error('操作失败，请检查输入内容')
@@ -440,13 +436,9 @@ const handleSubmit = async () => {
 const handleDelete = async (row: any) => {
   try {
     // 删除题目
-    const response = await axios.delete(`/questions/${row.id}`)
-    if (response.code === 200) {
-      ElMessage.success('删除题目成功')
-      fetchQuestions() // 重新加载题目列表
-    } else {
-      ElMessage.error('删除题目失败')
-    }
+    await axios.delete(`/questions/${row.id}`)
+    ElMessage.success('删除题目成功')
+    fetchQuestions() // 重新加载题目列表
   } catch (error) {
     console.error('删除题目失败:', error)
     ElMessage.error('删除题目失败')

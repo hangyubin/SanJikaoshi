@@ -171,11 +171,9 @@ const fetchUsers = () => {
       status: searchForm.status
     }
   })
-  .then(response => {
-    if (response.code === 200) {
-      users.value = response.data.users || []
-      total.value = response.total || 0
-    }
+  .then(res => {
+    users.value = res.data.users || []
+    total.value = res.total || 0
   })
   .catch(error => {
     console.error('获取用户列表失败:', error)

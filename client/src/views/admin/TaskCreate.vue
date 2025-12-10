@@ -289,10 +289,8 @@ const subjects = ref<any[]>([])
 // 获取科目列表
 const fetchSubjects = async () => {
   try {
-    const response = await axios.get('/subjects')
-    if (response.code === 200) {
-      subjects.value = response.data || []
-    }
+    const res = await axios.get('/subjects')
+    subjects.value = res.data || []
   } catch (error) {
     console.error('获取科目列表失败:', error)
     ElMessage.error('获取科目列表失败')
@@ -302,10 +300,8 @@ const fetchSubjects = async () => {
 // 获取题库列表
 const fetchPapers = async () => {
   try {
-    const response = await axios.get('/papers')
-    if (response.code === 200) {
-      papers.value = response.data.records || response.data || []
-    }
+    const res = await axios.get('/papers')
+    papers.value = res.data.records || res.data || []
   } catch (error) {
     console.error('获取题库列表失败:', error)
     ElMessage.error('获取题库列表失败')
@@ -315,10 +311,8 @@ const fetchPapers = async () => {
 // 获取科室列表
 const fetchDepartments = async () => {
   try {
-    const response = await axios.get('/departments')
-    if (response.code === 200) {
-      departments.value = response.data || []
-    }
+    const res = await axios.get('/departments')
+    departments.value = res.data || []
   } catch (error) {
     console.error('获取科室列表失败:', error)
     ElMessage.error('获取科室列表失败')
@@ -331,10 +325,8 @@ const fetchParticipants = async () => {
     const params = {
       departmentIds: taskForm.departmentIds.length > 0 ? taskForm.departmentIds : undefined
     }
-    const response = await axios.get('/users/participants', { params })
-    if (response.code === 200) {
-      participants.value = response.data || []
-    }
+    const res = await axios.get('/users/participants', { params })
+    participants.value = res.data || []
   } catch (error) {
     console.error('获取参与人员列表失败:', error)
     ElMessage.error('获取参与人员列表失败')
