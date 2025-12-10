@@ -25,3 +25,5 @@ public class Department {
     private Long createTime;
     private Long updateTime;
 }
+
+

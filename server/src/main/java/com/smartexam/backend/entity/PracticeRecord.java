@@ -29,3 +29,5 @@ public class PracticeRecord {
     private Long createTime; // 创建时间
     private Long updateTime; // 更新时间
 }
+
+

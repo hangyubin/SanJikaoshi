@@ -95,51 +95,30 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const examId = ref(Number(route.params.id))
 
-// 模拟考试信息
+// 考试信息，初始为空
 const examInfo = ref({
-  id: 1,
-  name: '2025年春季数学期中考试',
-  subject: '数学',
-  totalScore: 100,
-  duration: 90,
-  startTime: '2025-12-10 09:00:00',
-  endTime: '2025-12-10 10:30:00',
-  status: '已结束',
-  description: '这是2025年春季数学期中考试，主要考察学生对高等数学基础知识的掌握情况。'
+  id: 0,
+  name: '',
+  subject: '',
+  totalScore: 0,
+  duration: 0,
+  startTime: '',
+  endTime: '',
+  status: '',
+  description: ''
 })
 
-// 模拟题目数据
-const questions = ref([
-  {
-    id: 1,
-    title: '下列哪个是奇函数？',
-    type: 1, // 选择题
-    options: ['y = x²', 'y = sinx', 'y = cosx', 'y = e^x'],
-    answer: 'B',
-    score: 5,
-    userAnswer: 'B'
-  },
-  {
-    id: 2,
-    title: '函数y = x³在x=0处可导。',
-    type: 2, // 判断题
-    answer: '正确',
-    score: 3,
-    userAnswer: '正确'
-  },
-  {
-    id: 3,
-    title: '计算定积分∫₀¹x²dx = ',
-    type: 3, // 填空题
-    answer: '1/3',
-    score: 5,
-    userAnswer: '1/2'
-  }
-])
+// 题目数据，初始为空数组
+const questions = ref<any[]>([])
+
+// 加载状态
+const loading = ref(false)
 
 const getQuestionType = (type: number) => {
   switch (type) {
@@ -151,9 +130,26 @@ const getQuestionType = (type: number) => {
   }
 }
 
+// 获取考试详情
+const fetchExamDetail = () => {
+  loading.value = true
+  axios.get(`/exams/${examId.value}`)
+    .then(response => { if (response.code === 200) {
+        examInfo.value = response.data.examInfo || examInfo.value
+        questions.value = response.data.questions || []
+      }
+    })
+    .catch(error => {
+      console.error('获取考试详情失败:', error)
+      ElMessage.error('获取考试详情失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
 onMounted(() => {
-  // 根据examId获取考试详情
-  console.log('获取考试详情', examId.value)
+  fetchExamDetail()
 })
 </script>
 
@@ -250,3 +246,6 @@ onMounted(() => {
   font-weight: bold;
 }
 </style>
+
+
+

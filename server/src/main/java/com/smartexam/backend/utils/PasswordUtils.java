@@ -38,3 +38,5 @@ public class PasswordUtils {
         return password != null && password.startsWith("$2a$");
     }
 }
+
+

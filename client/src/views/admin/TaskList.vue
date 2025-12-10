@@ -312,11 +312,9 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 
 // 获取科目列表
 const getSubjects = () => {
-  axios.get('/api/subjects')
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      subjects.value = data.data
+  axios.get('/subjects')
+  .then(response => { if (response.code === 200) {
+      subjects.value = response.data
     }
   })
   .catch(error => {
@@ -327,18 +325,16 @@ const getSubjects = () => {
 // 初始化数据
 const initData = () => {
   loading.value = true
-  axios.get('/api/tasks', {
+  axios.get('/tasks', {
     params: {
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
       ...searchForm
     }
   })
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      tasks.value = data.data
-      pagination.total = data.total || 0
+  .then(response => { if (response.code === 200) {
+      tasks.value = response.data
+      pagination.total = response.total || 0
     }
   })
   .catch(error => {
@@ -393,10 +389,8 @@ const handleDeleteTask = (row: any) => {
     type: 'warning'
   })
   .then(() => {
-    axios.delete(`/api/tasks/${row.id}`)
-    .then(response => {
-      const { data } = response
-      if (data.code === 200) {
+    axios.delete(`/tasks/${row.id}`)
+    .then(response => { if (response.code === 200) {
         ElMessage.success('删除成功')
         initData()
       } else {
@@ -420,10 +414,8 @@ const handlePublishTask = (row: any) => {
     return
   }
   
-  axios.put(`/api/tasks/${row.id}/publish`)
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
+  axios.put(`/tasks/${row.id}/publish`)
+  .then(response => { if (response.code === 200) {
       ElMessage.success('任务发布成功')
       initData()
     } else {
@@ -444,13 +436,11 @@ const handleSubmitEdit = () => {
     if (valid) {
       loading.value = true
       
-      axios.put(`/api/tasks/${editTaskForm.id}`, {
+      axios.put(`/tasks/${editTaskForm.id}`, {
         ...editTaskForm,
         subject: { id: editTaskForm.subjectId }
       })
-      .then(response => {
-        const { data } = response
-        if (data.code === 200) {
+      .then(response => { if (response.code === 200) {
           ElMessage.success('任务编辑成功')
           dialogVisible.value = false
           initData()
@@ -527,3 +517,6 @@ onMounted(() => {
   }
 }
 </style>
+
+
+

@@ -50,7 +50,7 @@
           </el-sub-menu>
           
           <!-- 管理员功能 -->
-          <el-sub-menu index="admin">
+          <el-sub-menu v-if="isAdmin" index="admin">
             <template #title>
               <el-icon><Setting /></el-icon>
               <span>管理员功能</span>
@@ -146,6 +146,12 @@ const activeMenu = computed(() => {
 // 用户信息
 const userName = ref('管理员')
 const userAvatar = ref('')
+const userRoles = ref<string[]>([])
+
+// 计算属性：是否为管理员
+const isAdmin = computed(() => {
+  return userRoles.value.some(role => role === 'ROLE_ADMIN' || role === '管理员')
+})
 
 // 从localStorage获取用户信息
 const fetchUserInfo = () => {
@@ -157,6 +163,19 @@ const fetchUserInfo = () => {
     }
     if (userInfo.avatar) {
       userAvatar.value = userInfo.avatar
+    }
+    if (userInfo.roles && Array.isArray(userInfo.roles)) {
+      // 提取角色代码或名称
+      userRoles.value = userInfo.roles.map((role: any) => {
+        if (typeof role === 'string') {
+          return role
+        } else if (role.code) {
+          return role.code
+        } else if (role.name) {
+          return role.name
+        }
+        return ''
+      })
     }
   }
 }
@@ -187,7 +206,8 @@ fetchUserInfo()
 
 // 监听localStorage变化，更新用户信息
 window.addEventListener('storage', (e) => {
-  if (e.key === 'userInfo') {
+  // 如果是手动触发的事件或者userInfo发生变化，都更新用户信息
+  if (!e.key || e.key === 'userInfo') {
     fetchUserInfo()
   }
 })
@@ -589,3 +609,6 @@ window.addEventListener('storage', (e) => {
   }
 }
 </style>
+
+
+

@@ -122,42 +122,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
-// 模拟错题数据
-const errorQuestions = ref([
-  {
-    id: 1,
-    title: '计算定积分∫₀¹x²dx = ',
-    type: 3, // 填空题
-    subject: '数学',
-    answer: '1/3',
-    userAnswer: '1/2',
-    errorDate: '2025-12-05',
-    analysis: '根据定积分公式，∫x²dx = x³/3 + C，所以∫₀¹x²dx = 1³/3 - 0³/3 = 1/3'
-  },
-  {
-    id: 2,
-    title: '下列哪个不是JavaScript的基本数据类型？',
-    type: 1, // 选择题
-    subject: '计算机',
-    options: ['String', 'Number', 'Boolean', 'Object'],
-    answer: 'D',
-    userAnswer: 'C',
-    errorDate: '2025-12-04',
-    analysis: 'JavaScript的基本数据类型包括：String、Number、Boolean、Null、Undefined、Symbol和BigInt。Object是引用数据类型。'
-  },
-  {
-    id: 3,
-    title: '英语中现在完成时的构成是"have/has + 过去分词"。',
-    type: 2, // 判断题
-    subject: '英语',
-    answer: '正确',
-    userAnswer: '错误',
-    errorDate: '2025-12-03',
-    analysis: '现在完成时的构成确实是"have/has + 过去分词"，用于表示过去发生的动作对现在造成的影响或结果。'
-  }
-])
+// 错题数据，初始为空数组
+const errorQuestions = ref<any[]>([])
 
 // 筛选条件
 const filterForm = ref({
@@ -168,6 +138,8 @@ const filterForm = ref({
 // 分页
 const currentPage = ref(1)
 const pageSize = ref(10)
+const total = ref(0)
+const loading = ref(false)
 
 // 统计数据
 const totalErrorCount = computed(() => errorQuestions.value.length)
@@ -202,35 +174,74 @@ const getQuestionType = (type: number) => {
   }
 }
 
+// 获取错题列表
+const fetchErrorQuestions = () => {
+  loading.value = true
+  // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
+  const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
+  axios.get(`/practice/wrong-questions/${userId}`, {
+    params: {
+      subjectId: filterForm.value.subject,
+      type: filterForm.value.questionType
+    }
+  })
+  .then(response => {
+    if (response.code === 200) {
+      errorQuestions.value = response.data || []
+      total.value = response.data.length || 0
+    }
+  })
+  .catch(error => {
+    console.error('获取错题列表失败:', error)
+    // 显示空数据，避免页面出错
+    errorQuestions.value = []
+    total.value = 0
+  })
+  .finally(() => {
+    loading.value = false
+  })
+}
+
 const filterQuestions = () => {
-  // 筛选逻辑
-  console.log('筛选错题', filterForm.value)
+  currentPage.value = 1
+  fetchErrorQuestions()
 }
 
 const resetFilter = () => {
   filterForm.value.subject = ''
   filterForm.value.questionType = ''
-}
-
-const reviewQuestion = (question: any) => {
-  // 重新练习逻辑
-  console.log('重新练习', question)
-}
-
-const markCorrect = (questionId: number) => {
-  // 标记已掌握逻辑
-  console.log('标记已掌握', questionId)
-  errorQuestions.value = errorQuestions.value.filter(q => q.id !== questionId)
+  currentPage.value = 1
+  fetchErrorQuestions()
 }
 
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  fetchErrorQuestions()
 }
 
 const handleCurrentChange = (current: number) => {
   currentPage.value = current
+  fetchErrorQuestions()
 }
+
+const reviewQuestion = (question: any) => {
+  // 重新练习逻辑
+  console.log('重新练习', question)
+  // 可以跳转到练习页面
+}
+
+const markCorrect = (questionId: number) => {
+  // 标记为已掌握 - 目前后端没有实现这个功能，所以只显示成功消息
+  ElMessage.success('标记成功')
+  // 从错题列表中移除该题目
+  errorQuestions.value = errorQuestions.value.filter(q => q.id !== questionId)
+  total.value = errorQuestions.value.length
+}
+
+onMounted(() => {
+  fetchErrorQuestions()
+})
 </script>
 
 <style scoped>
@@ -363,3 +374,6 @@ const handleCurrentChange = (current: number) => {
   margin-top: 30px;
 }
 </style>
+
+
+

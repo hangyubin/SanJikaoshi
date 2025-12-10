@@ -143,43 +143,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from '@/utils/axios'
 
-// 模拟用户数据
-const users = ref([
-  {
-    id: 1,
-    username: 'user1',
-    realName: '张三',
-    email: 'zhangsan@example.com',
-    phone: '13800138001',
-    status: '1',
-    role: 'user',
-    createTime: '2025-12-01 10:00:00',
-    updateTime: '2025-12-02 14:30:00'
-  },
-  {
-    id: 2,
-    username: 'user2',
-    realName: '李四',
-    email: 'lisi@example.com',
-    phone: '13800138002',
-    status: '1',
-    role: 'user',
-    createTime: '2025-12-01 11:00:00',
-    updateTime: '2025-12-03 09:15:00'
-  },
-  {
-    id: 3,
-    username: 'admin1',
-    realName: '王五',
-    email: 'wangwu@example.com',
-    phone: '13800138003',
-    status: '0',
-    role: 'admin',
-    createTime: '2025-12-02 14:00:00',
-    updateTime: '2025-12-04 16:45:00'
-  }
-])
+// 用户数据，初始为空数组
+const users = ref<any[]>([])
 
 const searchForm = reactive({
   username: '',
@@ -189,7 +156,40 @@ const searchForm = reactive({
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(users.value.length)
+const total = ref(0)
+const loading = ref(false)
+
+// 获取用户列表
+const fetchUsers = () => {
+  loading.value = true
+  axios.get('/users', {
+    params: {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      username: searchForm.username,
+      realName: searchForm.realName,
+      status: searchForm.status
+    }
+  })
+  .then(response => {
+    if (response.code === 200) {
+      users.value = response.data.users || []
+      total.value = response.total || 0
+    }
+  })
+  .catch(error => {
+    console.error('获取用户列表失败:', error)
+    ElMessage.error('获取用户列表失败')
+  })
+  .finally(() => {
+    loading.value = false
+  })
+}
+
+// 页面加载时获取用户列表
+onMounted(() => {
+  fetchUsers()
+})
 
 // 对话框
 const dialogVisible = ref(false)
@@ -230,14 +230,16 @@ const rules = reactive<FormRules>({
 })
 
 const handleSearch = () => {
-  // 搜索逻辑
-  console.log('搜索用户', searchForm)
+  currentPage.value = 1
+  fetchUsers()
 }
 
 const handleReset = () => {
   searchForm.username = ''
   searchForm.realName = ''
   searchForm.status = ''
+  currentPage.value = 1
+  fetchUsers()
 }
 
 const handleAdd = () => {
@@ -298,11 +300,13 @@ const handlePromote = (row: any) => {
     type: 'warning',
   })
     .then(() => {
-      // 更新角色
-      row.role = 'admin'
+      // 调用后端API进行提权
+      return axios.put(`/users/promote/${row.id}`)
+    })
+    .then(() => {
       ElMessage.success('提权成功，该用户已成为管理员')
-      // 这里可以添加调用后端API的逻辑，将用户添加到管理员列表
-      console.log('用户提权成功', row)
+      // 重新获取用户列表，确保数据最新
+      fetchUsers()
     })
     .catch(() => {
       ElMessage.info('已取消提权操作')
@@ -316,11 +320,13 @@ const handleDemote = (row: any) => {
     type: 'warning',
   })
     .then(() => {
-      // 更新角色
-      row.role = 'user'
+      // 调用后端API进行降权
+      return axios.put(`/users/demote/${row.id}`)
+    })
+    .then(() => {
       ElMessage.success('降权成功，该管理员已成为普通用户')
-      // 这里可以添加调用后端API的逻辑，将用户从管理员列表移除
-      console.log('管理员降权成功', row)
+      // 重新获取用户列表，确保数据最新
+      fetchUsers()
     })
     .catch(() => {
       ElMessage.info('已取消降权操作')
@@ -330,16 +336,13 @@ const handleDemote = (row: any) => {
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  fetchUsers()
 }
 
 const handleCurrentChange = (current: number) => {
   currentPage.value = current
+  fetchUsers()
 }
-
-onMounted(() => {
-  // 初始化数据
-  console.log('用户列表初始化')
-})
 </script>
 
 <style scoped>
@@ -357,3 +360,6 @@ onMounted(() => {
   margin-top: 20px;
 }
 </style>
+
+
+

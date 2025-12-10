@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/exam")
+@RequestMapping("/exam")
 public class ExamController {
 
     @Autowired
@@ -337,3 +337,5 @@ public class ExamController {
         }
     }
 }
+
+

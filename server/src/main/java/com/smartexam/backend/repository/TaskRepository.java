@@ -30,3 +30,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // 根据接收者ID和任务类型查询任务列表
     List<Task> findByReceiveByIdAndType(Long receiveById, Integer type);
 }
+
+

@@ -17,3 +17,5 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     // 根据代码查询科目
     Subject findByCode(String code);
 }
+
+

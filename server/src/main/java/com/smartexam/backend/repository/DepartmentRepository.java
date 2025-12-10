@@ -13,3 +13,5 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     // 根据科室名称查询科室
     Department findByName(String name);
 }
+
+

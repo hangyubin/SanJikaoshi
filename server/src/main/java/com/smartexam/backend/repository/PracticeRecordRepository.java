@@ -36,3 +36,5 @@ public interface PracticeRecordRepository extends JpaRepository<PracticeRecord, 
     // 根据用户ID和是否正确以及难度查询练习记录
     List<PracticeRecord> findByUserIdAndIsCorrectAndDifficulty(Long userId, Boolean isCorrect, Integer difficulty);
 }
+
+

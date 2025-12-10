@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/menus")
+@RequestMapping("/menus")
 public class MenuController {
 
     @Autowired
@@ -238,3 +238,5 @@ public class MenuController {
         }
     }
 }
+
+

@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/questions")
+@RequestMapping("/questions")
 public class QuestionController {
 
     @Autowired
@@ -312,3 +312,5 @@ public class QuestionController {
         }
     }
 }
+
+

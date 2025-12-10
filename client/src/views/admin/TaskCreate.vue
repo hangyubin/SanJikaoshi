@@ -283,19 +283,28 @@ const updateDifficultyDistribution = () => {
   // 目前简化处理，允许总和不等于100%
 }
 
-// 固定考试科目为三个选项
-const subjects = ref([
-  { id: 'basic-theory', name: '基本理论' },
-  { id: 'basic-knowledge', name: '基本知识' },
-  { id: 'basic-skill', name: '基本技能' }
-])
+// 科目列表，从API获取
+const subjects = ref<any[]>([])
+
+// 获取科目列表
+const fetchSubjects = async () => {
+  try {
+    const response = await axios.get('/subjects')
+    if (response.code === 200) {
+      subjects.value = response.data || []
+    }
+  } catch (error) {
+    console.error('获取科目列表失败:', error)
+    ElMessage.error('获取科目列表失败')
+  }
+}
 
 // 获取题库列表
 const fetchPapers = async () => {
   try {
-    const response = await axios.get('/api/papers')
-    if (response.data.code === 200) {
-      papers.value = response.data.data.records || response.data.data || []
+    const response = await axios.get('/papers')
+    if (response.code === 200) {
+      papers.value = response.data.records || response.data || []
     }
   } catch (error) {
     console.error('获取题库列表失败:', error)
@@ -306,9 +315,9 @@ const fetchPapers = async () => {
 // 获取科室列表
 const fetchDepartments = async () => {
   try {
-    const response = await axios.get('/api/departments')
-    if (response.data.code === 200) {
-      departments.value = response.data.data || []
+    const response = await axios.get('/departments')
+    if (response.code === 200) {
+      departments.value = response.data || []
     }
   } catch (error) {
     console.error('获取科室列表失败:', error)
@@ -322,9 +331,9 @@ const fetchParticipants = async () => {
     const params = {
       departmentIds: taskForm.departmentIds.length > 0 ? taskForm.departmentIds : undefined
     }
-    const response = await axios.get('/api/users/participants', { params })
-    if (response.data.code === 200) {
-      participants.value = response.data.data || []
+    const response = await axios.get('/users/participants', { params })
+    if (response.code === 200) {
+      participants.value = response.data || []
     }
   } catch (error) {
     console.error('获取参与人员列表失败:', error)
@@ -360,7 +369,7 @@ const handleSubmit = async () => {
     }
     
     // 发送创建任务请求
-    await axios.post('/api/tasks', requestData)
+    await axios.post('/tasks', requestData)
     
     ElMessage.success('任务创建成功')
     router.push('/dashboard/task-management')
@@ -384,6 +393,7 @@ const handleCancel = () => {
 
 // 组件挂载时获取数据
 onMounted(() => {
+  fetchSubjects()
   fetchPapers()
   fetchDepartments()
   fetchParticipants()
@@ -475,3 +485,6 @@ onMounted(() => {
   box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.1);
 }
 </style>
+
+
+

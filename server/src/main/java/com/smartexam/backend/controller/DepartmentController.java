@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/departments")
+@RequestMapping("/departments")
 public class DepartmentController {
     
     @Autowired
@@ -175,3 +175,5 @@ public class DepartmentController {
         return ResponseEntity.ok(response);
     }
 }
+
+

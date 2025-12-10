@@ -1,13 +1,14 @@
 package com.smartexam.backend.config;
 
+import com.smartexam.backend.service.impl.UserDetailsServiceImpl;
 import com.smartexam.backend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -18,51 +19,56 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     @Autowired
     private JwtUtils jwtUtils;
-    
+
     @Autowired
-    private UserDetailsService userDetailsService;
-    
+    private UserDetailsServiceImpl userDetailsService;
+
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService) {
+        this.jwtUtils = jwtUtils;
+        this.userDetailsService = userDetailsService;
+    }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        
-        // 获取请求头中的Authorization字段
-        String authorizationHeader = request.getHeader("Authorization");
-        
-        String username = null;
-        String token = null;
-        
-        // 检查Authorization头是否存在，并且格式是否正确
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            // 提取JWT令牌
-            token = authorizationHeader.substring(7);
-            // 从JWT令牌中获取用户名
-            username = jwtUtils.getUsernameFromToken(token);
-        }
-        
-        // 如果用户名不为空，且当前SecurityContext中没有认证信息
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // 加载用户信息
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            // 从请求头中获取JWT令牌
+            String jwt = parseJwt(request);
             
-            // 验证JWT令牌是否有效
-            if (jwtUtils.validateToken(token, userDetails.getUsername())) {
+            // 如果JWT令牌存在且有效，设置认证信息
+            if (jwt != null && jwtUtils.getUsernameFromToken(jwt) != null) {
+                String username = jwtUtils.getUsernameFromToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                
                 // 创建认证令牌
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 
                 // 设置认证详情
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 
-                // 将认证令牌存储到SecurityContext中
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                // 将认证信息设置到SecurityContext中
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+        } catch (Exception e) {
+            logger.error("Cannot set user authentication: {}", e);
         }
         
-        // 继续执行过滤器链
+        // 继续执行过滤链
         filterChain.doFilter(request, response);
+    }
+
+    // 从请求头中解析JWT令牌
+    private String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+        
+        // 如果请求头中包含Bearer前缀，则提取JWT令牌
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+        
+        return null;
     }
 }

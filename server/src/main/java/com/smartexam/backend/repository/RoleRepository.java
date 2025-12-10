@@ -25,3 +25,5 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
      */
     List<Role> findByStatus(Integer status);
 }
+
+

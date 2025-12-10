@@ -193,18 +193,16 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 // 初始化数据
 const initData = () => {
   loading.value = true
-  axios.get('/api/departments', {
+  axios.get('/departments', {
     params: {
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
       ...searchForm
     }
   })
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      departments.value = data.data
-      pagination.total = data.total || 0
+  .then(response => { if (response.code === 200) {
+      departments.value = response.data
+      pagination.total = response.total || 0
     }
   })
   .catch(error => {
@@ -260,10 +258,8 @@ const handleDelete = (row: any) => {
     type: 'warning'
   })
   .then(() => {
-    axios.delete(`/api/departments/${row.id}`)
-    .then(response => {
-      const { data } = response
-      if (data.code === 200) {
+    axios.delete(`/departments/${row.id}`)
+    .then(response => { if (response.code === 200) {
         ElMessage.success('删除成功')
         initData()
       } else {
@@ -287,14 +283,12 @@ const handleSubmit = () => {
       loading.value = true
       let request
       if (dialogType.value === 'add') {
-        request = axios.post('/api/departments', form)
+        request = axios.post('/departments', form)
       } else {
-        request = axios.put(`/api/departments/${form.id}`, form)
+        request = axios.put(`/departments/${form.id}`, form)
       }
       
-      request.then(response => {
-        const { data } = response
-        if (data.code === 200) {
+      request.then(response => { if (response.code === 200) {
           ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
           dialogVisible.value = false
           initData()
@@ -370,3 +364,6 @@ onMounted(() => {
   }
 }
 </style>
+
+
+

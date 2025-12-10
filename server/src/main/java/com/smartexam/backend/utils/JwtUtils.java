@@ -60,8 +60,10 @@ public class JwtUtils {
     private Claims getClaimsFromToken(String token) {
         Claims claims;
         try {
-            claims = Jwts.parser()
+            // 使用新的API获取Claims
+            claims = Jwts.parserBuilder()
                     .setSigningKey(secret)
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {

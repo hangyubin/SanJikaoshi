@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/learning-resources")
+@RequestMapping("/learning-resources")
 public class LearningResourceController {
     
     @Autowired
@@ -177,3 +177,5 @@ public class LearningResourceController {
         return ResponseEntity.ok(response);
     }
 }
+
+

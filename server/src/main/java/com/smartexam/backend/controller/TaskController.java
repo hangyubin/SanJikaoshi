@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/tasks")
 public class TaskController {
 
     @Autowired
@@ -253,3 +253,5 @@ public class TaskController {
         }
     }
 }
+
+

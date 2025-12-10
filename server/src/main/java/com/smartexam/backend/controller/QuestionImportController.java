@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/questions/import")
+@RequestMapping("/questions/import")
 public class QuestionImportController {
 
     @Autowired
@@ -313,3 +313,5 @@ public class QuestionImportController {
         return value;
     }
 }
+
+

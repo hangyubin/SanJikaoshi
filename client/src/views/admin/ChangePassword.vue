@@ -157,8 +157,8 @@ const handleSubmit = async () => {
     
     // 模拟修改密码请求
     // 实际使用时应替换为真实API调用
-    // const response = await axios.post('/api/user/change-password', passwordForm)
-    // if (response.data.code === 200) {
+    // const response = await axios.post('/user/change-password', passwordForm)
+    // if (response.code === 200) {
     //   ElMessage.success('密码修改成功')
     //   passwordForm.oldPassword = ''
     //   passwordForm.newPassword = ''
@@ -287,3 +287,6 @@ const handleReset = () => {
   margin-bottom: 0;
 }
 </style>
+
+
+

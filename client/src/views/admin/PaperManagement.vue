@@ -286,17 +286,17 @@ const fetchPapers = async () => {
       type: searchForm.type
     }
     // 修复API地址，去掉/api前缀
-    const response = await axios.get('/api/papers', { params })
-    if (response.data.code === 200) {
+    const response = await axios.get('/papers', { params })
+    if (response.code === 200) {
       // 适应后端返回的格式
-      if (response.data.data.records) {
+      if (response.data.records) {
         // 如果是分页格式
-        papers.value = response.data.data.records
-        total.value = response.data.data.total
+        papers.value = response.data.records
+        total.value = response.response.total
       } else {
         // 如果是直接列表格式
-        papers.value = response.data.data
-        total.value = response.data.data.length
+        papers.value = response.data
+        total.value = response.data.length
       }
     } else {
       ElMessage.error('获取题库列表失败')
@@ -366,13 +366,13 @@ const handleSubmit = async () => {
     let response
     if (form.id) {
       // 更新题库
-      response = await axios.put(`/api/papers/${form.id}`, requestData)
+      response = await axios.put(`/papers/${form.id}`, requestData)
     } else {
       // 增加题库，去掉/api前缀
-      response = await axios.post('/api/papers', requestData)
+      response = await axios.post('/papers', requestData)
     }
     
-    if (response.data.code === 200) {
+    if (response.code === 200) {
       ElMessage.success(form.id ? '更新题库成功' : '增加题库成功')
       dialogVisible.value = false
       fetchPapers() // 重新加载题库列表
@@ -388,8 +388,8 @@ const handleSubmit = async () => {
 const handleDelete = async (row: any) => {
   try {
     // 删除题库
-    const response = await axios.delete(`/api/papers/${row.id}`)
-    if (response.data.code === 200) {
+    const response = await axios.delete(`/papers/${row.id}`)
+    if (response.code === 200) {
       ElMessage.success('删除题库成功')
       fetchPapers() // 重新加载题库列表
     } else {
@@ -423,7 +423,7 @@ const handleImportClick = () => {
 // 下载题库模板
 const handleDownloadTemplate = async () => {
   try {
-    const response = await axios.get('/api/papers/import/template', {
+    const response = await axios.get('/papers/import/template', {
       responseType: 'blob'
     })
     
@@ -489,13 +489,13 @@ const handleImportSubmit = async () => {
     formData.append('description', importForm.description)
     
     // 去掉/api前缀
-    const response = await axios.post('/api/papers/import', formData, {
+    const response = await axios.post('/papers/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
     
-    if (response.data.code === 200) {
+    if (response.code === 200) {
       ElMessage.success('导入题库成功')
       importDialogVisible.value = false
       fetchPapers() // 重新加载题库列表
@@ -716,3 +716,6 @@ onMounted(() => {
   font-weight: 500;
 }
 </style>
+
+
+

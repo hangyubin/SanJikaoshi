@@ -84,68 +84,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
-// 模拟可参加的考试数据（三基考试科目）
-const examList = ref([
-  {
-    id: 1,
-    name: '2025年秋季基本理论考试',
-    subject: '基本理论',
-    totalScore: 100,
-    duration: 90,
-    startTime: '2025-12-10 09:00:00',
-    endTime: '2025-12-10 10:30:00',
-    status: '进行中'
-  },
-  {
-    id: 2,
-    name: '2025年秋季基础知识考试',
-    subject: '基础知识',
-    totalScore: 100,
-    duration: 120,
-    startTime: '2025-12-11 09:00:00',
-    endTime: '2025-12-11 11:00:00',
-    status: '未开始'
-  },
-  {
-    id: 3,
-    name: '2025年秋季基本技能考试',
-    subject: '基本技能',
-    totalScore: 100,
-    duration: 150,
-    startTime: '2025-12-12 09:00:00',
-    endTime: '2025-12-12 11:30:00',
-    status: '未开始'
-  }
-])
+// 可参加的考试数据，初始为空数组
+const examList = ref<any[]>([])
 
-// 模拟已完成的考试数据（三基考试科目）
-const finishedExams = ref([
-  {
-    id: 4,
-    name: '2025年春季基本理论考试',
-    subject: '基本理论',
-    totalScore: 100,
-    obtainedScore: 85,
-    startTime: '2025-12-05 09:00:00',
-    endTime: '2025-12-05 10:30:00',
-    status: '已结束'
-  },
-  {
-    id: 5,
-    name: '2025年春季基础知识考试',
-    subject: '基础知识',
-    totalScore: 100,
-    obtainedScore: 90,
-    startTime: '2025-12-06 09:00:00',
-    endTime: '2025-12-06 11:00:00',
-    status: '已结束'
-  }
-])
+// 已完成的考试数据，初始为空数组
+const finishedExams = ref<any[]>([])
+
+const loading = ref(false)
+
+// 获取可参加的考试列表
+const fetchAvailableExams = () => {
+  loading.value = true
+  // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
+  const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
+  axios.get(`/exam/available/${userId}`)
+    .then(response => {
+      if (response.code === 200) {
+        examList.value = response.data || []
+      }
+    })
+    .catch(error => {
+      console.error('获取可参加的考试列表失败:', error)
+      // 显示空数据，避免页面出错
+      examList.value = []
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+// 获取已完成的考试列表
+const fetchFinishedExams = () => {
+  loading.value = true
+  // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
+  const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
+  axios.get(`/exam/user/${userId}`)
+    .then(response => {
+      if (response.code === 200) {
+        finishedExams.value = response.data || []
+      }
+    })
+    .catch(error => {
+      console.error('获取已完成的考试列表失败:', error)
+      // 显示空数据，避免页面出错
+      finishedExams.value = []
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
 
 const joinExam = (exam: any) => {
   // 参加考试逻辑
@@ -162,6 +156,11 @@ const viewErrorNotebook = () => {
   // 查看错题集逻辑
   router.push('/dashboard/error-notebook')
 }
+
+onMounted(() => {
+  fetchAvailableExams()
+  fetchFinishedExams()
+})
 </script>
 
 <style scoped>
@@ -181,3 +180,6 @@ const viewErrorNotebook = () => {
   font-weight: bold;
 }
 </style>
+
+
+

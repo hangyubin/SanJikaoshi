@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// 暂时注释掉这个类，直到准备好重新添加Spring Security配置
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
     
@@ -44,3 +45,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 authorities);
     }
 }
+
+

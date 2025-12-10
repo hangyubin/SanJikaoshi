@@ -228,62 +228,25 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const router = useRouter()
 
 // 用户信息
-const userName = ref('管理员')
-const userRole = ref('admin') // 'admin' 或 'student'
+const userName = ref('')
+const userRole = ref('student') // 'admin' 或 'student'
 
 // 统计数据
-const userCount = ref(120)
-const subjectCount = ref(15)
-const questionCount = ref(2500)
-const paperCount = ref(85)
+const userCount = ref(0)
+const subjectCount = ref(0)
+const questionCount = ref(0)
+const paperCount = ref(0)
 
 // 学习统计数据
-const todayStudyTime = ref(30)
-const thisWeekCompletedQuestions = ref(125)
+const todayStudyTime = ref(0)
+const thisWeekCompletedQuestions = ref(0)
 
 // 加载状态
 const loading = ref(false)
 const resourcesLoading = ref(false)
 
 // 最近考试数据
-const recentExams = ref([
-  {
-    id: 1,
-    name: '2025年秋季基本理论考试',
-    subject: '基本理论',
-    totalScore: 100,
-    duration: 90,
-    startTime: '2025-12-10 09:00:00',
-    status: '进行中'
-  },
-  {
-    id: 2,
-    name: '2025年秋季基础知识考试',
-    subject: '基础知识',
-    totalScore: 100,
-    duration: 120,
-    startTime: '2025-12-11 09:00:00',
-    status: '未开始'
-  },
-  {
-    id: 3,
-    name: '2025年秋季基本技能考试',
-    subject: '基本技能',
-    totalScore: 100,
-    duration: 150,
-    startTime: '2025-12-12 09:00:00',
-    status: '未开始'
-  },
-  {
-    id: 4,
-    name: '2025年春季基本理论考试',
-    subject: '基本理论',
-    totalScore: 100,
-    duration: 100,
-    startTime: '2025-12-05 09:00:00',
-    status: '已结束'
-  }
-])
+const recentExams = ref<any[]>([])
 
 // 最新资源列表
 const latestResources = ref<any[]>([])
@@ -390,65 +353,18 @@ const fetchUserInfo = () => {
 // 获取最新资源
 const fetchLatestResources = () => {
   resourcesLoading.value = true
-  axios.get('/api/learning-resources/latest', {
-    params: { limit: 5 }
+  axios.get('/learning-resources', {
+    params: { pageNum: 1, pageSize: 5 }
   })
   .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      latestResources.value = data.data || []
+    if (response.code === 200) {
+      latestResources.value = response.data || []
     }
   })
   .catch(error => {
     console.error('获取最新资源失败:', error)
-    // 后端服务不可用时，使用模拟数据
-    latestResources.value = [
-      {
-        id: 1,
-        title: '三基理论知识培训课件',
-        fileType: 'pdf',
-        size: 1024 * 1024 * 5,
-        url: '',
-        department: '内科',
-        createTime: '2025-12-10 14:30:00'
-      },
-      {
-        id: 2,
-        title: '临床技能操作视频',
-        fileType: 'mp4',
-        size: 1024 * 1024 * 50,
-        url: '',
-        department: '外科',
-        createTime: '2025-12-09 09:15:00'
-      },
-      {
-        id: 3,
-        title: '医学影像学诊断图谱',
-        fileType: 'pdf',
-        size: 1024 * 1024 * 15,
-        url: '',
-        department: '影像科',
-        createTime: '2025-12-08 16:45:00'
-      },
-      {
-        id: 4,
-        title: '心电图解读教程',
-        fileType: 'doc',
-        size: 1024 * 1024 * 2,
-        url: '',
-        department: '心内科',
-        createTime: '2025-12-07 11:20:00'
-      },
-      {
-        id: 5,
-        title: '手术室护理规范',
-        fileType: 'docx',
-        size: 1024 * 1024 * 3,
-        url: '',
-        department: '护理部',
-        createTime: '2025-12-06 13:50:00'
-      }
-    ]
+    // 清除模拟数据，只保留真实API调用
+    latestResources.value = []
   })
   .finally(() => {
     resourcesLoading.value = false
@@ -1122,3 +1038,6 @@ onMounted(() => {
   max-width: 600px;
 }
 </style>
+
+
+

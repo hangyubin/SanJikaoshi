@@ -115,32 +115,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import axios from '@/utils/axios'
 
-// 模拟管理员数据
-const admins = ref([
-  {
-    id: 1,
-    username: 'admin1',
-    realName: '管理员张三',
-    email: 'admin1@example.com',
-    phone: '13800138001',
-    status: '1',
-    roleIds: [1],
-    createTime: '2025-12-01 10:00:00',
-    updateTime: '2025-12-02 14:30:00'
-  },
-  {
-    id: 2,
-    username: 'admin2',
-    realName: '管理员李四',
-    email: 'admin2@example.com',
-    phone: '13800138002',
-    status: '1',
-    roleIds: [2],
-    createTime: '2025-12-01 11:00:00',
-    updateTime: '2025-12-03 09:15:00'
-  }
-])
+// 管理员数据，初始为空数组
+const admins = ref<any[]>([])
 
 const searchForm = reactive({
   username: '',
@@ -150,7 +129,39 @@ const searchForm = reactive({
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(admins.value.length)
+const total = ref(0)
+const loading = ref(false)
+
+// 获取管理员列表
+const fetchAdmins = () => {
+  loading.value = true
+  axios.get('/admin/list', {
+    params: {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      username: searchForm.username,
+      realName: searchForm.realName,
+      status: searchForm.status
+    }
+  })
+  .then(response => { if (response.code === 200) {
+      admins.value = response.data.admins || []
+      total.value = response.total || 0
+    }
+  })
+  .catch(error => {
+    console.error('获取管理员列表失败:', error)
+    ElMessage.error('获取管理员列表失败')
+  })
+  .finally(() => {
+    loading.value = false
+  })
+}
+
+// 页面加载时获取管理员列表
+onMounted(() => {
+  fetchAdmins()
+})
 
 // 对话框
 const dialogVisible = ref(false)
@@ -194,14 +205,16 @@ const rules = reactive<FormRules>({
 })
 
 const handleSearch = () => {
-  // 搜索逻辑
-  console.log('搜索管理员', searchForm)
+  currentPage.value = 1
+  fetchAdmins()
 }
 
 const handleReset = () => {
   searchForm.username = ''
   searchForm.realName = ''
   searchForm.status = ''
+  currentPage.value = 1
+  fetchAdmins()
 }
 
 const handleAdd = () => {
@@ -258,16 +271,13 @@ const handleStatusChange = (row: any) => {
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  fetchAdmins()
 }
 
 const handleCurrentChange = (current: number) => {
   currentPage.value = current
+  fetchAdmins()
 }
-
-onMounted(() => {
-  // 初始化数据
-  console.log('管理员列表初始化')
-})
 </script>
 
 <style scoped>
@@ -285,3 +295,6 @@ onMounted(() => {
   margin-top: 20px;
 }
 </style>
+
+
+

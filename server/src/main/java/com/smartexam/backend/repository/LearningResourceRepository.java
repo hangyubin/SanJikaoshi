@@ -18,3 +18,5 @@ public interface LearningResourceRepository extends JpaRepository<LearningResour
     // 根据创建者ID查询学习资源列表
     List<LearningResource> findByCreateById(Long createById);
 }
+
+

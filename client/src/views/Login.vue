@@ -224,7 +224,7 @@ const handleLogin = async () => {
     loading.value = true
     
     // 发送登录请求
-    await axios.post('/api/auth/login', {
+    const response = await axios.post('/auth/login', {
       username: loginForm.username,
       password: loginForm.password
     })
@@ -243,7 +243,15 @@ const handleLogin = async () => {
       localStorage.removeItem('rememberedUser')
     }
     
-    // 登录成功，直接跳转到dashboard
+    // 保存token和用户信息到localStorage
+    localStorage.setItem('token', response.token)
+    localStorage.setItem('userInfo', JSON.stringify({
+      username: response.username,
+      realName: response.realName,
+      roles: response.roles
+    }))
+    
+    // 登录成功，跳转到dashboard
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (error: any) {
@@ -744,3 +752,6 @@ const handleRegisterRedirect = () => {
   }
 }
 </style>
+
+
+

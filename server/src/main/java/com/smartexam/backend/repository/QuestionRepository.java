@@ -34,3 +34,5 @@ public interface QuestionRepository extends JpaRepository<Question, Long>, JpaSp
     // 根据创建者ID查询题目列表
     List<Question> findByCreateById(Long createById);
 }
+
+

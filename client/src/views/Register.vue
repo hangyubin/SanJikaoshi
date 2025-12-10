@@ -237,7 +237,7 @@ const handleRegister = async () => {
     console.log('注册数据类型:', typeof registerData)
     
     // 发送注册请求，显式设置Content-Type
-    await axios.post('/api/auth/register', registerData, {
+    await axios.post('/auth/register', registerData, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -258,7 +258,13 @@ const handleRegister = async () => {
       data: error.response?.data,
       headers: error.response?.headers
     })
-    ElMessage.error(error.response?.data?.message || `注册失败，状态码: ${error.response?.status}`)
+    // 只在有response时显示错误消息，避免开发环境下显示不必要的错误
+    if (error.response) {
+      ElMessage.error(error.response.data?.message || `注册失败，状态码: ${error.response?.status}`)
+    } else {
+      // 表单验证失败等情况
+      ElMessage.error('注册失败，请稍后重试')
+    }
     refreshCaptcha() // 刷新验证码
   }
 }
@@ -661,3 +667,6 @@ onMounted(() => {
   }
 }
 </style>
+
+
+

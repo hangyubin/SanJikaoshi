@@ -1,82 +1,75 @@
 package com.smartexam.backend.config;
 
+import com.smartexam.backend.service.impl.UserDetailsServiceImpl;
+import com.smartexam.backend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    
+
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
+    private UserDetailsServiceImpl userDetailsService;
+
     @Autowired
-    private UserDetailsService userDetailsService;
-    
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // 使用BCrypt加密，比MD5更安全
-        return new BCryptPasswordEncoder();
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            // 允许跨域请求
+            .cors().and()
+            // 禁用CSRF保护，因为我们使用JWT
+            .csrf().disable()
+            // 配置会话管理为无状态
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            // 配置请求授权规则
+            .authorizeRequests()
+            // 允许所有用户访问的路径
+            .antMatchers("/**/login", "/**/register", "/**/refresh-token").permitAll()
+            // 允许所有GET请求
+            .antMatchers("GET", "/**").permitAll()
+            // 其他所有请求需要认证
+            .anyRequest().authenticated()
+            .and()
+            // 禁用默认的登录表单
+            .formLogin().disable()
+            // 禁用默认的注销功能
+            .logout().disable()
+            // 禁用HTTP基本认证
+            .httpBasic().disable()
+            // 添加JWT认证过滤器
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, userDetailsService), UsernamePasswordAuthenticationFilter.class);
     }
-    
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+            // 使用自定义的UserDetailsService
+            .userDetailsService(userDetailsService)
+            // 使用BCryptPasswordEncoder加密密码
+            .passwordEncoder(passwordEncoder);
+    }
+
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
-    }
-    
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
-    
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-            // 禁用CSRF保护，方便开发测试
-            .csrf().disable()
-            // 配置请求授权
-            .authorizeRequests()
-            // 公开路径，不需要认证
-            .antMatchers(
-                "/", "/index.html", "/login", "/register", "/static/**",
-                "/auth/login", "/auth/register", "/auth/refresh-token"
-            ).permitAll()
-            // 其他所有路径都需要认证
-            .anyRequest().authenticated()
-            .and()
-            // 禁用表单登录，使用JWT认证
-            .formLogin().disable()
-            // 禁用HTTP基本认证
-            .httpBasic().disable()
-            // 禁用会话管理，使用无状态认证
-            .sessionManagement().disable()
-            // 配置错误处理，将404请求重定向到index.html
-            .exceptionHandling().defaultAuthenticationEntryPointFor(
-                (request, response, authException) -> response.sendRedirect("/index.html"),
-                request -> true
-            );
-        
-        // 添加JWT认证过滤器
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    }
-    
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        // 静态资源和Swagger文档放行
-        web.ignoring().antMatchers(
-            "/", "/index.html", "/login", "/register",
-            "/static/**", "/assets/**", "/favicon.ico",
-            "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**"
-        );
     }
 }

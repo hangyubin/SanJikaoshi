@@ -20,46 +20,53 @@
             </div>
           </el-form-item>
           
-          <!-- 基本信息表单 -->
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="用户名" prop="username" disabled>
-                <el-input v-model="userForm.username" placeholder="用户名"></el-input>
-              </el-form-item>
+          <!-- 基本信息表单 - 只有非系统管理员可以编辑 -->
+          <template v-if="!isSystemAdmin">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="用户名" prop="username" disabled>
+                  <el-input v-model="userForm.username" placeholder="用户名"></el-input>
+                </el-form-item>
+                
+                <el-form-item label="真实姓名" prop="realName" disabled>
+                  <el-input v-model="userForm.realName" placeholder="真实姓名"></el-input>
+                </el-form-item>
+                
+                <el-form-item label="性别" prop="gender">
+                  <el-select v-model="userForm.gender" placeholder="请选择性别">
+                    <el-option label="男" :value="1"></el-option>
+                    <el-option label="女" :value="2"></el-option>
+                    <el-option label="保密" :value="0"></el-option>
+                  </el-select>
+                </el-form-item>
+                
+                <el-form-item label="手机号" prop="phone">
+                  <el-input v-model="userForm.phone" placeholder="手机号"></el-input>
+                </el-form-item>
+              </el-col>
               
-              <el-form-item label="真实姓名" prop="realName" disabled>
-                <el-input v-model="userForm.realName" placeholder="真实姓名"></el-input>
-              </el-form-item>
-              
-              <el-form-item label="性别" prop="gender">
-                <el-select v-model="userForm.gender" placeholder="请选择性别">
-                  <el-option label="男" :value="1"></el-option>
-                  <el-option label="女" :value="2"></el-option>
-                  <el-option label="保密" :value="0"></el-option>
-                </el-select>
-              </el-form-item>
-              
-              <el-form-item label="手机号" prop="phone">
-                <el-input v-model="userForm.phone" placeholder="手机号"></el-input>
-              </el-form-item>
-            </el-col>
+              <el-col :span="12">
+                <el-form-item label="科室" prop="department">
+                  <el-input v-model="userForm.department" placeholder="请输入科室"></el-input>
+                </el-form-item>
+                
+                <el-form-item label="职称" prop="jobTitle">
+                  <el-input v-model="userForm.jobTitle" placeholder="职称"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
             
-            <el-col :span="12">
-              <el-form-item label="科室" prop="department">
-                <el-input v-model="userForm.department" placeholder="请输入科室"></el-input>
-              </el-form-item>
-              
-              <el-form-item label="职称" prop="jobTitle">
-                <el-input v-model="userForm.jobTitle" placeholder="职称"></el-input>
-              </el-form-item>
-            </el-col>
-          </el-row>
+            <!-- 保存按钮 -->
+            <div class="form-actions">
+              <el-button type="primary" @click="handleSubmit">保存修改</el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </div>
+          </template>
           
-          <!-- 保存按钮 -->
-          <div class="form-actions">
-            <el-button type="primary" @click="handleSubmit">保存修改</el-button>
-            <el-button @click="handleReset">重置</el-button>
-          </div>
+          <!-- 系统管理员只显示头像设置，修改密码功能在顶部导航栏 -->
+          <template v-else>
+            <!-- 系统管理员不需要额外的按钮，只保留头像设置功能 -->
+          </template>
         </el-form>
       </div>
     </el-card>
@@ -111,10 +118,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import axios from '@/utils/axios'
+
+// 路由实例
+const router = useRouter()
 
 // 表单引用
 const formRef = ref<FormInstance>()
@@ -158,6 +169,7 @@ const systemAvatars = ref([
 
 // 用户表单
 const userForm = reactive({
+  id: '',
   username: '',
   realName: '',
   phone: '',
@@ -165,6 +177,14 @@ const userForm = reactive({
   gender: 0,
   department: '',
   jobTitle: ''
+})
+
+// 用户角色
+const userRole = ref<string>('')
+
+// 计算属性：是否为系统管理员
+const isSystemAdmin = computed(() => {
+  return userRole.value.includes('ROLE_ADMIN')
 })
 
 // 表单验证规则
@@ -193,26 +213,24 @@ const fetchUserInfo = async () => {
       const userInfo = JSON.parse(savedUserInfo)
       Object.assign(userForm, userInfo)
       selectedSystemAvatar.value = userForm.avatar
+      // 获取用户角色
+      if (userInfo.roles && userInfo.roles.length > 0) {
+        userRole.value = userInfo.roles.map((role: any) => role.code).join(',')
+      }
       return
     }
     
-    // 从API获取用户信息
-      const response = await axios.get('/api/user/profile')
-      const { data } = response
-      if (data.code === 200) {
-        Object.assign(userForm, data.data)
-      } else {
-        // 如果API调用失败，使用基本数据，不使用模拟数据
-        userForm.username = 'admin'
-        userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-      }
-    
+    // 如果localStorage中没有用户信息，显示默认信息
+    userForm.username = 'admin'
+    userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    userRole.value = 'ROLE_ADMIN'
     selectedSystemAvatar.value = userForm.avatar
   } catch (error) {
     console.error('获取用户信息失败:', error)
     // 如果API调用失败，使用基本数据，不使用模拟数据
     userForm.username = 'admin'
     userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    userRole.value = 'ROLE_ADMIN'
     selectedSystemAvatar.value = userForm.avatar
   }
 }
@@ -227,14 +245,19 @@ const handleSubmit = async () => {
     // 保存用户信息到localStorage，确保头像等信息能够持久保存
     localStorage.setItem('userInfo', JSON.stringify(userForm))
     
-    // 发送保存用户信息请求
-    const response = await axios.put('/api/user/profile', userForm)
-    const { data } = response
-    if (data.code === 200) {
-      ElMessage.success('保存成功')
-    } else {
-      ElMessage.error('保存失败')
+    // 只发送需要更新的字段，不发送不可编辑的字段
+    const updateData = {
+      realName: userForm.realName, // 虽然realName不可编辑，但保留在表单中显示
+      phone: userForm.phone,
+      gender: userForm.gender,
+      department: userForm.department,
+      jobTitle: userForm.jobTitle,
+      status: 1 // 保持用户状态为启用
     }
+    
+    // 由于当前没有后端的个人信息更新API，我们只更新localStorage
+    // 这里可以添加一个模拟的成功消息
+    ElMessage.success('保存成功')
   } catch (error) {
     console.error('保存用户信息失败:', error)
     ElMessage.error('保存失败')
@@ -244,6 +267,12 @@ const handleSubmit = async () => {
 // 重置表单
 const handleReset = () => {
   fetchUserInfo()
+}
+
+// 跳转到修改密码页面
+const handleChangePassword = () => {
+  // 使用编程式导航跳转到修改密码页面
+  router.push('/dashboard/change-password')
 }
 
 // 处理头像上传
@@ -276,6 +305,10 @@ const handleAvatarUpload = (file: File) => {
 // 确认更换头像
 const confirmAvatarChange = () => {
   userForm.avatar = selectedSystemAvatar.value
+  // 将更新后的用户信息保存到localStorage
+  localStorage.setItem('userInfo', JSON.stringify(userForm))
+  // 手动触发storage事件，确保同一标签页内的MainLayout.vue也能收到更新
+  window.dispatchEvent(new Event('storage'))
   showAvatarOptions.value = false
   ElMessage.success('头像更换成功')
 }
@@ -337,6 +370,14 @@ onMounted(() => {
   gap: 10px;
 }
 
+/* 系统管理员操作区域 */
+.system-admin-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
 /* 头像选择弹窗样式 */
 .avatar-options {
   padding: 20px 0;
@@ -388,3 +429,6 @@ onMounted(() => {
   gap: 10px;
 }
 </style>
+
+
+

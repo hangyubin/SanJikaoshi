@@ -33,3 +33,5 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
      */
     List<Menu> findByStatus(Integer status);
 }
+
+

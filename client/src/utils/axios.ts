@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:8080',
   timeout: 15000
 })
 
@@ -22,9 +22,20 @@ service.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json'
     }
     
+    // 添加请求日志
+    console.log('请求配置:', {
+      url: config.url,
+      method: config.method,
+      baseURL: config.baseURL,
+      headers: config.headers,
+      params: config.params,
+      data: config.data
+    })
+    
     return config
   },
   (error) => {
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
@@ -44,8 +55,8 @@ service.interceptors.response.use(
       
       // 401: 未登录或token过期
       if (res.code === 401) {
-        const router = useRouter()
-        router.push('/login')
+        // 使用window.location.href而不是useRouter，因为拦截器中无法访问Vue实例
+        window.location.href = '/login'
       }
       
       return Promise.reject(new Error(res.message || 'Error'))
@@ -54,13 +65,29 @@ service.interceptors.response.use(
     }
   },
   (error) => {
-    // 只在有response时显示错误消息，避免开发环境下显示不必要的错误
+    // 只在有response时显示错误信息，避免在开发环境下显示不必要的错误
     if (error.response) {
+      console.error('API请求失败:', {
+        url: error.config.url,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      })
+      
+      // 只显示有明确错误消息的错误
+      const errorMessage = error.response.data?.message || `请求失败，状态码: ${error.response.status}`
       ElMessage({
-        message: error.response.data?.message || '请求失败',
+        message: errorMessage,
         type: 'error',
         duration: 3 * 1000
       })
+    } else {
+      // 忽略网络错误或其他无响应的错误，避免影响系统主要功能
+      console.warn('API请求警告:', {
+        message: error.message,
+        url: error.config?.url
+      })
+      // 不显示错误消息，只在控制台记录
     }
     return Promise.reject(error)
   }

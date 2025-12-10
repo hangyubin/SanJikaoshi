@@ -30,3 +30,5 @@ public interface ExamRecordRepository extends JpaRepository<ExamRecord, Long> {
     // 根据用户ID和考试时间范围查询考试记录列表
     List<ExamRecord> findByUserIdAndExamTimeBetween(Long userId, Long startTime, Long endTime);
 }
+
+

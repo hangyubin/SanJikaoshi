@@ -7,13 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/subjects")
+@RequestMapping("/subjects")
 public class SubjectController {
 
     @Autowired
@@ -202,9 +203,11 @@ public class SubjectController {
             basicSkills.setUpdateTime(currentTime);
 
             // 保存所有科目
-            List<Subject> defaultSubjects = subjectRepository.saveAll(
-                    List.of(basicTheory, basicKnowledge, basicSkills)
-            );
+            List<Subject> defaultSubjects = new ArrayList<>();
+            defaultSubjects.add(basicTheory);
+            defaultSubjects.add(basicKnowledge);
+            defaultSubjects.add(basicSkills);
+            defaultSubjects = subjectRepository.saveAll(defaultSubjects);
 
             response.put("code", 200);
             response.put("message", "初始化默认科目成功");
@@ -217,3 +220,5 @@ public class SubjectController {
         }
     }
 }
+
+

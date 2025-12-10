@@ -26,3 +26,5 @@ public class Subject {
     private Long createTime;
     private Long updateTime;
 }
+
+

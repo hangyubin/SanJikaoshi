@@ -298,11 +298,9 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 
 // 获取科目列表 - 暂时保留，但将在后续改为固定值
 const getSubjects = () => {
-  axios.get('/api/subjects')
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      subjects.value = data.data
+  axios.get('/subjects')
+  .then(response => { if (response.code === 200) {
+      subjects.value = response.data
     }
   })
   .catch(error => {
@@ -313,18 +311,16 @@ const getSubjects = () => {
 // 初始化数据
 const initData = () => {
   loading.value = true
-  axios.get('/api/learning-resources', {
+  axios.get('/learning-resources', {
     params: {
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
       ...searchForm
     }
   })
-  .then(response => {
-    const { data } = response
-    if (data.code === 200) {
-      learningResources.value = data.data.records || data.data
-      pagination.total = data.data.total || data.total || 0
+  .then(response => { if (response.code === 200) {
+      learningResources.value = response.data.records || response.data
+      pagination.total = response.total || response.total || 0
     }
   })
   .catch(error => {
@@ -449,9 +445,7 @@ const handleDelete = (row: any) => {
   })
   .then(() => {
     axios.delete(`/learning-resources/${row.id}`)
-    .then(response => {
-      const { data } = response
-      if (data.code === 200) {
+    .then(response => { if (response.code === 200) {
         ElMessage.success('删除成功')
         initData()
       } else {
@@ -532,23 +526,21 @@ const handleSubmit = () => {
         
         let request
         if (dialogType.value === 'add') {
-          request = axios.post('/api/learning-resources/upload', formData, {
+          request = axios.post('/learning-resources/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           })
         } else {
           formData.append('id', form.id)
-          request = axios.put('/api/learning-resources/upload', formData, {
+          request = axios.put('/learning-resources/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           })
         }
         
-        request.then(response => {
-          const { data } = response
-          if (data.code === 200) {
+        request.then(response => { if (response.code === 200) {
             ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
             dialogVisible.value = false
             initData()
@@ -567,7 +559,7 @@ const handleSubmit = () => {
         // 没有文件，直接提交表单
         let request
         if (dialogType.value === 'add') {
-          request = axios.post('/api/learning-resources', {
+          request = axios.post('/learning-resources', {
             ...form,
             subject: { id: form.subjectId }
           })
@@ -578,9 +570,7 @@ const handleSubmit = () => {
           })
         }
         
-        request.then(response => {
-          const { data } = response
-          if (data.code === 200) {
+        request.then(response => { if (response.code === 200) {
             ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
             dialogVisible.value = false
             initData()
@@ -682,3 +672,6 @@ onMounted(() => {
   }
 }
 </style>
+
+
+

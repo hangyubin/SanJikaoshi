@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/roles")
 public class RoleController {
 
     @Autowired
@@ -175,3 +175,5 @@ public class RoleController {
         }
     }
 }
+
+

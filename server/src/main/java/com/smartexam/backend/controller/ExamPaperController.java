@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/papers")
+@RequestMapping("/papers")
 public class ExamPaperController {
 
     @Autowired
@@ -217,3 +217,5 @@ public class ExamPaperController {
         }
     }
 }
+
+

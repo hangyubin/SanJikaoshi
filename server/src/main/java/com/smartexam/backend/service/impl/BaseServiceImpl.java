@@ -52,3 +52,5 @@ public abstract class BaseServiceImpl {
         return entities;
     }
 }
+
+

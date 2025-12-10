@@ -21,3 +21,5 @@ public interface ExamPaperRepository extends JpaRepository<ExamPaper, Long> {
     // 根据科目ID和状态查询试卷列表
     List<ExamPaper> findBySubjectIdAndStatus(Long subjectId, Integer status);
 }
+
+

@@ -155,42 +155,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { 
   RefreshRight, Star, Menu, 
   Delete 
 } from '@element-plus/icons-vue'
+import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
-// 模拟三基考试科目数据
-const subjects = ref([
-  {
-    id: 1,
-    name: '基本理论',
-    description: '卫生系统三基-基本理论部分',
-    questionCount: 850,
-    avgDifficulty: '中等',
-    code: 'BASIC_THEORY'
-  },
-  {
-    id: 2,
-    name: '基础知识',
-    description: '卫生系统三基-基础知识部分',
-    questionCount: 920,
-    avgDifficulty: '中等偏难',
-    code: 'BASIC_KNOWLEDGE'
-  },
-  {
-    id: 3,
-    name: '基本技能',
-    description: '卫生系统三基-基本技能部分',
-    questionCount: 780,
-    avgDifficulty: '偏难',
-    code: 'BASIC_SKILLS'
-  }
-])
+// 科目数据，初始为空数组
+const subjects = ref<any[]>([])
 
 const selectedSubject = ref<any>(null)
 const loading = ref(false)
+const router = useRouter()
 
 const practiceSetting = reactive({
   questionType: [] as number[],
@@ -224,7 +203,14 @@ const startPractice = () => {
   
   // 开始练习逻辑
   console.log('开始练习', selectedSubject.value, practiceSetting)
-  // 这里可以跳转到练习页面
+  // 跳转到练习页面
+  router.push({
+    path: '/dashboard/practice/start',
+    query: {
+      subjectId: selectedSubject.value.id,
+      ...practiceSetting
+    }
+  })
 }
 
 const resetSetting = () => {
@@ -235,20 +221,34 @@ const resetSetting = () => {
   practiceSetting.goal = ''
 }
 
-const refreshSubjects = () => {
+// 获取科目列表
+const fetchSubjects = () => {
   loading.value = true
-  // 模拟从后端获取最新科目数据
-  setTimeout(() => {
-    console.log('刷新科目列表')
-    // 这里可以添加从后端获取数据的逻辑
-    loading.value = false
-  }, 1000)
+  axios.get('/subjects')
+    .then(response => { if (response.code === 200) {
+        subjects.value = response.data || []
+      }
+    })
+    .catch(error => {
+      console.error('获取科目列表失败:', error)
+      ElMessage.error('获取科目列表失败')
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+const refreshSubjects = () => {
+  fetchSubjects()
 }
 
 const clearSubjectSelection = () => {
   selectedSubject.value = null
-  resetSetting()
 }
+
+onMounted(() => {
+  fetchSubjects()
+})
 </script>
 
 <style scoped>
@@ -766,3 +766,6 @@ const clearSubjectSelection = () => {
   font-weight: 500;
 }
 </style>
+
+
+
