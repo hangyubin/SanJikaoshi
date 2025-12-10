@@ -244,11 +244,11 @@ const handleLogin = async () => {
     }
     
     // 保存token和用户信息到localStorage
-    localStorage.setItem('token', response.token)
+    localStorage.setItem('token', response.data.token)
     localStorage.setItem('userInfo', JSON.stringify({
-      username: response.username,
-      realName: response.realName,
-      roles: response.roles
+      username: response.data.username,
+      realName: response.data.realName,
+      roles: response.data.roles
     }))
     
     // 登录成功，跳转到dashboard

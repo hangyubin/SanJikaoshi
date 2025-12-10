@@ -144,11 +144,11 @@ const fetchAdmins = () => {
       status: searchForm.status
     }
   })
-  .then(response => { if (response.code === 200) {
-      admins.value = response.data.admins || []
-      total.value = response.total || 0
+  .then(res => {
+      admins.value = res.data.admins || []
+      total.value = res.data.total || 0
     }
-  })
+  )
   .catch(error => {
     console.error('获取管理员列表失败:', error)
     ElMessage.error('获取管理员列表失败')

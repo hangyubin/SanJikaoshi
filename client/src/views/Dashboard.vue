@@ -356,10 +356,8 @@ const fetchLatestResources = () => {
   axios.get('/learning-resources', {
     params: { pageNum: 1, pageSize: 5 }
   })
-  .then(response => {
-    if (response.code === 200) {
-      latestResources.value = response.data || []
-    }
+  .then(res => {
+    latestResources.value = res.data || []
   })
   .catch(error => {
     console.error('获取最新资源失败:', error)
