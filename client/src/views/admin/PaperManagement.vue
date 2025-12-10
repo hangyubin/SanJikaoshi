@@ -351,8 +351,16 @@ const fetchPapers = async () => {
     }
     const response = await axios.get('/api/papers', { params })
     if (response.data.code === 200) {
-      papers.value = response.data.data.records
-      total.value = response.data.data.total
+      // 适应后端返回的格式
+      if (response.data.data.records) {
+        // 如果是分页格式
+        papers.value = response.data.data.records
+        total.value = response.data.data.total
+      } else {
+        // 如果是直接列表格式
+        papers.value = response.data.data
+        total.value = response.data.data.length
+      }
     } else {
       ElMessage.error('获取题库列表失败')
     }

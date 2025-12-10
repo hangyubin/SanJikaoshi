@@ -14,9 +14,13 @@ public class ExamPaper {
     
     private String name;
     private String description;
+    private Integer type;
+    private Integer difficulty;
+    private Integer totalQuestions;
     private Integer totalScore;
     private Integer duration;
     private Integer status;
+    private String remark;
     
     @ManyToOne
     @JoinColumn(name = "subject_id")
