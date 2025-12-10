@@ -299,10 +299,10 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 // 获取科目列表 - 暂时保留，但将在后续改为固定值
 const getSubjects = () => {
   axios.get('/subjects')
-  .then(response => { if (response.code === 200) {
-      subjects.value = response.data
+  .then(res => {
+      subjects.value = res.data
     }
-  })
+  )
   .catch(error => {
     console.error('获取科目列表失败:', error)
   })
@@ -318,11 +318,11 @@ const initData = () => {
       ...searchForm
     }
   })
-  .then(response => { if (response.code === 200) {
-      learningResources.value = response.data.records || response.data
-      pagination.total = response.total || response.total || 0
+  .then(res => {
+      learningResources.value = res.data.records || res.data
+      pagination.total = res.data.total || 0
     }
-  })
+  )
   .catch(error => {
     console.error('获取学习资源列表失败:', error)
     ElMessage.error('获取学习资源列表失败')

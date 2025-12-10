@@ -200,11 +200,11 @@ const initData = () => {
       ...searchForm
     }
   })
-  .then(response => { if (response.code === 200) {
-      departments.value = response.data
-      pagination.total = response.total || 0
+  .then(res => {
+      departments.value = res.data
+      pagination.total = res.data.total || 0
     }
-  })
+  )
   .catch(error => {
     console.error('获取科室列表失败:', error)
   })
@@ -259,13 +259,10 @@ const handleDelete = (row: any) => {
   })
   .then(() => {
     axios.delete(`/departments/${row.id}`)
-    .then(response => { if (response.code === 200) {
+    .then(() => {
         ElMessage.success('删除成功')
         initData()
-      } else {
-        ElMessage.error(data.message || '删除失败')
-      }
-    })
+      })
     .catch(error => {
       console.error('删除科室失败:', error)
       ElMessage.error('删除失败')
@@ -288,14 +285,11 @@ const handleSubmit = () => {
         request = axios.put(`/departments/${form.id}`, form)
       }
       
-      request.then(response => { if (response.code === 200) {
+      request.then(() => {
           ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
           dialogVisible.value = false
           initData()
-        } else {
-          ElMessage.error(data.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
-        }
-      })
+        })
       .catch(error => {
         console.error(dialogType.value === 'add' ? '新增科室失败:' : '编辑科室失败:', error)
         ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
