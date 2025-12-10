@@ -123,33 +123,37 @@
           />
         </el-form-item>
         
-        <el-form-item label="资源类型" prop="type">
-          <el-select
-            v-model="form.type"
-            placeholder="请选择资源类型"
-            style="width: 100%"
-          >
-            <el-option label="文档" :value="1" />
-            <el-option label="视频" :value="2" />
-            <el-option label="音频" :value="3" />
-            <el-option label="图片" :value="4" />
-          </el-select>
-        </el-form-item>
-        
         <el-form-item label="资源链接" prop="url">
-          <el-input v-model="form.url" placeholder="请输入资源链接" />
+          <el-input v-model="form.url" placeholder="请输入资源链接（可选）" clearable />
+          <div class="form-tip">提示：如果上传文件，资源链接将自动生成</div>
         </el-form-item>
         
-        <el-form-item label="文件类型" prop="fileType">
-          <el-input v-model="form.fileType" placeholder="请输入文件类型（如：pdf, mp4, jpg）" />
-        </el-form-item>
-        
-        <el-form-item label="文件大小" prop="fileSize">
-          <el-input-number
-            v-model="form.fileSize"
-            :min="0"
-            placeholder="请输入文件大小（字节）"
-          />
+        <el-form-item label="上传文件">
+          <el-upload
+            class="upload-demo"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :accept="'.' + supportedExtensions.join(',.')"
+            :before-upload="beforeUpload"
+            drag
+            multiple
+            :limit="1"
+          >
+            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+            <div class="el-upload__text">
+              将文件拖到此处，或 <em>点击上传</em>
+            </div>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持上传的文件格式：{{ supportedExtensions.join(', ') }}
+              </div>
+            </template>
+          </el-upload>
+          <div v-if="form.file" class="file-info">
+            <el-icon><Document /></el-icon>
+            <span>{{ form.file.name }}</span>
+            <el-button type="danger" link size="small" @click="form.file = null">删除</el-button>
+          </div>
         </el-form-item>
         
         <el-form-item label="所属科目" prop="subjectId">
@@ -158,6 +162,7 @@
             placeholder="请选择所属科目"
             style="width: 100%"
           >
+            <el-option label="学习资料" value="learning-materials" />
             <el-option
               v-for="subject in subjects"
               :key="subject.id"
@@ -187,9 +192,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, UploadFilled, Document } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 表单引用
 const formRef = ref()
@@ -231,20 +236,31 @@ const form = reactive({
   fileType: '',
   fileSize: 0,
   subjectId: '',
-  status: 1
+  status: 1,
+  file: null as File | null
 })
+
+// 支持的文件类型映射
+const fileTypeMap = {
+  'pdf': { label: 'PDF文档', type: 1 },
+  'doc': { label: 'Word文档', type: 1 },
+  'docx': { label: 'Word文档', type: 1 },
+  'xls': { label: 'Excel表格', type: 1 },
+  'xlsx': { label: 'Excel表格', type: 1 },
+  'mp3': { label: '音频文件', type: 3 },
+  'mp4': { label: '视频文件', type: 2 },
+  'rm': { label: '视频文件', type: 2 },
+  'rmvb': { label: '视频文件', type: 2 }
+}
+
+// 支持的文件扩展名
+const supportedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp3', 'mp4', 'rm', 'rmvb']
 
 // 表单验证规则
 const rules = reactive({
   title: [
     { required: true, message: '请输入资源标题', trigger: 'blur' },
     { min: 2, max: 100, message: '资源标题长度在 2 到 100 个字符', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择资源类型', trigger: 'blur' }
-  ],
-  url: [
-    { required: true, message: '请输入资源链接', trigger: 'blur' }
   ],
   subjectId: [
     { required: true, message: '请选择所属科目', trigger: 'blur' }
@@ -280,9 +296,9 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
   return date.toLocaleString('zh-CN')
 }
 
-// 获取科目列表
+// 获取科目列表 - 暂时保留，但将在后续改为固定值
 const getSubjects = () => {
-  axios.get('/api/subjects')
+  axios.get('/subjects')
   .then(response => {
     const { data } = response
     if (data.code === 200) {
@@ -297,7 +313,7 @@ const getSubjects = () => {
 // 初始化数据
 const initData = () => {
   loading.value = true
-  axios.get('/api/learning-resources', {
+  axios.get('/learning-resources', {
     params: {
       pageNum: pagination.pageNum,
       pageSize: pagination.pageSize,
@@ -307,12 +323,13 @@ const initData = () => {
   .then(response => {
     const { data } = response
     if (data.code === 200) {
-      learningResources.value = data.data
-      pagination.total = data.total || 0
+      learningResources.value = data.data.records || data.data
+      pagination.total = data.data.total || data.total || 0
     }
   })
   .catch(error => {
     console.error('获取学习资源列表失败:', error)
+    ElMessage.error('获取学习资源列表失败')
   })
   .finally(() => {
     loading.value = false
@@ -347,8 +364,9 @@ const handleAdd = () => {
     url: '',
     fileType: '',
     fileSize: 0,
-    subjectId: '',
-    status: 1
+    subjectId: 'learning-materials',
+    status: 1,
+    file: null
   })
   dialogVisible.value = true
 }
@@ -364,8 +382,9 @@ const handleEdit = (row: any) => {
     url: row.url,
     fileType: row.fileType,
     fileSize: row.fileSize,
-    subjectId: row.subject?.id || '',
-    status: row.status
+    subjectId: row.subject?.id || 'learning-materials',
+    status: row.status,
+    file: null
   })
   dialogVisible.value = true
 }
@@ -374,16 +393,46 @@ const handleEdit = (row: any) => {
 const handlePreview = (row: any) => {
   // 根据资源类型打开预览
   if (row.url) {
-    // 如果是图片，直接预览
-    if (row.type === 4) {
-      ElNotification({
-        title: '图片预览',
-        message: `<img src="${row.url}" style="max-width: 100%; max-height: 300px;" />`,
+    // 获取文件扩展名
+    const ext = row.fileType?.toLowerCase() || ''
+    
+    // PDF文件在线预览
+    if (ext === 'pdf') {
+      window.open(row.url, '_blank')
+    }
+    // 视频文件在线播放
+    else if (['mp4', 'rm', 'rmvb'].includes(ext)) {
+      ElMessageBox({
+        title: '视频预览',
+        message: `<video src="${row.url}" controls style="width: 100%; max-height: 500px;"></video>`,
         dangerouslyUseHTMLString: true,
-        duration: 5000
+        confirmButtonText: '关闭',
+        customClass: 'video-preview-dialog'
       })
-    } else {
-      // 其他类型，打开新窗口
+    }
+    // 音频文件在线播放
+    else if (ext === 'mp3') {
+      ElMessageBox({
+        title: '音频预览',
+        message: `<audio src="${row.url}" controls style="width: 100%;"></audio>`,
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'audio-preview-dialog'
+      })
+    }
+    // 文档文件下载
+    else if (['doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+      // 直接下载
+      const a = document.createElement('a')
+      a.href = row.url
+      a.download = row.title || '学习资源'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      ElMessage.success('文件下载中...')
+    }
+    // 其他类型，打开新窗口
+    else {
       window.open(row.url, '_blank')
     }
   } else {
@@ -399,7 +448,7 @@ const handleDelete = (row: any) => {
     type: 'warning'
   })
   .then(() => {
-    axios.delete(`/api/learning-resources/${row.id}`)
+    axios.delete(`/learning-resources/${row.id}`)
     .then(response => {
       const { data } = response
       if (data.code === 200) {
@@ -419,41 +468,134 @@ const handleDelete = (row: any) => {
   })
 }
 
+// 文件变化处理
+const handleFileChange = (file: any) => {
+  form.file = file.raw
+  
+  // 自动识别文件类型和大小
+  const fileName = file.name
+  const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+  
+  // 设置文件类型和资源类型
+  const fileTypeInfo = fileTypeMap[ext as keyof typeof fileTypeMap]
+  if (fileTypeInfo) {
+    form.fileType = ext
+    form.type = fileTypeInfo.type
+  } else {
+    form.fileType = ext
+    form.type = 1 // 默认文档类型
+  }
+  
+  // 设置文件大小
+  form.fileSize = file.size
+}
+
+// 上传前校验
+const beforeUpload = (file: any) => {
+  const fileName = file.name
+  const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+  
+  if (!supportedExtensions.includes(ext)) {
+    ElMessage.error(`不支持的文件格式，请上传：${supportedExtensions.join(', ')}`)
+    return false
+  }
+  
+  // 可以添加文件大小限制，例如50MB
+  const maxSize = 50 * 1024 * 1024 // 50MB
+  if (file.size > maxSize) {
+    ElMessage.error('文件大小不能超过50MB')
+    return false
+  }
+  
+  return true
+}
+
 // 处理提交
 const handleSubmit = () => {
   formRef.value?.validate((valid: boolean) => {
     if (valid) {
       loading.value = true
-      let request
-      if (dialogType.value === 'add') {
-        request = axios.post('/api/learning-resources', {
-          ...form,
-          subject: { id: form.subjectId }
+      
+      // 如果有文件，先上传文件
+      if (form.file) {
+        const formData = new FormData()
+        formData.append('file', form.file)
+        formData.append('title', form.title)
+        formData.append('description', form.description)
+        formData.append('type', form.type.toString())
+        formData.append('status', form.status.toString())
+        formData.append('subjectId', form.subjectId)
+        
+        if (form.url) {
+          formData.append('url', form.url)
+        }
+        
+        let request
+        if (dialogType.value === 'add') {
+          request = axios.post('/learning-resources/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        } else {
+          formData.append('id', form.id)
+          request = axios.put('/learning-resources/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        }
+        
+        request.then(response => {
+          const { data } = response
+          if (data.code === 200) {
+            ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
+            dialogVisible.value = false
+            initData()
+          } else {
+            ElMessage.error(data.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
+          }
+        })
+        .catch(error => {
+          console.error(dialogType.value === 'add' ? '新增学习资源失败:' : '编辑学习资源失败:', error)
+          ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
+        })
+        .finally(() => {
+          loading.value = false
         })
       } else {
-        request = axios.put(`/api/learning-resources/${form.id}`, {
-          ...form,
-          subject: { id: form.subjectId }
+        // 没有文件，直接提交表单
+        let request
+        if (dialogType.value === 'add') {
+          request = axios.post('/learning-resources', {
+            ...form,
+            subject: { id: form.subjectId }
+          })
+        } else {
+          request = axios.put(`/learning-resources/${form.id}`, {
+            ...form,
+            subject: { id: form.subjectId }
+          })
+        }
+        
+        request.then(response => {
+          const { data } = response
+          if (data.code === 200) {
+            ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
+            dialogVisible.value = false
+            initData()
+          } else {
+            ElMessage.error(data.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
+          }
+        })
+        .catch(error => {
+          console.error(dialogType.value === 'add' ? '新增学习资源失败:' : '编辑学习资源失败:', error)
+          ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
+        })
+        .finally(() => {
+          loading.value = false
         })
       }
-      
-      request.then(response => {
-        const { data } = response
-        if (data.code === 200) {
-          ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
-          dialogVisible.value = false
-          initData()
-        } else {
-          ElMessage.error(data.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
-        }
-      })
-      .catch(error => {
-        console.error(dialogType.value === 'add' ? '新增学习资源失败:' : '编辑学习资源失败:', error)
-        ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
-      })
-      .finally(() => {
-        loading.value = false
-      })
     }
   })
 }
@@ -494,6 +636,30 @@ onMounted(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.file-info {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 6px;
+}
+
+.video-preview-dialog {
+  max-width: 800px;
+}
+
+.audio-preview-dialog {
+  max-width: 600px;
 }
 
 .pagination-container {

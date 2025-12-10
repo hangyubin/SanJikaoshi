@@ -125,22 +125,35 @@ const selectedSystemAvatar = ref('')
 
 // 系统提供的头像选项
 const systemAvatars = ref([
-  'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/1/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/2/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/3/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/4/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/5/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/6/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/7/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/8/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/9/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/a/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/b/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/c/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/d/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/e/88/03b0d39583f48206768a7534e55bcpng.png',
-  'https://cube.elemecdn.com/f/88/03b0d39583f48206768a7534e55bcpng.png',
+  // 男性头像
+  'https://picsum.photos/id/1005/400/400',
+  'https://picsum.photos/id/1012/400/400',
+  'https://picsum.photos/id/1013/400/400',
+  'https://picsum.photos/id/1016/400/400',
+  'https://picsum.photos/id/1025/400/400',
+  'https://picsum.photos/id/1035/400/400',
+  'https://picsum.photos/id/1062/400/400',
+  'https://picsum.photos/id/1074/400/400',
+  
+  // 女性头像
+  'https://picsum.photos/id/1027/400/400',
+  'https://picsum.photos/id/1042/400/400',
+  'https://picsum.photos/id/1060/400/400',
+  'https://picsum.photos/id/1066/400/400',
+  'https://picsum.photos/id/1070/400/400',
+  'https://picsum.photos/id/1077/400/400',
+  'https://picsum.photos/id/1082/400/400',
+  'https://picsum.photos/id/1083/400/400',
+  
+  // 中性头像/职业头像
+  'https://picsum.photos/id/1024/400/400',
+  'https://picsum.photos/id/1059/400/400',
+  'https://picsum.photos/id/1071/400/400',
+  'https://picsum.photos/id/1084/400/400',
+  'https://picsum.photos/id/1092/400/400',
+  'https://picsum.photos/id/1094/400/400',
+  'https://picsum.photos/id/110/400/400',
+  'https://picsum.photos/id/116/400/400'
 ])
 
 // 用户表单
@@ -165,6 +178,9 @@ const rules = reactive<FormRules>({
   ],
   gender: [
     { required: true, message: '请选择性别', trigger: 'change' }
+  ],
+  department: [
+    { required: true, message: '请输入科室', trigger: 'blur' }
   ]
 })
 
@@ -181,15 +197,15 @@ const fetchUserInfo = async () => {
     }
     
     // 从API获取用户信息
-    const response = await axios.get('/api/user/profile')
-    const { data } = response
-    if (data.code === 200) {
-      Object.assign(userForm, data.data)
-    } else {
-      // 如果API调用失败，使用基本数据，不使用模拟数据
-      userForm.username = 'admin'
-      userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    }
+      const response = await axios.get('/user/profile')
+      const { data } = response
+      if (data.code === 200) {
+        Object.assign(userForm, data.data)
+      } else {
+        // 如果API调用失败，使用基本数据，不使用模拟数据
+        userForm.username = 'admin'
+        userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+      }
     
     selectedSystemAvatar.value = userForm.avatar
   } catch (error) {
@@ -212,7 +228,7 @@ const handleSubmit = async () => {
     localStorage.setItem('userInfo', JSON.stringify(userForm))
     
     // 发送保存用户信息请求
-    const response = await axios.put('/api/user/profile', userForm)
+    const response = await axios.put('/user/profile', userForm)
     const { data } = response
     if (data.code === 200) {
       ElMessage.success('保存成功')

@@ -99,9 +99,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="totalQuestions" label="题目数量" width="120"></el-table-column>
-        <el-table-column prop="totalScore" label="总分" width="100"></el-table-column>
-        <el-table-column prop="difficulty" label="难度" width="100">
+        <el-table-column prop="difficulty" label="难度" width="150">
           <template #default="scope">
             <el-tag :type="scope.row.difficulty === 1 ? 'success' : scope.row.difficulty === 2 ? 'warning' : 'danger'">
               {{ scope.row.difficulty === 1 ? '简单' : scope.row.difficulty === 2 ? '中等' : '困难' }}
@@ -148,7 +146,11 @@
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="题库名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入题库名称"></el-input>
+          <el-select v-model="form.name" placeholder="请选择题库名称">
+            <el-option label="基本理论" value="基本理论"></el-option>
+            <el-option label="基本知识" value="基本知识"></el-option>
+            <el-option label="基本技能" value="基本技能"></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="题型" prop="type">
           <el-select v-model="form.type" placeholder="请选择题型">
@@ -160,16 +162,10 @@
         </el-form-item>
         <el-form-item label="难度" prop="difficulty">
           <el-select v-model="form.difficulty" placeholder="请选择难度">
-            <el-option label="简单" :value="1"></el-option>
-            <el-option label="中等" :value="2"></el-option>
-            <el-option label="困难" :value="3"></el-option>
+            <el-option label="简单 (1分)" :value="1"></el-option>
+            <el-option label="中等 (3分)" :value="2"></el-option>
+            <el-option label="困难 (5分)" :value="3"></el-option>
           </el-select>
-        </el-form-item>
-        <el-form-item label="总分" prop="totalScore">
-          <el-input-number v-model="form.totalScore" :min="10" :max="1000" :step="10"></el-input-number>
-        </el-form-item>
-        <el-form-item label="题目数量" prop="totalQuestions">
-          <el-input-number v-model="form.totalQuestions" :min="5" :max="500" :step="5"></el-input-number>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch v-model="form.status" active-value="1" inactive-value="0"></el-switch>
@@ -309,8 +305,6 @@ const form = reactive({
   name: '',
   type: 1,
   difficulty: 2,
-  totalQuestions: 50,
-  totalScore: 100,
   status: 1,
   remark: ''
 })
@@ -349,7 +343,8 @@ const fetchPapers = async () => {
       name: searchForm.name,
       type: searchForm.type
     }
-    const response = await axios.get('/api/papers', { params })
+    // 修复API地址，去掉/api前缀
+    const response = await axios.get('/papers', { params })
     if (response.data.code === 200) {
       // 适应后端返回的格式
       if (response.data.data.records) {
@@ -393,8 +388,6 @@ const handleAdd = () => {
     name: '',
     type: 1,
     difficulty: 2,
-    totalQuestions: 50,
-    totalScore: 100,
     status: 1,
     remark: ''
   })
@@ -410,8 +403,6 @@ const handleEdit = (row: any) => {
     name: row.name,
     type: row.type,
     difficulty: row.difficulty,
-    totalQuestions: row.totalQuestions,
-    totalScore: row.totalScore,
     status: row.status,
     remark: row.remark
   })
@@ -432,11 +423,11 @@ const handleSubmit = async () => {
     
     let response
     if (form.id) {
-      // 更新题库
-      response = await axios.put(`/api/papers/${form.id}`, requestData)
+      // 更新题库，去掉/api前缀
+      response = await axios.put(`/papers/${form.id}`, requestData)
     } else {
-      // 增加题库
-      response = await axios.post('/api/papers', requestData)
+      // 增加题库，去掉/api前缀
+      response = await axios.post('/papers', requestData)
     }
     
     if (response.data.code === 200) {
@@ -454,7 +445,8 @@ const handleSubmit = async () => {
 // 删除题库
 const handleDelete = async (row: any) => {
   try {
-    const response = await axios.delete(`/api/papers/${row.id}`)
+    // 去掉/api前缀
+    const response = await axios.delete(`/papers/${row.id}`)
     if (response.data.code === 200) {
       ElMessage.success('删除题库成功')
       fetchPapers() // 重新加载题库列表
@@ -500,7 +492,8 @@ const handleGenerateSubmit = async () => {
       remark: generateForm.remark
     }
     
-    const response = await axios.post('/api/papers/generate', requestData)
+    // 去掉/api前缀
+    const response = await axios.post('/papers/generate', requestData)
     if (response.data.code === 200) {
       ElMessage.success('生成题库成功')
       generateDialogVisible.value = false
@@ -569,7 +562,8 @@ const handleImportSubmit = async () => {
     formData.append('name', importForm.name)
     formData.append('description', importForm.description)
     
-    const response = await axios.post('/api/papers/import', formData, {
+    // 去掉/api前缀
+    const response = await axios.post('/papers/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

@@ -168,6 +168,49 @@
         </el-table-column>
       </el-table>
     </el-card>
+    
+    <!-- 最新学习资源 -->
+    <el-card class="resources-card" style="margin-top: 30px;">
+      <template #header>
+        <div class="card-header">
+          <h3>最新学习资源</h3>
+          <el-button type="primary" size="small" @click="router.push('/dashboard/learning-resource-management')">查看全部</el-button>
+        </div>
+      </template>
+      
+      <div class="resources-list" v-if="latestResources.length > 0" v-loading="resourcesLoading">
+        <div v-for="resource in latestResources" :key="resource.id" class="resource-item">
+          <div class="resource-info">
+            <div class="resource-title">
+              <el-icon class="resource-icon"><Link /></el-icon>
+              <span class="title-text">{{ resource.title }}</span>
+              <el-tag :type="resource.type === 1 ? 'info' : resource.type === 2 ? 'success' : resource.type === 3 ? 'warning' : 'primary'">
+                {{ fileTypeMap[resource.fileType as keyof typeof fileTypeMap]?.label || '未知类型' }}
+              </el-tag>
+            </div>
+            <div class="resource-meta">
+              <span class="meta-item">{{ resource.subject?.name || '学习资料' }}</span>
+              <span class="meta-item">{{ formatFileSize(resource.fileSize) }}</span>
+              <span class="meta-item">{{ new Date(resource.createTime).toLocaleString() }}</span>
+            </div>
+            <div class="resource-desc">{{ resource.description || '暂无描述' }}</div>
+          </div>
+          <div class="resource-actions">
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="handleResourcePreview(resource)"
+              :icon="resource.type === 2 || resource.type === 3 ? VideoPlay : Download"
+            >
+              {{ resource.type === 2 || resource.type === 3 ? '预览' : '下载' }}
+            </el-button>
+          </div>
+        </div>
+      </div>
+      <div v-else class="no-resources" v-loading="resourcesLoading">
+        <el-empty description="暂无学习资源" />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -177,8 +220,10 @@ import { useRouter } from 'vue-router'
 import {
   User, Document, EditPen, DocumentCopy, Star, 
   WarningFilled, OfficeBuilding, 
-  FolderOpened 
+  FolderOpened, Link, VideoPlay, Download 
 } from '@element-plus/icons-vue'
+import axios from '@/utils/axios'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 
@@ -198,6 +243,7 @@ const thisWeekCompletedQuestions = ref(125)
 
 // 加载状态
 const loading = ref(false)
+const resourcesLoading = ref(false)
 
 // 最近考试数据
 const recentExams = ref([
@@ -238,6 +284,22 @@ const recentExams = ref([
     status: '已结束'
   }
 ])
+
+// 最新资源列表
+const latestResources = ref<any[]>([])
+
+// 支持的文件类型映射
+const fileTypeMap = {
+  'pdf': { label: 'PDF文档', type: 1 },
+  'doc': { label: 'Word文档', type: 1 },
+  'docx': { label: 'Word文档', type: 1 },
+  'xls': { label: 'Excel表格', type: 1 },
+  'xlsx': { label: 'Excel表格', type: 1 },
+  'mp3': { label: '音频文件', type: 3 },
+  'mp4': { label: '视频文件', type: 2 },
+  'rm': { label: '视频文件', type: 2 },
+  'rmvb': { label: '视频文件', type: 2 }
+}
 
 // 管理员快捷操作
 const adminQuickActions = ref([
@@ -325,8 +387,89 @@ const fetchUserInfo = () => {
   }
 }
 
+// 获取最新资源
+const fetchLatestResources = () => {
+  resourcesLoading.value = true
+  axios.get('/learning-resources/latest', {
+    params: { limit: 5 }
+  })
+  .then(response => {
+    const { data } = response
+    if (data.code === 200) {
+      latestResources.value = data.data || []
+    }
+  })
+  .catch(error => {
+    console.error('获取最新资源失败:', error)
+  })
+  .finally(() => {
+    resourcesLoading.value = false
+  })
+}
+
+// 文件大小格式化
+const formatFileSize = (bytes: number) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 处理资源预览
+const handleResourcePreview = (resource: any) => {
+  // 根据资源类型打开预览
+  if (resource.url) {
+    // 获取文件扩展名
+    const ext = resource.fileType?.toLowerCase() || ''
+    
+    // PDF文件在线预览
+    if (ext === 'pdf') {
+      window.open(resource.url, '_blank')
+    }
+    // 视频文件在线播放
+    else if (['mp4', 'rm', 'rmvb'].includes(ext)) {
+      ElMessageBox({
+        title: '视频预览',
+        message: `<video src="${resource.url}" controls style="width: 100%; max-height: 500px;"></video>`,
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'video-preview-dialog'
+      })
+    }
+    // 音频文件在线播放
+    else if (ext === 'mp3') {
+      ElMessageBox({
+        title: '音频预览',
+        message: `<audio src="${resource.url}" controls style="width: 100%;"></audio>`,
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'audio-preview-dialog'
+      })
+    }
+    // 文档文件下载
+    else if (['doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+      // 直接下载
+      const a = document.createElement('a')
+      a.href = resource.url
+      a.download = resource.title || '学习资源'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      ElMessage.success('文件下载中...')
+    }
+    // 其他类型，打开新窗口
+    else {
+      window.open(resource.url, '_blank')
+    }
+  } else {
+    ElMessage.warning('资源链接为空，无法预览')
+  }
+}
+
 onMounted(() => {
   fetchUserInfo()
+  fetchLatestResources()
   console.log('Dashboard mounted')
 })
 </script>
@@ -821,5 +964,113 @@ onMounted(() => {
 
 :deep(.el-table__body-wrapper::-webkit-scrollbar-thumb:hover) {
   background: #a1a1a1;
+}
+
+/* 资源列表样式 */
+.resources-card {
+  margin-top: 30px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: white;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.resources-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.resources-list {
+  padding: 20px 0;
+}
+
+.resource-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 30px;
+  border-bottom: 1px solid #f5f7fa;
+  transition: all 0.3s ease;
+}
+
+.resource-item:last-child {
+  border-bottom: none;
+}
+
+.resource-item:hover {
+  background-color: #fafafa;
+  transform: translateX(5px);
+}
+
+.resource-info {
+  flex: 1;
+}
+
+.resource-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.resource-icon {
+  font-size: 18px;
+  color: #667eea;
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.resource-desc {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.resource-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: 20px;
+}
+
+.no-resources {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.video-preview-dialog {
+  max-width: 800px;
+}
+
+.audio-preview-dialog {
+  max-width: 600px;
 }
 </style>

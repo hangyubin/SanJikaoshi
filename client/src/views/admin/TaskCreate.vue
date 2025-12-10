@@ -35,6 +35,11 @@
             <el-form-item label="考试时长(分钟)" prop="duration">
               <el-input-number v-model="taskForm.duration" :min="5" :max="300" placeholder="请输入考试时长"></el-input-number>
             </el-form-item>
+            
+            <el-form-item label="开考后允许进入时间(分钟)" prop="lateAllowedTime">
+              <el-input-number v-model="taskForm.lateAllowedTime" :min="0" :max="120" placeholder="请输入开考后允许进入的时间"></el-input-number>
+              <div class="form-tip">设置为0表示不允许迟到进入</div>
+            </el-form-item>
           </el-col>
           
           <el-col :span="12">
@@ -58,8 +63,25 @@
               ></el-date-picker>
             </el-form-item>
             
-            <el-form-item label="参与人数" prop="participantCount">
-              <el-input-number v-model="taskForm.participantCount" :min="1" placeholder="请输入参与人数"></el-input-number>
+            <el-form-item label="参与科室" prop="departmentIds">
+              <el-select v-model="taskForm.departmentIds" placeholder="请选择参与科室" multiple filterable @change="handleDepartmentChange">
+                <el-option 
+                  v-for="dept in departments" 
+                  :key="dept.id" 
+                  :label="dept.name" 
+                  :value="dept.id"></el-option>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="参与人员" prop="participantIds">
+              <el-select v-model="taskForm.participantIds" placeholder="请选择参与人员" multiple filterable>
+                <el-option 
+                  v-for="participant in participants" 
+                  :key="participant.id" 
+                  :label="participant.department" 
+                  :value="participant.id"></el-option>
+              </el-select>
+              <div class="form-tip">显示格式：科室，不显示真实姓名和人员ID</div>
             </el-form-item>
             
             <el-form-item label="状态" prop="status">
@@ -71,6 +93,71 @@
             </el-form-item>
           </el-col>
         </el-row>
+        
+        <!-- 题库选择 -->
+        <el-divider>题库设置</el-divider>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="选择题库">
+              <el-select v-model="selectedPaper" placeholder="请选择题库" filterable>
+                <el-option 
+                  v-for="paper in papers" 
+                  :key="paper.id" 
+                  :label="paper.name" 
+                  :value="paper"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="选择题型">
+              <el-select v-model="selectedTypes" placeholder="请选择题型" multiple>
+                <el-option 
+                  v-for="type in questionTypes" 
+                  :key="type.value" 
+                  :label="type.label" 
+                  :value="type.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <!-- 难度分配比例 -->
+        <el-form-item label="难度分配比例">
+          <div class="difficulty-distribution">
+            <div class="distribution-item">
+              <span class="distribution-label">简单题:</span>
+              <el-slider 
+                v-model="difficultyDistribution.easy" 
+                :min="0" 
+                :max="100" 
+                :step="5"
+                @change="updateDifficultyDistribution"></el-slider>
+              <span class="distribution-value">{{ difficultyDistribution.easy }}%</span>
+            </div>
+            <div class="distribution-item">
+              <span class="distribution-label">中等题:</span>
+              <el-slider 
+                v-model="difficultyDistribution.medium" 
+                :min="0" 
+                :max="100" 
+                :step="5"
+                @change="updateDifficultyDistribution"></el-slider>
+              <span class="distribution-value">{{ difficultyDistribution.medium }}%</span>
+            </div>
+            <div class="distribution-item">
+              <span class="distribution-label">困难题:</span>
+              <el-slider 
+                v-model="difficultyDistribution.hard" 
+                :min="0" 
+                :max="100" 
+                :step="5"
+                @change="updateDifficultyDistribution"></el-slider>
+              <span class="distribution-value">{{ difficultyDistribution.hard }}%</span>
+            </div>
+          </div>
+          <div class="distribution-total">总比例: {{ difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard }}%</div>
+        </el-form-item>
         
         <el-form-item label="任务描述" prop="description">
           <el-input 
@@ -108,9 +195,6 @@ import axios from '@/utils/axios'
 const router = useRouter()
 const taskFormRef = ref<FormInstance>()
 
-// 科目列表
-const subjects = ref<any[]>([])
-
 // 任务表单
 const taskForm = reactive({
   id: '',
@@ -120,10 +204,44 @@ const taskForm = reactive({
   duration: 60,
   startTime: '',
   endTime: '',
-  participantCount: 0,
+  lateAllowedTime: 0, // 开考后允许进入的时间（分钟）
+  departmentIds: [], // 参与科室ID列表
+  participantIds: [], // 参与人员ID列表
   status: 0,
   description: '',
   instructions: ''
+})
+
+// 科室列表
+const departments = ref<any[]>([])
+
+// 人员列表
+const participants = ref<any[]>([])
+
+
+
+// 题库列表
+const papers = ref<any[]>([])
+
+// 选择的题库
+const selectedPaper = ref<any>(null)
+
+// 题型列表
+const questionTypes = ref([
+  { label: 'A1型题', value: 1 },
+  { label: 'A2型题', value: 2 },
+  { label: 'B1型题', value: 3 },
+  { label: 'A3/A4型题', value: 4 }
+])
+
+// 选择的题型
+const selectedTypes = ref<any[]>([])
+
+// 难度分配比例
+const difficultyDistribution = reactive({
+  easy: 30, // 简单题比例
+  medium: 50, // 中等题比例
+  hard: 20 // 困难题比例
 })
 
 // 表单验证规则
@@ -146,23 +264,80 @@ const taskRules = reactive<FormRules>({
   endTime: [
     { required: true, message: '请选择结束时间', trigger: 'change' }
   ],
+  lateAllowedTime: [
+    { required: true, message: '请输入开考后允许进入的时间', trigger: 'blur' }
+  ],
+  departmentIds: [
+    { required: true, message: '请选择参与科室', trigger: 'change' }
+  ],
+  participantIds: [
+    { required: true, message: '请选择参与人员', trigger: 'change' }
+  ],
   status: [
     { required: true, message: '请选择状态', trigger: 'change' }
   ]
 })
 
-// 获取科目列表
-const getSubjects = async () => {
+// 更新难度分配比例，确保总和为100%
+const updateDifficultyDistribution = () => {
+  // 这里可以添加逻辑，确保三个难度比例总和为100%
+  // 目前简化处理，允许总和不等于100%
+}
+
+// 固定考试科目为三个选项
+const subjects = ref([
+  { id: 'basic-theory', name: '基本理论' },
+  { id: 'basic-knowledge', name: '基本知识' },
+  { id: 'basic-skill', name: '基本技能' }
+])
+
+// 获取题库列表
+const fetchPapers = async () => {
   try {
-    const response = await axios.get('/api/subjects')
-    const { data } = response
-    if (data.code === 200) {
-      subjects.value = data.data
+    const response = await axios.get('/papers')
+    if (response.data.code === 200) {
+      papers.value = response.data.data.records || response.data.data || []
     }
   } catch (error) {
-    console.error('获取科目列表失败:', error)
-    ElMessage.error('获取科目列表失败')
+    console.error('获取题库列表失败:', error)
+    ElMessage.error('获取题库列表失败')
   }
+}
+
+// 获取科室列表
+const fetchDepartments = async () => {
+  try {
+    const response = await axios.get('/departments')
+    if (response.data.code === 200) {
+      departments.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('获取科室列表失败:', error)
+    ElMessage.error('获取科室列表失败')
+  }
+}
+
+// 获取参与人员列表
+const fetchParticipants = async () => {
+  try {
+    const params = {
+      departmentIds: taskForm.departmentIds.length > 0 ? taskForm.departmentIds : undefined
+    }
+    const response = await axios.get('/users/participants', { params })
+    if (response.data.code === 200) {
+      participants.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('获取参与人员列表失败:', error)
+    ElMessage.error('获取参与人员列表失败')
+  }
+}
+
+// 科室选择变化时，重新获取人员列表
+const handleDepartmentChange = () => {
+  fetchParticipants()
+  // 清空已选择的人员，避免无效选择
+  taskForm.participantIds = []
 }
 
 // 提交表单
@@ -172,12 +347,21 @@ const handleSubmit = async () => {
   try {
     await taskFormRef.value.validate()
     
-    // 发送创建任务请求
-    // 注意：这里暂时只使用第一个选择的科目，因为Task实体目前只支持单个科目
-    await axios.post('/api/tasks', {
+    // 构建请求数据
+    const requestData = {
       ...taskForm,
-      subject: { id: taskForm.subjectIds[0] }
-    })
+      subject: { id: taskForm.subjectIds[0] },
+      paperId: selectedPaper.value?.id,
+      questionTypes: selectedTypes.value,
+      difficultyDistribution: {
+        easy: difficultyDistribution.easy,
+        medium: difficultyDistribution.medium,
+        hard: difficultyDistribution.hard
+      }
+    }
+    
+    // 发送创建任务请求
+    await axios.post('/tasks', requestData)
     
     ElMessage.success('任务创建成功')
     router.push('/dashboard/task-management')
@@ -199,9 +383,11 @@ const handleCancel = () => {
   router.push('/dashboard/task-management')
 }
 
-// 组件挂载时获取科目列表
+// 组件挂载时获取数据
 onMounted(() => {
-  getSubjects()
+  fetchPapers()
+  fetchDepartments()
+  fetchParticipants()
 })
 </script>
 
@@ -222,5 +408,71 @@ onMounted(() => {
 
 .task-form {
   margin-top: 20px;
+}
+
+/* 表单提示 */
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 难度分配比例样式 */
+.difficulty-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 10px 0;
+}
+
+.distribution-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.distribution-label {
+  width: 80px;
+  font-weight: 500;
+  color: #303133;
+  text-align: right;
+}
+
+.distribution-value {
+  width: 50px;
+  text-align: left;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.distribution-total {
+  text-align: right;
+  margin-top: 10px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 滑块样式 */
+:deep(.el-slider) {
+  flex: 1;
+}
+
+:deep(.el-slider__runway) {
+  background-color: #e4e7ed;
+}
+
+:deep(.el-slider__bar) {
+  background-color: #667eea;
+}
+
+:deep(.el-slider__button) {
+  border-color: #667eea;
+  background-color: #fff;
+}
+
+:deep(.el-slider__button:hover),
+:deep(.el-slider__button:focus) {
+  border-color: #536dfe;
+  box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.1);
 }
 </style>

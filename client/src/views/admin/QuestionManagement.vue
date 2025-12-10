@@ -269,7 +269,8 @@ const fetchQuestions = async () => {
       type: searchForm.type,
       difficulty: searchForm.difficulty
     }
-    const response = await axios.get('/api/questions', { params })
+    // 修复API地址，去掉/api前缀
+    const response = await axios.get('/questions', { params })
     if (response.data.code === 200) {
       questions.value = response.data.data.records
       total.value = response.data.data.total
@@ -301,7 +302,8 @@ const handleReset = () => {
 // 生成题目模板
 const handleGenerateTemplate = async () => {
   try {
-    const response = await axios.get('/api/questions/import/template', { 
+    // 修复API地址，去掉/api前缀
+    const response = await axios.get('/questions/import/template', { 
       responseType: 'blob' 
     })
     
@@ -328,7 +330,8 @@ const handleBatchImport = async (file: any) => {
     const formData = new FormData()
     formData.append('file', file)
     
-    const response = await axios.post('/api/questions/import/batch', formData, {
+    // 修复API地址，去掉/api前缀
+    const response = await axios.post('/questions/import/batch', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -401,29 +404,23 @@ const handleSubmit = async () => {
     }
     
     // 处理选项
-    const optionsStr = JSON.stringify(form.options)
-    if (optionsStr !== JSON.stringify(['', '', '', '', ''])) {
-      const validOptions: any = {}
-      form.options.forEach((option: string, index: number) => {
-        if (option && option.trim()) {
-          const key = String.fromCharCode(65 + index) // A, B, C, D, E
-          validOptions[key] = option.trim()
-        }
-      })
-      // 使用类型断言解决类型不匹配问题
-      ;(requestData as any).options = Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
-    } else {
-      // 使用类型断言解决类型不匹配问题
-      ;(requestData as any).options = undefined
-    }
+    const validOptions: any = {}
+    form.options.forEach((option: string, index: number) => {
+      if (option && option.trim()) {
+        const key = String.fromCharCode(65 + index) // A, B, C, D, E
+        validOptions[key] = option.trim()
+      }
+    })
+    // 使用类型断言解决类型不匹配问题
+    ;(requestData as any).options = Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
     
     let response
     if (form.id) {
-      // 更新题目
-      response = await axios.put(`/api/questions/${form.id}`, requestData)
+      // 更新题目，去掉/api前缀
+      response = await axios.put(`/questions/${form.id}`, requestData)
     } else {
-      // 添加题目
-      response = await axios.post('/api/questions', requestData)
+      // 添加题目，去掉/api前缀
+      response = await axios.post('/questions', requestData)
     }
     
     if (response.data.code === 200) {
@@ -435,13 +432,15 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('表单验证失败:', error)
+    ElMessage.error('操作失败，请检查输入内容')
   }
 }
 
 // 删除题目
 const handleDelete = async (row: any) => {
   try {
-    const response = await axios.delete(`/api/questions/${row.id}`)
+    // 修复API地址，去掉/api前缀
+    const response = await axios.delete(`/questions/${row.id}`)
     if (response.data.code === 200) {
       ElMessage.success('删除题目成功')
       fetchQuestions() // 重新加载题目列表
