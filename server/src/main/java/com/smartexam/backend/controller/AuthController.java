@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/auth")
@@ -102,6 +104,25 @@ public class AuthController {
         registerUser.setStatus(1); // 启用状态
         registerUser.setCreateTime(new Date().getTime());
         registerUser.setUpdateTime(new Date().getTime());
+        
+        // 为新用户分配默认角色（学员角色）
+        Role studentRole = roleRepository.findByCode("ROLE_STUDENT");
+        if (studentRole == null) {
+            // 如果学员角色不存在，创建一个
+            studentRole = new Role();
+            studentRole.setName("学员");
+            studentRole.setCode("ROLE_STUDENT");
+            studentRole.setDescription("普通学员角色，拥有学习和考试权限");
+            studentRole.setStatus(1);
+            studentRole.setCreateTime(System.currentTimeMillis());
+            studentRole.setUpdateTime(System.currentTimeMillis());
+            roleRepository.save(studentRole);
+        }
+        
+        // 设置角色集合
+        Set<Role> roles = new HashSet<>();
+        roles.add(studentRole);
+        registerUser.setRoles(roles);
         
         // 保存用户
         User savedUser = userRepository.save(registerUser);
