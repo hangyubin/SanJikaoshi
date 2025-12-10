@@ -81,7 +81,7 @@
                   :label="participant.department" 
                   :value="participant.id"></el-option>
               </el-select>
-              <div class="form-tip">显示格式：科室，不显示真实姓名和人员ID</div>
+              <div class="form-tip">显示格式：科室，不显示姓名和人员ID</div>
             </el-form-item>
             
             <el-form-item label="状态" prop="status">

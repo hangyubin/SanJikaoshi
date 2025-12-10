@@ -8,8 +8,8 @@
         <el-form-item label="用户名">
           <el-input v-model="searchForm.username" placeholder="请输入用户名"></el-input>
         </el-form-item>
-        <el-form-item label="真实姓名">
-          <el-input v-model="searchForm.realName" placeholder="请输入真实姓名"></el-input>
+        <el-form-item label="姓名">
+          <el-input v-model="searchForm.realName" placeholder="请输入姓名"></el-input>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态">
@@ -32,7 +32,7 @@
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" width="120"></el-table-column>
-        <el-table-column prop="realName" label="真实姓名" width="120"></el-table-column>
+        <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
         <el-table-column prop="email" label="邮箱" width="180"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -83,8 +83,8 @@
         <el-form-item label="密码" prop="password" v-if="!form.id">
           <el-input v-model="form.password" type="password" placeholder="请输入密码"></el-input>
         </el-form-item>
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="form.realName" placeholder="请输入真实姓名"></el-input>
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="form.realName" placeholder="请输入姓名"></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" type="email" placeholder="请输入邮箱"></el-input>
@@ -189,7 +189,8 @@ const rules = reactive<FormRules>({
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
   ],
   realName: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' }
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { pattern: /^[\u4e00-\u9fa5]+$/, message: '请输入有效的中文姓名，不能包含空格或特殊字符', trigger: 'blur' }
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },

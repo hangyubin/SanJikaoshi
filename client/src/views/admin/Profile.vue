@@ -28,8 +28,8 @@
                   <el-input v-model="userForm.username" placeholder="用户名"></el-input>
                 </el-form-item>
                 
-                <el-form-item label="真实姓名" prop="realName" disabled>
-                  <el-input v-model="userForm.realName" placeholder="真实姓名"></el-input>
+                <el-form-item label="姓名" prop="realName" disabled>
+                  <el-input v-model="userForm.realName" placeholder="姓名"></el-input>
                 </el-form-item>
                 
                 <el-form-item label="性别" prop="gender">
@@ -185,7 +185,8 @@ const isSystemAdmin = computed(() => {
 // 表单验证规则
 const rules = reactive<FormRules>({
   realName: [
-    { required: true, message: '请输入真实姓名', trigger: 'blur' }
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { pattern: /^[\u4e00-\u9fa5]+$/, message: '请输入有效的中文姓名，不能包含空格或特殊字符', trigger: 'blur' }
   ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
