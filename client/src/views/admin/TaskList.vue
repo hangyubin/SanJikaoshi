@@ -313,10 +313,9 @@ const formatDate = (_row: any, _column: any, cellValue: any) => {
 // 获取科目列表
 const getSubjects = () => {
   axios.get('/subjects')
-  .then(response => { if (response.code === 200) {
-      subjects.value = response.data
-    }
-  })
+  .then(res => {
+      subjects.value = res
+    })
   .catch(error => {
     console.error('获取科目列表失败:', error)
   })
@@ -332,11 +331,10 @@ const initData = () => {
       ...searchForm
     }
   })
-  .then(response => { if (response.code === 200) {
-      tasks.value = response.data
-      pagination.total = response.total || 0
-    }
-  })
+  .then(res => {
+      tasks.value = res.data
+      pagination.total = res.total || 0
+    })
   .catch(error => {
     console.error('获取任务列表失败:', error)
   })
@@ -390,13 +388,10 @@ const handleDeleteTask = (row: any) => {
   })
   .then(() => {
     axios.delete(`/tasks/${row.id}`)
-    .then(response => { if (response.code === 200) {
+    .then(() => {
         ElMessage.success('删除成功')
         initData()
-      } else {
-        ElMessage.error(data.message || '删除失败')
-      }
-    })
+      })
     .catch(error => {
       console.error('删除任务失败:', error)
       ElMessage.error('删除失败')
@@ -415,7 +410,7 @@ const handlePublishTask = (row: any) => {
   }
   
   axios.put(`/tasks/${row.id}/publish`)
-  .then(res => {
+  .then(() => {
       ElMessage.success('任务发布成功')
       initData()
   })
@@ -437,7 +432,7 @@ const handleSubmitEdit = () => {
         ...editTaskForm,
         subject: { id: editTaskForm.subjectId }
       })
-      .then(res => {
+      .then(() => {
           ElMessage.success('任务编辑成功')
           dialogVisible.value = false
           initData()

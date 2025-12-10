@@ -226,7 +226,7 @@ const fetchSubjects = () => {
   loading.value = true
   axios.get('/subjects')
     .then(res => {
-        subjects.value = res || []
+        subjects.value = res.data || []
     })
     .catch(error => {
       console.error('获取科目列表失败:', error)

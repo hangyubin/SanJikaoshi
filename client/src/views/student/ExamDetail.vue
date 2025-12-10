@@ -135,8 +135,8 @@ const fetchExamDetail = () => {
   loading.value = true
   axios.get(`/exams/${examId.value}`)
     .then(res => {
-      examInfo.value = res.examInfo || examInfo.value
-      questions.value = res.questions || []
+      examInfo.value = res.data?.examInfo || examInfo.value
+      questions.value = res.data?.questions || []
     })
     .catch(error => {
       console.error('获取考试详情失败:', error)
