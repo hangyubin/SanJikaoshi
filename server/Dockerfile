@@ -1,8 +1,24 @@
-# 第一阶段：构建阶段
-FROM eclipse-temurin:11-jdk AS build
+# 第一阶段：前端构建阶段
+FROM node:18-alpine AS frontend-build
 
 # 设置工作目录
-WORKDIR /app
+WORKDIR /app/frontend
+
+# 复制前端代码
+COPY ../client/package.json ../client/package-lock.json ./
+RUN npm install
+
+# 复制前端源代码
+COPY ../client/ ./
+
+# 构建前端项目
+RUN npm run build
+
+# 第二阶段：后端构建阶段
+FROM eclipse-temurin:11-jdk AS backend-build
+
+# 设置工作目录
+WORKDIR /app/backend
 
 # 设置 Java 运行参数以允许不安全的 SSL/TLS
 ENV MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
@@ -32,6 +48,11 @@ RUN mvn dependency:go-offline -B
 
 # 复制源代码
 COPY src ./src
+
+# 从前端构建阶段复制构建好的静态资源到后端的src/main/resources/static目录
+RUN mkdir -p src/main/resources/static
+COPY --from=frontend-build /app/frontend/dist/* src/main/resources/static/
+COPY --from=frontend-build /app/frontend/dist/assets src/main/resources/static/assets
 
 # 构建项目，生成jar文件
 RUN mvn clean package -DskipTests

@@ -1,5 +1,6 @@
 package com.smartexam.backend.controller;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,8 +12,24 @@ import java.util.Map;
 /**
  * 简单控制器，用于测试基本的API请求是否能正常工作
  */
-@RestController
+@Controller
 public class SimpleController {
+
+    /**
+     * 处理前端路由，返回index.html，支持Vue Router的history模式
+     */
+    @GetMapping("/")
+    public String index() {
+        return "forward:/index.html";
+    }
+
+    /**
+     * 处理前端路由，支持Vue Router的history模式，匹配所有路径
+     */
+    @GetMapping("/**/{path:[^\.]*}")
+    public String forwardToIndex() {
+        return "forward:/index.html";
+    }
 
     @GetMapping("/api/hello")
     public Map<String, Object> hello() {

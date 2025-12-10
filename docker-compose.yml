@@ -7,12 +7,10 @@ services:
     container_name: smart-exam-mysql
     restart: always
     environment:
-      # root账号密码，可自定义
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      # root账号密码，固定为hang8743559@
+      MYSQL_ROOT_PASSWORD: hang8743559@
       MYSQL_DATABASE: smart_exam
-      # 创建普通用户
-     # MYSQL_USER: ${MYSQL_USER:-smart_exam_user}
-     # MYSQL_PASSWORD: ${MYSQL_PASSWORD:-smart_exam_password}
+      # 直接使用root账号，不创建普通用户
       LANG: C.UTF-8
     # MySQL 8.0默认使用utf8mb4字符集，无需额外配置字符集参数
     command: --init-connect='SET NAMES utf8mb4;' --skip-character-set-client-handshake --default-authentication-plugin=mysql_native_password
@@ -31,14 +29,17 @@ services:
     depends_on:
       - mysql
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-      # 可选择使用root账号或普通用户账号
-      # 使用root账号访问数据库
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-root}
-      # 使用对应的密码
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-${MYSQL_ROOT_PASSWORD:-root}}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/smart_exam?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+      # 直接使用root账号访问数据库
+      SPRING_DATASOURCE_USERNAME: root
+      # 使用固定的root密码
+      SPRING_DATASOURCE_PASSWORD: hang8743559@
       # 文件上传目录配置，默认为当前目录下的uploads
       SMART_EXAM_UPLOAD_DIR: /upload
+      # JPA配置
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
     ports:
       - "8080:8080"
     volumes:

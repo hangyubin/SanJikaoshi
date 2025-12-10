@@ -41,7 +41,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
             // 配置请求授权规则
             .authorizeRequests()
-            // 允许所有用户访问的路径
+            // 允许静态资源访问
+            .antMatchers("/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.gif", "/**/*.svg", "/**/*.ico").permitAll()
+            // 允许前端入口文件访问
+            .antMatchers("/index.html", "/").permitAll()
+            // 允许认证相关路径
             .antMatchers("/**/login", "/**/register", "/**/refresh-token").permitAll()
             // 允许所有GET请求
             .antMatchers("GET", "/**").permitAll()
