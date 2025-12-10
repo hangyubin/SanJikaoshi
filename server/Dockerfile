@@ -64,7 +64,7 @@ FROM eclipse-temurin:11-jre
 WORKDIR /app
 
 # 从构建阶段复制jar文件
-COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=backend-build /app/backend/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
 # 暴露端口
 EXPOSE 8080
