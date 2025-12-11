@@ -16,18 +16,27 @@ public class FallbackController {
     
     /**
      * Forward all unmatched paths to index.html
-     * This handles all paths that aren't already matched by other controllers
-     * API paths are excluded by SecurityConfig and other controllers
+     * Explicitly exclude API paths and static resources
      */
-    @RequestMapping(value = "/**", method = {org.springframework.web.bind.annotation.RequestMethod.GET})
+    @RequestMapping(value = "*", method = {org.springframework.web.bind.annotation.RequestMethod.GET})
     public String fallback(HttpServletRequest request) {
-        // Get the path info to determine if it's a file with extension
-        String pathInfo = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String requestURI = request.getRequestURI();
         
-        // If the path has a file extension, don't forward - let it return 404
-        // This prevents forwarding for non-existent static files
-        if (pathInfo != null && pathInfo.contains(".")) {
-            return null; // Return null to let the container handle 404 for files
+        // Exclude API paths
+        if (requestURI.startsWith("/api/")) {
+            return null; // Let the container handle API 404s
+        }
+        
+        // Exclude static resources with extensions
+        if (requestURI.contains(".")) {
+            return null; // Let the container handle static file 404s
+        }
+        
+        // Exclude known static resource directories
+        if (requestURI.startsWith("/css/") || requestURI.startsWith("/js/") || 
+            requestURI.startsWith("/img/") || requestURI.startsWith("/fonts/") ||
+            requestURI.equals("/favicon.ico")) {
+            return null;
         }
         
         // Forward everything else to index.html for Vue Router to handle
