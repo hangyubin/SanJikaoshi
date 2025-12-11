@@ -5,6 +5,7 @@ import com.smartexam.backend.repository.UserRepository;
 import com.smartexam.backend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +32,7 @@ public class AuthController {
     
     // 登录请求
     @PostMapping("/login")
+    @Transactional
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         // 获取用户名和密码
         String username = loginRequest.get("username");
