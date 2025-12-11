@@ -55,8 +55,16 @@ public class AuthController {
                     response.put("username", user.getUsername());
                     response.put("realName", user.getRealName());
                     response.put("token", token);
-                    // 返回用户角色信息
-                    response.put("roles", user.getRoles());
+                    // 返回简化的用户角色信息（仅包含角色名称和代码，避免循环引用）
+                    response.put("roles", user.getRoles().stream()
+                            .map(role -> {
+                                Map<String, Object> roleInfo = new HashMap<>();
+                                roleInfo.put("id", role.getId());
+                                roleInfo.put("name", role.getName());
+                                roleInfo.put("code", role.getCode());
+                                return roleInfo;
+                            })
+                            .collect(java.util.stream.Collectors.toList()));
                 } else {
                     response.put("code", 400);
                     response.put("message", "用户名或密码错误");
