@@ -45,8 +45,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/*.html", "/css/**", "/js/**", "/img/**", "/fonts/**", "/favicon.ico").permitAll()
             // 允许前端入口文件访问
             .antMatchers("/index.html", "/").permitAll()
-            // 允许API认证相关路径
-            .antMatchers("/api/login", "/api/register", "/api/refresh-token").permitAll()
+            // 允许认证相关路径
+            .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh-token").permitAll()
             // 允许所有API GET请求
             .antMatchers("GET", "/api/**").permitAll()
             // 其他API请求需要认证

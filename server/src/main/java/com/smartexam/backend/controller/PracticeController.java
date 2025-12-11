@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/practice")
+@RequestMapping("/api/practice")
 public class PracticeController {
 
     @Autowired

@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/questions/import")
+@RequestMapping("/api/questions/import")
 public class QuestionImportController {
 
     @Autowired

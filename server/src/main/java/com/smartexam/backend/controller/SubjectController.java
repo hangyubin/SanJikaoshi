@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/subjects")
+@RequestMapping("/api/subjects")
 public class SubjectController {
 
     @Autowired

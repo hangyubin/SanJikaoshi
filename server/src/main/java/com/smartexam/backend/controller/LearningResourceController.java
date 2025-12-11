@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/learning-resources")
+@RequestMapping("/api/learning-resources")
 public class LearningResourceController {
     
     @Autowired
