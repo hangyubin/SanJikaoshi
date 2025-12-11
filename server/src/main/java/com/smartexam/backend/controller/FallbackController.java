@@ -1,8 +1,8 @@
 package com.smartexam.backend.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,31 +15,38 @@ import javax.servlet.http.HttpServletRequest;
 public class FallbackController {
     
     /**
-     * Forward all unmatched paths to index.html
-     * Explicitly exclude API paths and static resources
+     * Forward all unmatched non-API paths to index.html
+     * This handles client-side routing for Vue.js
      */
-    @RequestMapping(value = "*", method = {org.springframework.web.bind.annotation.RequestMethod.GET})
-    public String fallback(HttpServletRequest request) {
+    @GetMapping(value = {"", "/", "/home", "/about", "/login", "/register", "/dashboard"})
+    public String fallbackToIndex() {
+        // Directly return index.html for known routes
+        return "forward:/index.html";
+    }
+    
+    /**
+     * Catch-all for any other non-API paths
+     */
+    @GetMapping(value = "/**", params = "!_spring-security-filter-chain")
+    public String catchAllFallback(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
         
-        // Exclude API paths
+        // Exclude API paths completely
         if (requestURI.startsWith("/api/")) {
-            return null; // Let the container handle API 404s
+            return null;
         }
         
         // Exclude static resources with extensions
         if (requestURI.contains(".")) {
-            return null; // Let the container handle static file 404s
-        }
-        
-        // Exclude known static resource directories
-        if (requestURI.startsWith("/css/") || requestURI.startsWith("/js/") || 
-            requestURI.startsWith("/img/") || requestURI.startsWith("/fonts/") ||
-            requestURI.equals("/favicon.ico")) {
             return null;
         }
         
-        // Forward everything else to index.html for Vue Router to handle
+        // Exclude Spring Boot actuator endpoints if any
+        if (requestURI.startsWith("/actuator/")) {
+            return null;
+        }
+        
+        // Forward to index.html for client-side routing
         return "forward:/index.html";
     }
 }
