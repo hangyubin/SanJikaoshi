@@ -1,6 +1,5 @@
 package com.smartexam.backend.controller;
 
-import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -14,7 +13,7 @@ import java.util.Map;
  * Prevents infinite loops by providing a clear error handling mechanism
  */
 @Controller
-public class CustomErrorController implements ErrorController {
+public class CustomErrorController {
     
     private static final String PATH = "/error";
     
@@ -63,8 +62,5 @@ public class CustomErrorController implements ErrorController {
         return errorAttributes;
     }
     
-    @Override
-    public String getErrorPath() {
-        return PATH;
-    }
+
 }
