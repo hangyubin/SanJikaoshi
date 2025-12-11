@@ -42,15 +42,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 配置请求授权规则
             .authorizeRequests()
             // 允许静态资源访问
-            .antMatchers("/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.gif", "/**/*.svg", "/**/*.ico").permitAll()
+            .antMatchers("/*.html", "/css/**", "/js/**", "/img/**", "/fonts/**", "/favicon.ico").permitAll()
             // 允许前端入口文件访问
             .antMatchers("/index.html", "/").permitAll()
-            // 允许认证相关路径
-            .antMatchers("/**/login", "/**/register", "/**/refresh-token").permitAll()
-            // 允许所有GET请求
-            .antMatchers("GET", "/**").permitAll()
-            // 其他所有请求需要认证
-            .anyRequest().authenticated()
+            // 允许API认证相关路径
+            .antMatchers("/api/login", "/api/register", "/api/refresh-token").permitAll()
+            // 允许所有API GET请求
+            .antMatchers("GET", "/api/**").permitAll()
+            // 其他API请求需要认证
+            .antMatchers("/api/**").authenticated()
+            // 静态资源和其他请求直接放行
+            .anyRequest().permitAll()
             .and()
             // 禁用默认的登录表单
             .formLogin().disable()

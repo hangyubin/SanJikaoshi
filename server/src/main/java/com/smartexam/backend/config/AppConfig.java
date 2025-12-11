@@ -31,8 +31,10 @@ public class AppConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/")
                 .resourceChain(true);
         
-        // 配置首页访问
+        // 显式配置index.html作为静态资源，避免循环视图问题
         registry.addResourceHandler("/index.html")
-                .addResourceLocations("classpath:/static/index.html");
+                .addResourceLocations("classpath:/static/index.html")
+                .resourceChain(true)
+                .setCachePeriod(0);
     }
 }
