@@ -297,6 +297,9 @@ public class UserController {
                 existingUser.setRealName((String) userData.get("realName"));
                 existingUser.setPhone((String) userData.get("phone"));
                 existingUser.setStatus((Integer) userData.get("status"));
+                existingUser.setAvatar((String) userData.get("avatar"));
+                existingUser.setGender((Integer) userData.get("gender"));
+                existingUser.setJobTitle((String) userData.get("jobTitle"));
                 existingUser.setUpdateTime(System.currentTimeMillis());
                 
                 // 更新用户角色
