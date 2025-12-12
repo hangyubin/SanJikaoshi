@@ -1,21 +1,133 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
   <defs>
-    <style>
-      .cls-1 {
-        fill: #ffffff;
-      }
-      .cls-2 {
-        fill: #e53935;
-      }
-    </style>
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e53935;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c62828;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="whiteGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5f5f5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.3)" flood-opacity="0.6" />
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
-  <g id="医疗十字标志">
+  <g id="医疗十字标志" filter="url(#shadow)">
     <!-- 红色花瓣背景 -->
-    <path class="cls-2" d="M100,20 L130,50 L160,50 L160,80 L190,100 L160,120 L160,150 L130,150 L100,180 L70,150 L40,150 L40,120 L10,100 L40,80 L40,50 L70,50 Z"/>
+    <path 
+      fill="url(#redGradient)" 
+      stroke="#b71c1c" 
+      stroke-width="2" 
+      d="M100,20 
+         L130,50 C135,50 138,53 138,58 L138,82 
+         C138,87 135,90 130,90 L110,90 C105,90 102,87 102,82 L102,70 
+         C102,65 99,62 94,62 L80,62 
+         C75,62 72,65 72,70 L72,82 
+         C72,87 69,90 64,90 L44,90 
+         C39,90 36,87 36,82 L36,58 
+         C36,53 39,50 44,50 L70,50 Z" />
+    
+    <path 
+      fill="url(#redGradient)" 
+      stroke="#b71c1c" 
+      stroke-width="2" 
+      d="M100,20 
+         L130,50 C135,50 138,53 138,58 L138,82 
+         C138,87 135,90 130,90 L110,90 
+         C110,95 113,98 118,98 L130,98 
+         C135,98 138,101 138,106 L138,128 
+         C138,133 135,136 130,136 L118,136 
+         C113,136 110,139 110,144 L110,150 
+         C110,155 107,158 102,158 L100,180 
+         L98,158 C93,158 90,155 90,150 L90,144 
+         C90,139 87,136 82,136 L70,136 
+         C65,136 62,133 62,128 L62,106 
+         C62,101 65,98 70,98 L82,98 
+         C87,98 90,95 90,90 L70,90 
+         C65,90 62,87 62,82 L62,58 
+         C62,53 65,50 70,50 Z" />
+    
+    <path 
+      fill="url(#redGradient)" 
+      stroke="#b71c1c" 
+      stroke-width="2" 
+      d="M100,180 
+         L130,150 C130,145 133,142 138,142 L162,142 
+         C167,142 170,145 170,150 L170,162 
+         C170,167 167,170 162,170 L138,170 
+         C133,170 130,173 130,178 L130,190 
+         C130,195 127,198 122,198 L110,198 
+         C105,198 102,195 102,190 L102,178 
+         C102,173 99,170 94,170 L80,170 
+         C75,170 72,173 72,178 L72,190 
+         C72,195 69,198 64,198 L52,198 
+         C47,198 44,195 44,190 L44,178 
+         C44,173 41,170 36,170 L12,170 
+         C7,170 4,167 4,162 L4,150 
+         C4,145 7,142 12,142 L36,142 
+         C41,142 44,145 44,150 L70,150 Z" />
+    
     <!-- 白色十字 -->
-    <rect class="cls-1" x="75" y="80" width="50" height="40"/>
-    <rect class="cls-1" x="80" y="75" width="40" height="50"/>
-    <!-- 白色边框效果 -->
-    <path class="cls-1" d="M100,22 L128,50 L158,50 L158,82 L188,100 L158,118 L158,148 L128,148 L100,178 L72,148 L42,148 L42,118 L12,100 L42,82 L42,50 L72,50 Z"/>
+    <rect 
+      fill="url(#whiteGradient)" 
+      stroke="#e0e0e0" 
+      stroke-width="2" 
+      x="75" 
+      y="80" 
+      width="50" 
+      height="40" 
+      rx="2" 
+      ry="2" 
+      filter="url(#glow)" />
+    <rect 
+      fill="url(#whiteGradient)" 
+      stroke="#e0e0e0" 
+      stroke-width="2" 
+      x="80" 
+      y="75" 
+      width="40" 
+      height="50" 
+      rx="2" 
+      ry="2" 
+      filter="url(#glow)" />
+    
+    <!-- 十字中心细节 -->
+    <circle 
+      fill="#ffffff" 
+      stroke="#bdbdbd" 
+      stroke-width="1" 
+      cx="100" 
+      cy="100" 
+      r="8" />
+    
+    <!-- 装饰线条 -->
+    <path 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="1" 
+      stroke-opacity="0.8" 
+      d="M80,85 L120,85" />
+    <path 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="1" 
+      stroke-opacity="0.8" 
+      d="M80,115 L120,115" />
+    <path 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="1" 
+      stroke-opacity="0.8" 
+      d="M85,80 L85,120" />
+    <path 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="1" 
+      stroke-opacity="0.8" 
+      d="M115,80 L115,120" />
   </g>
 </svg>
