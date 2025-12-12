@@ -65,6 +65,21 @@ public class AuthController {
                                 return roleInfo;
                             })
                             .collect(java.util.stream.Collectors.toList()));
+                    // 返回完整的用户信息，包括头像、性别、科室、职称等
+                    response.put("id", user.getId());
+                    response.put("avatar", user.getAvatar());
+                    response.put("gender", user.getGender());
+                    response.put("phone", user.getPhone());
+                    response.put("jobTitle", user.getJobTitle());
+                    // 科室信息（避免循环引用）
+                    if (user.getDepartment() != null) {
+                        Map<String, Object> deptInfo = new HashMap<>();
+                        deptInfo.put("id", user.getDepartment().getId());
+                        deptInfo.put("name", user.getDepartment().getName());
+                        response.put("department", deptInfo);
+                    } else {
+                        response.put("department", null);
+                    }
                 } else {
                     response.put("code", 400);
                     response.put("message", "用户名或密码错误");

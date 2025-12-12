@@ -65,7 +65,10 @@
           
           <!-- 系统管理员只显示头像设置，修改密码功能在顶部导航栏 -->
           <template v-else>
-            <!-- 系统管理员不需要额外的按钮，只保留头像设置功能 -->
+            <!-- 系统管理员保留头像设置功能 -->
+            <div class="system-admin-actions">
+              <el-button type="primary" @click="openAvatarDialog">更换头像</el-button>
+            </div>
           </template>
         </el-form>
       </div>
@@ -231,6 +234,9 @@ const fetchUserInfo = async () => {
   }
 }
 
+// 引入axios
+import axios from '@/utils/axios'
+
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
@@ -238,12 +244,15 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     
-    // 保存用户信息到localStorage，确保头像等信息能够持久保存
-    localStorage.setItem('userInfo', JSON.stringify(userForm))
-    
-    // 由于当前没有后端的个人信息更新API，我们只更新localStorage
-    // 这里可以添加一个模拟的成功消息
-    ElMessage.success('保存成功')
+    // 调用后端API更新用户信息
+    const response = await axios.put(`/users/${userForm.id}`, userForm)
+    if (response.code === 200) {
+      // 保存用户信息到localStorage
+      localStorage.setItem('userInfo', JSON.stringify(response.data))
+      ElMessage.success('保存成功')
+    } else {
+      ElMessage.error('保存失败')
+    }
   } catch (error) {
     console.error('保存用户信息失败:', error)
     ElMessage.error('保存失败')
@@ -255,7 +264,10 @@ const handleReset = () => {
   fetchUserInfo()
 }
 
-
+// 打开头像选择弹窗
+const openAvatarDialog = () => {
+  showAvatarOptions.value = true
+}
 
 // 处理头像上传
 const handleAvatarUpload = (file: File) => {
@@ -285,14 +297,29 @@ const handleAvatarUpload = (file: File) => {
 }
 
 // 确认更换头像
-const confirmAvatarChange = () => {
-  userForm.avatar = selectedSystemAvatar.value
-  // 将更新后的用户信息保存到localStorage
-  localStorage.setItem('userInfo', JSON.stringify(userForm))
-  // 手动触发storage事件，确保同一标签页内的MainLayout.vue也能收到更新
-  window.dispatchEvent(new Event('storage'))
-  showAvatarOptions.value = false
-  ElMessage.success('头像更换成功')
+const confirmAvatarChange = async () => {
+  try {
+    userForm.avatar = selectedSystemAvatar.value
+    
+    // 调用后端API更新头像
+    const response = await axios.put(`/users/${userForm.id}`, {
+      avatar: userForm.avatar
+    })
+    
+    if (response.code === 200) {
+      // 将更新后的用户信息保存到localStorage
+      localStorage.setItem('userInfo', JSON.stringify(response.data))
+      // 手动触发storage事件，确保同一标签页内的MainLayout.vue也能收到更新
+      window.dispatchEvent(new Event('storage'))
+      showAvatarOptions.value = false
+      ElMessage.success('头像更换成功')
+    } else {
+      ElMessage.error('头像更换失败')
+    }
+  } catch (error) {
+    console.error('更换头像失败:', error)
+    ElMessage.error('头像更换失败')
+  }
 }
 
 // 初始化

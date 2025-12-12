@@ -243,12 +243,18 @@ const handleLogin = async () => {
       localStorage.removeItem('rememberedUser')
     }
     
-    // 保存token和用户信息到localStorage
+    // 保存token和完整的用户信息到localStorage
     const responseData = response as any
     localStorage.setItem('token', responseData.token)
     localStorage.setItem('userInfo', JSON.stringify({
+      id: responseData.id,
       username: responseData.username,
       realName: responseData.realName,
+      avatar: responseData.avatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+      gender: responseData.gender,
+      phone: responseData.phone,
+      jobTitle: responseData.jobTitle,
+      department: responseData.department,
       roles: responseData.roles
     }))
     
