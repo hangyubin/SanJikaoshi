@@ -180,57 +180,27 @@ const permissionTreeRef = ref<InstanceType<typeof ElTree>>()
 const permissionTree = ref([
   {
     id: 'user',
-    label: '用户管理',
-    children: [
-      { id: 'user:list', label: '查看用户列表' },
-      { id: 'user:add', label: '添加用户' },
-      { id: 'user:edit', label: '编辑用户' },
-      { id: 'user:delete', label: '删除用户' },
-      { id: 'user:status', label: '修改状态' }
-    ]
+    label: '用户管理'
   },
   {
     id: 'question',
-    label: '题库管理',
-    children: [
-      { id: 'question:list', label: '查看题库' },
-      { id: 'question:add', label: '添加题目' },
-      { id: 'question:edit', label: '编辑题目' },
-      { id: 'question:delete', label: '删除题目' }
-    ]
-  },
-  {
-    id: 'task',
-    label: '任务管理',
-    children: [
-      { id: 'task:list', label: '查看任务列表' },
-      { id: 'task:create', label: '创建任务' },
-      { id: 'task:edit', label: '编辑任务' },
-      { id: 'task:delete', label: '删除任务' }
-    ]
+    label: '题库管理'
   },
   {
     id: 'resource',
-    label: '资源管理',
-    children: [
-      { id: 'resource:list', label: '查看资源列表' },
-      { id: 'resource:add', label: '添加资源' },
-      { id: 'resource:edit', label: '编辑资源' },
-      { id: 'resource:delete', label: '删除资源' }
-    ]
+    label: '资源管理'
+  },
+  {
+    id: 'task',
+    label: '任务管理'
   },
   {
     id: 'setting',
-    label: '系统设置',
-    children: [
-      { id: 'setting:basic', label: '基本设置' },
-      { id: 'setting:permission', label: '权限设置' }
-    ]
+    label: '系统设置'
   }
 ])
 
 const treeProps = {
-  children: 'children',
   label: 'label'
 }
 

@@ -263,10 +263,21 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     // 提交表单逻辑
-    console.log('提交用户信息', form)
+    const method = form.id ? 'put' : 'post'
+    const url = form.id ? `/users/${form.id}` : '/users'
+    
+    await axios[method as 'post' | 'put'](url, form)
+    
+    ElMessage.success(form.id ? '编辑用户成功' : '添加用户成功')
     dialogVisible.value = false
+    fetchUsers() // 刷新用户列表
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('提交用户信息失败:', error)
+    let errorMsg = form.id ? '编辑用户失败' : '添加用户失败'
+    if (error instanceof Error) {
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
   }
 }
 
