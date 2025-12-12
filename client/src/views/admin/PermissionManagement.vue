@@ -349,19 +349,33 @@ const handlePermissionSubmit = async () => {
     // 获取选中的权限ID
     const selectedPermissions = permissionTreeRef.value?.getCheckedKeys() || []
     
-    // 提交权限分配
-    await axios.put(`/users/${permissionForm.userId}/permissions`, {
+    // 提交权限分配 - 使用正确的API端点
+    await axios.put(`/users/${permissionForm.userId}`, {
       permissions: selectedPermissions
     })
     
     ElMessage.success('权限分配成功')
     dialogVisible.value = false
     fetchUsers() // 刷新用户列表
-  } catch (error) {
+  } catch (error: any) {
     console.error('权限分配失败:', error)
     let errorMsg = '权限分配失败'
-    if (error instanceof Error) {
-      errorMsg = error.message
+    // 更详细的错误处理
+    if (error.response) {
+      // 服务器返回了错误响应
+      if (error.response.status === 404) {
+        errorMsg = '权限分配接口不存在，请联系开发人员'
+      } else if (error.response.data?.message) {
+        errorMsg = error.response.data.message
+      } else {
+        errorMsg = `${error.response.status} - ${error.response.statusText}`
+      }
+    } else if (error.request) {
+      // 请求已发送但没有收到响应
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      // 请求配置错误
+      errorMsg = error.message || errorMsg
     }
     ElMessage.error(errorMsg)
   }
