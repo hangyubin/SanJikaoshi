@@ -167,7 +167,7 @@ const systemAvatars = ref([
 
 // 用户表单
 const userForm = reactive({
-  id: '',
+  id: 0,
   username: '',
   realName: '',
   phone: '',

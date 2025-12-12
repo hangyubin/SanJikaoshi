@@ -318,6 +318,7 @@ public class UserController {
                 }
                 
                 // 更新用户基本信息
+                // 不允许修改用户名，用户名是唯一标识
                 existingUser.setRealName((String) userData.get("realName"));
                 existingUser.setPhone((String) userData.get("phone"));
                 // 只有管理员可以更新状态
