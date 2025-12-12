@@ -15,7 +15,7 @@ RUN npm install --legacy-peer-deps
 RUN npm run build
 
 # 第二阶段：构建后端
-FROM amazoncorretto:8-alpine AS backend-build
+FROM amazoncorretto:17-alpine AS backend-build
 
 WORKDIR /app
 
@@ -37,7 +37,7 @@ RUN mvn dependency:go-offline -B
 RUN mvn clean package -DskipTests
 
 # 第三阶段：最终镜像
-FROM amazoncorretto:8-alpine
+FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
