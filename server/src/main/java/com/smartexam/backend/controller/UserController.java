@@ -302,16 +302,13 @@ public class UserController {
             String currentUsername = userDetails.getUsername();
             User currentUser = userRepository.findByUsername(currentUsername).orElse(null);
             
-            // 验证权限：只能更新自己的信息，或者是管理员
-            boolean isAdmin = currentUser != null && currentUser.getRoles().stream()
-                    .anyMatch(role -> "admin".equals(role.getCode()) || "超级管理员".equals(role.getName()));
-            
             Optional<User> optionalUser = userRepository.findById(id);
             if (optionalUser.isPresent()) {
                 User existingUser = optionalUser.get();
                 
-                // 检查权限
-                if (!isAdmin && !existingUser.getUsername().equals(currentUsername)) {
+                // 简化权限检查：任何人都可以更新自己的信息
+                // 核心逻辑：只能更新自己的信息
+                if (!existingUser.getUsername().equals(currentUsername)) {
                     response.put("code", 403);
                     response.put("message", "Access Denied");
                     return ResponseEntity.ok(response);
@@ -322,7 +319,10 @@ public class UserController {
                 existingUser.setRealName((String) userData.get("realName"));
                 existingUser.setPhone((String) userData.get("phone"));
                 // 只有管理员可以更新状态
-                if (isAdmin && userData.containsKey("status")) {
+                // 检查当前用户是否为管理员
+                boolean isCurrentUserAdmin = currentUser != null && currentUser.getRoles().stream()
+                    .anyMatch(role -> "admin".equals(role.getCode()) || "超级管理员".equals(role.getName()));
+                if (isCurrentUserAdmin && userData.containsKey("status")) {
                     existingUser.setStatus((Integer) userData.get("status"));
                 }
                 existingUser.setAvatar((String) userData.get("avatar"));
@@ -353,7 +353,7 @@ public class UserController {
                 }
                 
                 // 更新用户角色（只有管理员可以）
-                if (isAdmin && userData.containsKey("roleIds")) {
+                if (isCurrentUserAdmin && userData.containsKey("roleIds")) {
                     List<?> roleIds = (List<?>) userData.get("roleIds");
                     Set<Role> roles = new HashSet<>();
                     for (Object roleIdObj : roleIds) {
