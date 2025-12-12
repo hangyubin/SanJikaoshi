@@ -288,14 +288,15 @@ const fetchPapers = async () => {
     // 修复API地址，去掉/api前缀
     const response = await axios.get('/papers', { params })
     // 适应后端返回的格式
-    if (response.data.records) {
+    const responseData = response as any
+    if (responseData.records) {
       // 如果是分页格式
-      papers.value = response.data.records
-      total.value = response.data.total
+      papers.value = responseData.records
+      total.value = responseData.total
     } else {
       // 如果是直接列表格式
-      papers.value = response.data
-      total.value = response.data.length
+      papers.value = responseData
+      total.value = responseData.length
     }
   } catch (error) {
     console.error('获取题库列表失败:', error)
