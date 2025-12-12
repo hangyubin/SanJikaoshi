@@ -143,10 +143,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage, ElTree } from 'element-plus'
+import { ElMessage, ElTree, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
+
+const router = useRouter()
+
+// 计算属性：是否为系统管理员
+const isSystemAdmin = computed(() => {
+  // 系统管理员判断：username为admin或者拥有系统管理员角色
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    const parsedInfo = JSON.parse(userInfo)
+    const roles = parsedInfo.roles || []
+    return parsedInfo.username === 'admin' || roles.some((role: any) => role === 'ROLE_SYS_ADMIN' || role === '系统管理员')
+  }
+  return false
+})
+
+// 页面加载时检查权限
+onMounted(() => {
+  if (!isSystemAdmin.value) {
+    ElMessageBox.alert('您没有权限访问此页面，请联系系统管理员', '权限不足', {
+      confirmButtonText: '确定',
+      type: 'warning'
+    })
+    .then(() => {
+      router.push('/dashboard/user-management')
+    })
+    .catch(() => {
+      router.push('/dashboard/user-management')
+    })
+    return
+  }
+  
+  fetchUsers()
+  fetchUserList()
+})
 
 // 用户数据
 const users = ref<any[]>([])

@@ -81,14 +81,8 @@
                 <span>任务管理</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="/dashboard/permission-management">
-              <el-icon><Setting /></el-icon>
-              <template #title>
-                <span>权限管理</span>
-              </template>
-            </el-menu-item>
-            
-            <el-menu-item index="/dashboard/settings">
+            <!-- 只有系统管理员可以访问系统设置 -->
+            <el-menu-item index="/dashboard/settings" v-if="isSystemAdmin">
               <el-icon><Setting /></el-icon>
               <template #title>
                 <span>系统设置</span>
@@ -158,6 +152,17 @@ const userRoles = ref<string[]>([])
 // 计算属性：是否为管理员
 const isAdmin = computed(() => {
   return userRoles.value.some(role => role === 'ROLE_ADMIN' || role === '管理员')
+})
+
+// 计算属性：是否为系统管理员
+const isSystemAdmin = computed(() => {
+  // 系统管理员判断：username为admin或者拥有系统管理员角色
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    const parsedInfo = JSON.parse(userInfo)
+    return parsedInfo.username === 'admin' || userRoles.value.some(role => role === 'ROLE_SYS_ADMIN' || role === '系统管理员')
+  }
+  return false
 })
 
 // 从localStorage获取用户信息

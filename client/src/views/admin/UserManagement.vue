@@ -63,7 +63,7 @@
           </el-card>
         </el-col>
         
-        <el-col :span="12">
+        <el-col :span="12" v-if="isSystemAdmin">
           <el-card class="nav-item" @click="navigateTo('permission-management')">
             <div class="nav-content">
               <el-icon class="nav-icon"><Setting /></el-icon>
@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Avatar, Setting } from '@element-plus/icons-vue'
 
@@ -90,6 +90,18 @@ const router = useRouter()
 const totalUserCount = ref(150)
 const studentCount = ref(120)
 const adminCount = ref(10)
+
+// 计算属性：是否为系统管理员
+const isSystemAdmin = computed(() => {
+  // 系统管理员判断：username为admin或者拥有系统管理员角色
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    const parsedInfo = JSON.parse(userInfo)
+    const roles = parsedInfo.roles || []
+    return parsedInfo.username === 'admin' || roles.some((role: any) => role === 'ROLE_SYS_ADMIN' || role === '系统管理员')
+  }
+  return false
+})
 
 const navigateTo = (path: string) => {
   router.push(`/dashboard/${path}`)
