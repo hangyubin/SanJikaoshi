@@ -342,14 +342,22 @@ public class UserController {
                 }
                 // 支持前端发送department对象的情况
                 else if (userData.containsKey("department") && userData.get("department") != null) {
-                    Map<String, Object> deptMap = (Map<String, Object>) userData.get("department");
-                    if (deptMap.containsKey("id")) {
-                        Long departmentId = deptMap.get("id") instanceof Integer ? 
-                            ((Integer) deptMap.get("id")).longValue() : 
-                            (Long) deptMap.get("id");
-                        Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
-                        departmentOpt.ifPresent(existingUser::setDepartment);
+                    Object departmentValue = userData.get("department");
+                    // 检查department值的类型
+                    if (departmentValue instanceof Map) {
+                        Map<String, Object> deptMap = (Map<String, Object>) departmentValue;
+                        if (deptMap.containsKey("id")) {
+                            Object idValue = deptMap.get("id");
+                            if (idValue instanceof Number) {
+                                Long departmentId = idValue instanceof Integer ? 
+                                    ((Integer) idValue).longValue() : 
+                                    (Long) idValue;
+                                Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
+                                departmentOpt.ifPresent(existingUser::setDepartment);
+                            }
+                        }
                     }
+                    // 前端可能直接发送部门名称字符串，暂不处理
                 }
                 
                 // 更新用户角色（只有管理员可以）
