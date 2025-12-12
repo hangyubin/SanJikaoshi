@@ -20,6 +20,9 @@ public class UserController {
     
     @Autowired
     private RoleRepository roleRepository;
+    
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     // 获取所有用户（支持分页、搜索和筛选）
     @GetMapping
@@ -301,6 +304,17 @@ public class UserController {
                 existingUser.setGender((Integer) userData.get("gender"));
                 existingUser.setJobTitle((String) userData.get("jobTitle"));
                 existingUser.setUpdateTime(System.currentTimeMillis());
+                
+                // 更新用户部门
+                if (userData.containsKey("departmentId")) {
+                    Long departmentId = userData.get("departmentId") instanceof Integer ? 
+                        ((Integer) userData.get("departmentId")).longValue() : 
+                        (Long) userData.get("departmentId");
+                    if (departmentId != null) {
+                        Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
+                        departmentOpt.ifPresent(existingUser::setDepartment);
+                    }
+                }
                 
                 // 更新用户角色
                 if (userData.containsKey("roleIds")) {
