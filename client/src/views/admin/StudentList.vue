@@ -48,8 +48,8 @@
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
-            <el-tag :type="(scope.row.role === 'admin' || scope.row.username === 'admin') ? 'primary' : 'success'">
-              {{ (scope.row.role === 'admin' || scope.row.username === 'admin') ? '管理员' : '普通用户' }}
+            <el-tag :type="scope.row.username === 'admin' ? 'primary' : (scope.row.role === 'admin' ? 'warning' : 'success')">
+              {{ scope.row.username === 'admin' ? '系统管理员' : (scope.row.role === 'admin' ? '管理员' : '普通用户') }}
             </el-tag>
           </template>
         </el-table-column>

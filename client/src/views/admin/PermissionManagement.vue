@@ -32,8 +32,8 @@
         <el-table-column prop="realName" label="姓名" width="150"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
-            <el-tag :type="scope.row.role === 'admin' ? 'primary' : 'success'">
-              {{ scope.row.role === 'admin' ? '系统管理员' : '普通管理员' }}
+            <el-tag :type="scope.row.username === 'admin' ? 'primary' : 'warning'">
+              {{ scope.row.username === 'admin' ? '系统管理员' : '普通管理员' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -494,8 +494,10 @@ const handleStatusChange = (row: any) => {
   font-weight: bold;
   font-size: 14px;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-  border-color: #67c23a;
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  border-color: #409eff;
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   box-shadow: 0 2px 8px rgba(103, 194, 58, 0.3);
 }
 

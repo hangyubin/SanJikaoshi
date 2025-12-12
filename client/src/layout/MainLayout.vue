@@ -151,16 +151,38 @@ const userRoles = ref<string[]>([])
 
 // 计算属性：是否为管理员
 const isAdmin = computed(() => {
-  return userRoles.value.some(role => role === 'ROLE_ADMIN' || role === '管理员')
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    const parsedInfo = JSON.parse(userInfo)
+    // admin账号直接是管理员
+    if (parsedInfo.username === 'admin') {
+      return true
+    }
+    // 检查角色数组
+    const roles = parsedInfo.roles || []
+    // 支持字符串和数组两种格式
+    if (typeof roles === 'string') {
+      return roles.includes('ROLE_ADMIN') || roles.includes('admin') || roles.includes('管理员')
+    } else if (Array.isArray(roles)) {
+      return roles.some((role: any) => {
+        if (typeof role === 'string') {
+          return role === 'ROLE_ADMIN' || role === 'admin' || role === '管理员'
+        } else {
+          return role.code === 'ROLE_ADMIN' || role.name === '管理员'
+        }
+      })
+    }
+  }
+  return false
 })
 
 // 计算属性：是否为系统管理员
 const isSystemAdmin = computed(() => {
-  // 系统管理员判断：username为admin或者拥有系统管理员角色
   const userInfo = localStorage.getItem('userInfo')
   if (userInfo) {
     const parsedInfo = JSON.parse(userInfo)
-    return parsedInfo.username === 'admin' || userRoles.value.some(role => role === 'ROLE_SYS_ADMIN' || role === '系统管理员')
+    // admin账号直接是系统管理员
+    return parsedInfo.username === 'admin'
   }
   return false
 })
@@ -179,9 +201,12 @@ const fetchUserInfo = () => {
     if (userInfo.avatar) {
       userAvatar.value = userInfo.avatar
     }
-    if (userInfo.roles && Array.isArray(userInfo.roles)) {
-      // 提取角色代码或名称
-      userRoles.value = userInfo.roles.map((role: any) => {
+    // 更新角色数组，支持字符串和数组格式
+    const roles = userInfo.roles || []
+    if (typeof roles === 'string') {
+      userRoles.value = [roles]
+    } else if (Array.isArray(roles)) {
+      userRoles.value = roles.map((role: any) => {
         if (typeof role === 'string') {
           return role
         } else if (role.code) {
@@ -191,6 +216,8 @@ const fetchUserInfo = () => {
         }
         return ''
       })
+    } else {
+      userRoles.value = []
     }
   }
 }
