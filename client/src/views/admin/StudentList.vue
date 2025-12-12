@@ -281,16 +281,30 @@ const handleView = (row: any) => {
 }
 
 const handleStatusChange = (row: any) => {
+  // 保存原状态，用于失败时恢复
+  const originalStatus = row.status
   // 调用后端API更新状态
-  axios.put(`/users/status/${row.id}`, { status: row.status })
+  axios.put(`/users/${row.id}`, { status: row.status })
     .then(() => {
       ElMessage.success('状态更新成功')
     })
     .catch(error => {
       console.error('更新状态失败:', error)
-      ElMessage.error('状态更新失败')
+      // 更详细的错误处理
+      let errorMsg = '状态更新失败'
+      if (error.response) {
+        // 服务器返回了错误响应
+        errorMsg = error.response.data?.message || errorMsg
+      } else if (error.request) {
+        // 请求已发送但没有收到响应
+        errorMsg = '服务器无响应，请稍后重试'
+      } else {
+        // 请求配置错误
+        errorMsg = error.message || errorMsg
+      }
+      ElMessage.error(errorMsg)
       // 恢复原状态
-      fetchUsers()
+      row.status = originalStatus
     })
 }
 

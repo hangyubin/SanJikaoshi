@@ -81,6 +81,13 @@
                 <span>任务管理</span>
               </template>
             </el-menu-item>
+            <el-menu-item index="/dashboard/permission-management">
+              <el-icon><Setting /></el-icon>
+              <template #title>
+                <span>权限管理</span>
+              </template>
+            </el-menu-item>
+            
             <el-menu-item index="/dashboard/settings">
               <el-icon><Setting /></el-icon>
               <template #title>

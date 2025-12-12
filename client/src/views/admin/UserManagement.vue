@@ -64,12 +64,12 @@
         </el-col>
         
         <el-col :span="12">
-          <el-card class="nav-item" @click="navigateTo('role-management')">
+          <el-card class="nav-item" @click="navigateTo('permission-management')">
             <div class="nav-content">
               <el-icon class="nav-icon"><Setting /></el-icon>
               <div class="nav-info">
-                <h4>角色与权限管理</h4>
-                <p>管理系统角色和权限分配</p>
+                <h4>权限管理</h4>
+                <p>管理系统权限分配</p>
               </div>
             </div>
           </el-card>
