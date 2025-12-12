@@ -1,7 +1,9 @@
 package com.smartexam.backend.controller;
 
+import com.smartexam.backend.entity.Department;
 import com.smartexam.backend.entity.Role;
 import com.smartexam.backend.entity.User;
+import com.smartexam.backend.repository.DepartmentRepository;
 import com.smartexam.backend.repository.RoleRepository;
 import com.smartexam.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
