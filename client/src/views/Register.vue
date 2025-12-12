@@ -81,10 +81,11 @@
             ></el-input>
           </el-form-item>
           
+          <!-- 姓名字段改为可选，可在个人中心完善 -->
           <el-form-item label="姓名" prop="realName">
             <el-input
               v-model="registerForm.realName"
-              placeholder="请输入姓名"
+              placeholder="请输入姓名（可选，可在个人中心完善）"
               prefix-icon="UserFilled"
               size="large"
               class="custom-input"
@@ -203,7 +204,7 @@ const registerRules = reactive<FormRules>({
       }, trigger: 'blur' }
   ],
   realName: [
-    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { required: false, message: '请输入姓名', trigger: 'blur' },
     { pattern: /^[\u4e00-\u9fa5]+$/, message: '请输入有效的中文姓名，不能包含空格或特殊字符', trigger: 'blur' }
   ],
   phone: [

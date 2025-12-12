@@ -347,6 +347,28 @@ const fetchUserInfo = () => {
     }
     // 这里可以根据实际角色设置userRole
     // userRole.value = userInfo.role === 'ROLE_ADMIN' ? 'admin' : 'student'
+    
+    // 检查用户是否已完善个人信息
+    const hasCompletedProfile = userInfo.realName && userInfo.phone && userInfo.gender !== undefined && userInfo.gender !== null
+    
+    // 如果未完善个人信息且是首次登录，弹出提示
+    if (!hasCompletedProfile && !localStorage.getItem('hasSeenProfilePrompt')) {
+      // 标记已提示过，避免重复弹窗
+      localStorage.setItem('hasSeenProfilePrompt', 'true')
+      
+      // 显示提示对话框
+      ElMessageBox.confirm('欢迎使用智能考试系统！请先完善您的个人信息', '提示', {
+        confirmButtonText: '去完善',
+        cancelButtonText: '稍后再说',
+        type: 'info'
+      }).then(() => {
+        // 跳转到个人中心
+        router.push('/dashboard/profile')
+      }).catch(() => {
+        // 用户选择稍后再说，不做处理
+        console.log('用户选择稍后完善个人信息')
+      })
+    }
   }
 }
 

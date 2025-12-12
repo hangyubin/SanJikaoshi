@@ -158,7 +158,10 @@ const fetchUserInfo = () => {
   const savedUserInfo = localStorage.getItem('userInfo')
   if (savedUserInfo) {
     const userInfo = JSON.parse(savedUserInfo)
-    if (userInfo.username) {
+    // 优先显示真实姓名，否则显示用户名
+    if (userInfo.realName) {
+      userName.value = userInfo.realName
+    } else if (userInfo.username) {
       userName.value = userInfo.username
     }
     if (userInfo.avatar) {
