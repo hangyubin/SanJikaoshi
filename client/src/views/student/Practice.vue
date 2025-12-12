@@ -153,15 +153,13 @@ import {
   RefreshRight, Star, Menu, 
   Delete 
 } from '@element-plus/icons-vue'
-import axios from '@/utils/axios'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
 // 题型选择
 const selectedQuestionType = ref<number | null>(null)
 // 各题型的题目数量
-const questionTypeCount = ref({
+const questionTypeCount = ref<Record<number, number>>({
   1: 100, // 单选题数量
   2: 80,  // 多选题数量
   3: 50   // 是非题数量
