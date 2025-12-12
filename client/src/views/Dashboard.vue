@@ -5,9 +5,17 @@
       <div class="welcome-info">
         <h1>欢迎您回来，{{ userName }}</h1>
         <p class="welcome-subtitle">这里是您的智能考试系统工作台</p>
-        <el-tag :type="roleType" size="large" class="role-tag">
-          {{ roleText }}
-        </el-tag>
+        <div class="user-info-tags">
+          <el-tag :type="roleType" size="large" class="role-tag">
+            {{ roleText }}
+          </el-tag>
+          <el-tag v-if="userDepartment" type="info" size="large" class="department-tag">
+            {{ userDepartment }}
+          </el-tag>
+          <el-tag v-if="userJobTitle" type="success" size="large" class="job-title-tag">
+            {{ userJobTitle }}
+          </el-tag>
+        </div>
       </div>
       <div class="welcome-stats">
         <div class="stat-item">
@@ -81,7 +89,7 @@
     </el-row>
     
     <!-- 快捷操作区 -->
-    <div class="quick-actions" v-if="roleText === '系统管理员' || roleText === '普通管理员'">
+    <div class="quick-actions" v-if="roleText === '系统管理员' || roleText === '管理员'">
       <h3>快捷操作</h3>
       <el-row :gutter="20">
         <el-col :span="4" v-for="action in adminQuickActions" :key="action.id">
@@ -224,6 +232,7 @@ import {
 } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getRoleType, getRoleLabel } from '@/utils/roleConfig'
 
 const router = useRouter()
 
@@ -231,6 +240,8 @@ const router = useRouter()
 const userName = ref('')
 const roleType = ref('success') // 标签类型：primary、success、warning等
 const roleText = ref('学员') // 角色文本：系统管理员、普通管理员、学员
+const userDepartment = ref('') // 科室信息
+const userJobTitle = ref('') // 职称信息
 
 // 统计数据
 const userCount = ref(0)
@@ -350,20 +361,13 @@ const fetchUserInfo = () => {
       userName.value = userInfo.username
     }
     
-    // 设置角色类型和文本
-    if (userInfo.username === 'admin') {
-      // 系统管理员
-      roleType.value = 'primary'
-      roleText.value = '系统管理员'
-    } else if (userInfo.role === 'admin' || userInfo.roles?.includes('ROLE_ADMIN') || userInfo.roles?.includes('管理员')) {
-      // 普通管理员
-      roleType.value = 'warning'
-      roleText.value = '普通管理员'
-    } else {
-      // 学员
-      roleType.value = 'success'
-      roleText.value = '学员'
-    }
+    // 设置科室和职称信息
+    userDepartment.value = userInfo.department || ''
+    userJobTitle.value = userInfo.jobTitle || ''
+    
+    // 使用统一的角色配置获取角色类型和文本
+    roleType.value = getRoleType(userInfo.role, userInfo.username)
+    roleText.value = getRoleLabel(userInfo.role, userInfo.username)
     
     // 检查用户是否已完善个人信息
     const hasCompletedProfile = userInfo.realName && userInfo.phone && userInfo.gender !== undefined && userInfo.gender !== null
@@ -543,6 +547,20 @@ onMounted(() => {
   margin-top: 10px;
   font-size: 16px;
   animation: fadeInUp 0.6s ease 0.4s both;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-right: 10px;
+}
+
+.user-info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.department-tag, .job-title-tag {
+  font-size: 16px;
+  animation: fadeInUp 0.6s ease 0.5s both;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 

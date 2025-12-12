@@ -48,8 +48,8 @@
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
-            <el-tag :type="scope.row.username === 'admin' ? 'primary' : (scope.row.role === 'admin' ? 'warning' : 'success')">
-              {{ scope.row.username === 'admin' ? '系统管理员' : (scope.row.role === 'admin' ? '管理员' : '普通用户') }}
+            <el-tag :type="getRoleType(scope.row.role, scope.row.username)">
+              {{ getRoleLabel(scope.row.role, scope.row.username) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -123,10 +123,50 @@
         </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-select v-model="form.role" placeholder="请选择角色">
-            <el-option label="普通用户" value="user"></el-option>
-            <el-option label="管理员" value="admin"></el-option>
+            <el-option 
+              v-for="role in roleConfig" 
+              :key="role.value" 
+              :label="role.label" 
+              :value="role.value"
+              :disabled="role.value === 'sysadmin'"
+            ></el-option>
           </el-select>
         </el-form-item>
+        
+        <!-- 权限分配对话框 -->
+        <el-dialog
+          v-model="permissionDialogVisible"
+          title="权限分配"
+          width="600px"
+        >
+          <el-form :model="permissionForm" label-width="100px">
+            <el-form-item label="用户">
+              {{ permissionForm.username }}
+            </el-form-item>
+            <el-form-item label="角色">
+              <el-tag :type="getRoleType(permissionForm.role)">
+                {{ getRoleLabel(permissionForm.role) }}
+              </el-tag>
+            </el-form-item>
+            <el-form-item label="权限">
+              <el-checkbox-group v-model="permissionForm.permissions">
+                <el-checkbox 
+                  v-for="permission in permissionList" 
+                  :key="permission.id" 
+                  :label="permission.id"
+                >
+                  {{ permission.label }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="permissionDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="handlePermissionSubmit">确认</el-button>
+            </span>
+          </template>
+        </el-dialog>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -139,10 +179,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import axios from '@/utils/axios'
+import { roleConfig, getRoleType, getRoleLabel, permissionList } from '@/utils/roleConfig'
 
 // 用户数据，初始为空数组
 const users = ref<any[]>([])
@@ -203,6 +244,47 @@ const form = reactive({
   role: 'user'
 })
 
+// 权限分配对话框
+const permissionDialogVisible = ref(false)
+const permissionForm = reactive({
+  id: '',
+  username: '',
+  role: '',
+  permissions: [] as string[]
+})
+
+// 监听角色变化，当角色变为admin时，自动弹出权限分配对话框
+watch(
+  () => form.role,
+  (newRole, oldRole) => {
+    if (form.id && newRole === 'admin' && oldRole !== 'admin') {
+      // 当编辑用户并将角色改为管理员时，自动弹出权限分配对话框
+      showPermissionDialog()
+    }
+  }
+)
+
+// 显示权限分配对话框
+const showPermissionDialog = async () => {
+  if (!form.id) return
+  
+  try {
+    // 获取当前用户的权限
+    const res = await axios.get(`/users/${form.id}/permissions`)
+    permissionForm.permissions = res.data.permissions || []
+  } catch (error) {
+    console.error('获取权限失败:', error)
+    permissionForm.permissions = []
+  }
+  
+  // 填充表单数据
+  permissionForm.id = form.id
+  permissionForm.username = form.username
+  permissionForm.role = form.role
+  
+  permissionDialogVisible.value = true
+}
+
 const rules = reactive<FormRules>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -257,6 +339,21 @@ const handleEdit = (row: any) => {
   dialogVisible.value = true
 }
 
+// 提交权限分配
+const handlePermissionSubmit = async () => {
+  try {
+    await axios.put(`/users/${permissionForm.id}/permissions`, {
+      permissions: permissionForm.permissions
+    })
+    
+    ElMessage.success('权限分配成功')
+    permissionDialogVisible.value = false
+  } catch (error) {
+    console.error('权限分配失败:', error)
+    ElMessage.error('权限分配失败')
+  }
+}
+
 const handleSubmit = async () => {
   if (!formRef.value) return
   
@@ -266,24 +363,41 @@ const handleSubmit = async () => {
     const method = form.id ? 'put' : 'post'
     const url = form.id ? `/users/${form.id}` : '/users'
     
-    // 如果是将管理员降为普通用户，需要额外处理权限
-    if (form.id && form.role === 'user') {
-      // 先更新基本信息
-      await axios.put(`/users/${form.id}`, form)
-      // 清除权限信息（如果有专门的权限接口）
+    // 提交用户信息
+    const userRes = await axios[method as 'post' | 'put'](url, form)
+    const userId = form.id || userRes.data.id
+    
+    // 如果是将管理员降为普通用户，需要清除权限
+    if (form.role === 'user') {
       try {
-        await axios.put(`/users/${form.id}/permissions`, { permissions: [] })
+        await axios.put(`/users/${userId}/permissions`, { permissions: [] })
       } catch (permError) {
         // 权限清除失败不影响用户角色更新
         console.error('清除权限失败:', permError)
       }
-    } else {
-      // 正常提交表单
-      await axios[method as 'post' | 'put'](url, form)
+    } 
+    // 如果是创建新的管理员用户，需要分配权限
+    else if (form.role === 'admin' && !form.id) {
+      // 更新权限表单数据
+      permissionForm.id = userId
+      permissionForm.username = form.username
+      permissionForm.role = form.role
+      permissionForm.permissions = []
+      
+      // 先关闭用户编辑对话框
+      dialogVisible.value = false
+      
+      // 弹出权限分配对话框
+      permissionDialogVisible.value = true
     }
     
     ElMessage.success(form.id ? '编辑用户成功' : '添加用户成功')
-    dialogVisible.value = false
+    
+    // 如果不是新创建的管理员用户，直接关闭对话框
+    if (!(form.role === 'admin' && !form.id)) {
+      dialogVisible.value = false
+    }
+    
     fetchUsers() // 刷新用户列表
   } catch (error) {
     console.error('提交用户信息失败:', error)
@@ -305,32 +419,42 @@ const handleView = (row: any) => {
   console.log('查看用户详情', row)
 }
 
-const handleStatusChange = (row: any) => {
+const handleStatusChange = async (row: any) => {
   // 保存原状态，用于失败时恢复
   const originalStatus = row.status
-  // 调用后端API更新状态
-  axios.put(`/users/${row.id}`, { status: row.status })
-    .then(() => {
-      ElMessage.success('状态更新成功')
+  try {
+    // 调用后端API更新状态，与handleSubmit函数保持一致的调用方式
+    await axios.put(`/users/${row.id}`, {
+      status: row.status,
+      // 确保提交所有必要字段，避免API验证失败
+      username: row.username,
+      realName: row.realName,
+      phone: row.phone,
+      role: row.role
     })
-    .catch(error => {
-      console.error('更新状态失败:', error)
-      // 更详细的错误处理
-      let errorMsg = '状态更新失败'
-      if (error.response) {
-        // 服务器返回了错误响应
-        errorMsg = error.response.data?.message || errorMsg
-      } else if (error.request) {
-        // 请求已发送但没有收到响应
-        errorMsg = '服务器无响应，请稍后重试'
+    ElMessage.success('状态更新成功')
+  } catch (error: any) {
+    console.error('更新状态失败:', error)
+    // 更详细的错误处理
+    let errorMsg = '状态更新失败'
+    if (error.response) {
+      // 服务器返回了错误响应
+      if (error.response.status === 403) {
+        errorMsg = '您没有权限执行此操作'
       } else {
-        // 请求配置错误
-        errorMsg = error.message || errorMsg
+        errorMsg = error.response.data?.message || errorMsg
       }
-      ElMessage.error(errorMsg)
-      // 恢复原状态
-      row.status = originalStatus
-    })
+    } else if (error.request) {
+      // 请求已发送但没有收到响应
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      // 请求配置错误
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
+    // 恢复原状态
+    row.status = originalStatus
+  }
 }
 
 const handleSizeChange = (size: number) => {

@@ -200,6 +200,9 @@ const rules = reactive<FormRules>({
   ],
   department: [
     { required: true, message: '请输入科室', trigger: 'blur' }
+  ],
+  jobTitle: [
+    { required: false, message: '请输入职称', trigger: 'blur' }
   ]
 })
 
@@ -245,17 +248,29 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     
     // 调用后端API更新用户信息
-    const response = await axios.put(`/users/${userForm.id}`, userForm) as any
-    if (response.code === 200) {
+    const response = await axios.put(`/users/${userForm.id}`, userForm)
+    
+    // 检查API响应是否成功（通常通过HTTP状态码判断）
+    if (response.status >= 200 && response.status < 300) {
       // 保存用户信息到localStorage
-      localStorage.setItem('userInfo', JSON.stringify(response.data))
+      const userData = response.data.data || response.data || userForm
+      localStorage.setItem('userInfo', JSON.stringify(userData))
+      // 手动触发storage事件，确保同一标签页内的组件也能收到更新
+      window.dispatchEvent(new Event('storage'))
       ElMessage.success('保存成功')
     } else {
       ElMessage.error('保存失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('保存用户信息失败:', error)
-    ElMessage.error('保存失败')
+    // 处理不同类型的错误
+    if (error.response) {
+      // 服务器返回了错误响应
+      ElMessage.error(error.response.data?.message || '保存失败')
+    } else {
+      // 网络错误或其他错误
+      ElMessage.error('网络错误，请稍后重试')
+    }
   }
 }
 

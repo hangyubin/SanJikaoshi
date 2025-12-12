@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
         name: 'UserManagement',
         component: () => import('../views/admin/UserManagement.vue')
       },
-      {        path: 'student-list',        name: 'StudentList',        component: () => import('../views/admin/StudentList.vue')      },      {        path: 'permission-management',        name: 'PermissionManagement',        component: () => import('../views/admin/PermissionManagement.vue')      },
+      {        path: 'student-list',        name: 'StudentList',        component: () => import('../views/admin/StudentList.vue')      },
 
       {        path: 'paper-management',        name: 'PaperManagement',        component: () => import('../views/admin/PaperManagement.vue')      },
 
@@ -70,7 +70,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
