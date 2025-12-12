@@ -29,7 +29,7 @@
         <el-table-column type="selection" width="55"></el-table-column>
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" width="150"></el-table-column>
-        <el-table-column prop="realName" label="真实姓名" width="150"></el-table-column>
+        <el-table-column prop="realName" label="姓名" width="150"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
             <el-tag :type="scope.row.role === 'admin' ? 'primary' : 'success'">
@@ -65,8 +65,12 @@
             ></el-switch>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="createTime" label="创建时间" width="180">
+          <template #default="scope">
+            <span>{{ formatDateTime(scope.row.createTime) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120">
           <template #default="scope">
             <!-- 系统管理员不能被修改权限 -->
             <el-button 
@@ -76,14 +80,6 @@
               :disabled="scope.row.username === 'admin'"
             >
               编辑权限
-            </el-button>
-            <el-button 
-              type="danger" 
-              size="small" 
-              @click="handleDeleteUser(scope.row)"
-              :disabled="scope.row.username === 'admin'"
-            >
-              删除
             </el-button>
           </template>
         </el-table-column>
@@ -169,6 +165,23 @@ const isSystemAdmin = computed(() => {
   }
   return false
 })
+
+// 格式化日期时间函数
+const formatDateTime = (dateTime: string | Date | undefined) => {
+  if (!dateTime) return '-'
+  
+  const date = new Date(dateTime)
+  if (isNaN(date.getTime())) return '-'
+  
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
 
 // 页面加载时检查权限
 onMounted(() => {
@@ -411,24 +424,7 @@ const handleStatusChange = (row: any) => {
     })
 }
 
-// 删除用户
-const handleDeleteUser = (row: any) => {
-  if (row.username === 'admin') {
-    ElMessage.warning('不能删除系统管理员')
-    return
-  }
-  
-  // 这里可以添加确认对话框
-  axios.delete(`/users/${row.id}`)
-    .then(() => {
-      ElMessage.success('删除成功')
-      fetchUsers() // 刷新用户列表
-    })
-    .catch(error => {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
-    })
-}
+
 </script>
 
 <style scoped>

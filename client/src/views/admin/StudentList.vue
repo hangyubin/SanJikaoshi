@@ -266,7 +266,21 @@ const handleSubmit = async () => {
     const method = form.id ? 'put' : 'post'
     const url = form.id ? `/users/${form.id}` : '/users'
     
-    await axios[method as 'post' | 'put'](url, form)
+    // 如果是将管理员降为普通用户，需要额外处理权限
+    if (form.id && form.role === 'user') {
+      // 先更新基本信息
+      await axios.put(`/users/${form.id}`, form)
+      // 清除权限信息（如果有专门的权限接口）
+      try {
+        await axios.put(`/users/${form.id}/permissions`, { permissions: [] })
+      } catch (permError) {
+        // 权限清除失败不影响用户角色更新
+        console.error('清除权限失败:', permError)
+      }
+    } else {
+      // 正常提交表单
+      await axios[method as 'post' | 'put'](url, form)
+    }
     
     ElMessage.success(form.id ? '编辑用户成功' : '添加用户成功')
     dialogVisible.value = false

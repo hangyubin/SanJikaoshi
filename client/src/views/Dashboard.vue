@@ -5,8 +5,8 @@
       <div class="welcome-info">
         <h1>欢迎您回来，{{ userName }}</h1>
         <p class="welcome-subtitle">这里是您的智能考试系统工作台</p>
-        <el-tag :type="userRole === 'admin' ? 'primary' : 'success'" size="large" class="role-tag">
-          {{ userRole === 'admin' ? '管理员' : '学员' }}
+        <el-tag :type="roleType" size="large" class="role-tag">
+          {{ roleText }}
         </el-tag>
       </div>
       <div class="welcome-stats">
@@ -81,7 +81,7 @@
     </el-row>
     
     <!-- 快捷操作区 -->
-    <div class="quick-actions" v-if="userRole === 'admin'">
+    <div class="quick-actions" v-if="roleText === '系统管理员' || roleText === '普通管理员'">
       <h3>快捷操作</h3>
       <el-row :gutter="20">
         <el-col :span="4" v-for="action in adminQuickActions" :key="action.id">
@@ -229,7 +229,8 @@ const router = useRouter()
 
 // 用户信息
 const userName = ref('')
-const userRole = ref('student') // 'admin' 或 'student'
+const roleType = ref('success') // 标签类型：primary、success、warning等
+const roleText = ref('学员') // 角色文本：系统管理员、普通管理员、学员
 
 // 统计数据
 const userCount = ref(0)
@@ -342,11 +343,27 @@ const fetchUserInfo = () => {
   const savedUserInfo = localStorage.getItem('userInfo')
   if (savedUserInfo) {
     const userInfo = JSON.parse(savedUserInfo)
-    if (userInfo.username) {
+    // 显示真实姓名或用户名
+    if (userInfo.realName) {
+      userName.value = userInfo.realName
+    } else if (userInfo.username) {
       userName.value = userInfo.username
     }
-    // 这里可以根据实际角色设置userRole
-    // userRole.value = userInfo.role === 'ROLE_ADMIN' ? 'admin' : 'student'
+    
+    // 设置角色类型和文本
+    if (userInfo.username === 'admin') {
+      // 系统管理员
+      roleType.value = 'primary'
+      roleText.value = '系统管理员'
+    } else if (userInfo.role === 'admin' || userInfo.roles?.includes('ROLE_ADMIN') || userInfo.roles?.includes('管理员')) {
+      // 普通管理员
+      roleType.value = 'warning'
+      roleText.value = '普通管理员'
+    } else {
+      // 学员
+      roleType.value = 'success'
+      roleText.value = '学员'
+    }
     
     // 检查用户是否已完善个人信息
     const hasCompletedProfile = userInfo.realName && userInfo.phone && userInfo.gender !== undefined && userInfo.gender !== null
