@@ -2,6 +2,7 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 
 @Data
@@ -18,9 +19,11 @@ public class Subject {
     private Integer status;
     
     @OneToMany(mappedBy = "subject")
+    @JsonIgnore
     private Set<Question> questions;
     
     @OneToMany(mappedBy = "subject")
+    @JsonIgnore
     private Set<ExamPaper> examPapers;
     
     private Long createTime;

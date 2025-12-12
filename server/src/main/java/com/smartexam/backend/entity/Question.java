@@ -2,6 +2,7 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 
 @Data
@@ -23,13 +24,16 @@ public class Question {
     
     @ManyToOne
     @JoinColumn(name = "subject_id")
+    @JsonIgnore
     private Subject subject;
     
     @ManyToOne
     @JoinColumn(name = "create_by")
+    @JsonIgnore
     private User createBy;
     
     @ManyToMany(mappedBy = "questions")
+    @JsonIgnore
     private Set<ExamPaper> examPapers;
     
     private Integer status;

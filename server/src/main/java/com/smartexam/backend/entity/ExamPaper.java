@@ -2,6 +2,7 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 
 @Data
@@ -34,9 +35,11 @@ public class ExamPaper {
     @JoinTable(name = "exam_paper_question",
             joinColumns = @JoinColumn(name = "paper_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id"))
+    @JsonIgnore
     private Set<Question> questions;
     
     @OneToMany(mappedBy = "examPaper")
+    @JsonIgnore
     private Set<ExamRecord> examRecords;
     
     private Long createTime;

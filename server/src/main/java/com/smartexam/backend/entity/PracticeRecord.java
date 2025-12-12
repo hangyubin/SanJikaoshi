@@ -2,6 +2,7 @@ package com.smartexam.backend.entity;
 
 import lombok.Data;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Data
 @Entity
@@ -13,10 +14,12 @@ public class PracticeRecord {
     
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
     
     @ManyToOne
     @JoinColumn(name = "question_id")
+    @JsonIgnore
     private Question question;
     
     private String answer; // 用户答案
