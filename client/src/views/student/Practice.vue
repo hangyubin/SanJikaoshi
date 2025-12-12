@@ -71,8 +71,8 @@
         <div class="card-header">
           <h3>练习设置</h3>
           <div class="selected-subject-info">
-            <el-tag type="primary">{{ getQuestionTypeLabel(selectedQuestionType) }}</el-tag>
-            <span class="subject-question-count">{{ questionTypeCount[selectedQuestionType] || 0 }}题</span>
+            <el-tag type="primary">{{ getQuestionTypeLabel(selectedQuestionType!) }}</el-tag>
+            <span class="subject-question-count">{{ questionTypeCount[selectedQuestionType!] || 0 }}题</span>
           </div>
         </div>
       </template>
@@ -83,7 +83,7 @@
               <el-input-number 
                 v-model="practiceSetting.questionCount" 
                 :min="5" 
-                :max="Math.min(50, questionTypeCount[selectedQuestionType] || 50)" 
+                :max="Math.min(50, questionTypeCount[selectedQuestionType!] || 50)" 
                 :step="5"
                 size="large"
               ></el-input-number>
