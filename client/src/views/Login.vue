@@ -244,6 +244,13 @@ const handleLogin = async () => {
     
     // 保存token和完整的用户信息到localStorage
     const responseData = response as any
+    
+    // 检查用户状态，如果被禁用则拒绝登录
+    if (responseData.status === 0 || responseData.status === '0') {
+      ElMessage.error('用户已被禁用，请联系管理员')
+      return
+    }
+    
     localStorage.setItem('token', responseData.token)
     localStorage.setItem('userInfo', JSON.stringify({
       id: responseData.id,
@@ -254,7 +261,8 @@ const handleLogin = async () => {
       phone: responseData.phone,
       jobTitle: responseData.jobTitle,
       department: responseData.department,
-      roles: responseData.roles
+      roles: responseData.roles,
+      status: responseData.status
     }))
     
     // 登录成功，跳转到dashboard

@@ -244,7 +244,7 @@ const handleAdd = () => {
       password: '',
       realName: '',
       phone: '',
-      status: '1',
+      status: '1', // 默认启用状态
       role: 'user' // 默认角色为普通用户
     })
   dialogVisible.value = true
