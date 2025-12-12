@@ -38,19 +38,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
             
             // 如果JWT令牌存在且有效，设置认证信息
-            if (jwt != null && jwtUtils.getUsernameFromToken(jwt) != null) {
+            if (jwt != null) {
                 String username = jwtUtils.getUsernameFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                
-                // 创建认证令牌
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                
-                // 设置认证详情
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // 将认证信息设置到SecurityContext中
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (username != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    // 验证令牌有效性
+                    if (jwtUtils.validateToken(jwt, username)) {
+                        // 创建认证令牌
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        
+                        // 设置认证详情
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        
+                        // 将认证信息设置到SecurityContext中
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                }
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);

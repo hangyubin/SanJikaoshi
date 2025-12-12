@@ -8,6 +8,8 @@ import com.smartexam.backend.repository.RoleRepository;
 import com.smartexam.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -291,17 +293,37 @@ public class UserController {
 
     // 更新用户
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> userData) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> userData, 
+                                       Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // 获取当前登录用户
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String currentUsername = userDetails.getUsername();
+            User currentUser = userRepository.findByUsername(currentUsername).orElse(null);
+            
+            // 验证权限：只能更新自己的信息，或者是管理员
+            boolean isAdmin = currentUser != null && currentUser.getRoles().stream()
+                    .anyMatch(role -> "admin".equals(role.getCode()) || "超级管理员".equals(role.getName()));
+            
             Optional<User> optionalUser = userRepository.findById(id);
             if (optionalUser.isPresent()) {
                 User existingUser = optionalUser.get();
                 
+                // 检查权限
+                if (!isAdmin && !existingUser.getUsername().equals(currentUsername)) {
+                    response.put("code", 403);
+                    response.put("message", "Access Denied");
+                    return ResponseEntity.ok(response);
+                }
+                
                 // 更新用户基本信息
                 existingUser.setRealName((String) userData.get("realName"));
                 existingUser.setPhone((String) userData.get("phone"));
-                existingUser.setStatus((Integer) userData.get("status"));
+                // 只有管理员可以更新状态
+                if (isAdmin && userData.containsKey("status")) {
+                    existingUser.setStatus((Integer) userData.get("status"));
+                }
                 existingUser.setAvatar((String) userData.get("avatar"));
                 existingUser.setGender((Integer) userData.get("gender"));
                 existingUser.setJobTitle((String) userData.get("jobTitle"));
@@ -317,9 +339,20 @@ public class UserController {
                         departmentOpt.ifPresent(existingUser::setDepartment);
                     }
                 }
+                // 支持前端发送department对象的情况
+                else if (userData.containsKey("department") && userData.get("department") != null) {
+                    Map<String, Object> deptMap = (Map<String, Object>) userData.get("department");
+                    if (deptMap.containsKey("id")) {
+                        Long departmentId = deptMap.get("id") instanceof Integer ? 
+                            ((Integer) deptMap.get("id")).longValue() : 
+                            (Long) deptMap.get("id");
+                        Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
+                        departmentOpt.ifPresent(existingUser::setDepartment);
+                    }
+                }
                 
-                // 更新用户角色
-                if (userData.containsKey("roleIds")) {
+                // 更新用户角色（只有管理员可以）
+                if (isAdmin && userData.containsKey("roleIds")) {
                     List<?> roleIds = (List<?>) userData.get("roleIds");
                     Set<Role> roles = new HashSet<>();
                     for (Object roleIdObj : roleIds) {
