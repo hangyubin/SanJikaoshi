@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import axios from '@/utils/axios'
 
 // 用户数据，初始为空数组

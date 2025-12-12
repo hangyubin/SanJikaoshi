@@ -7,6 +7,9 @@
       <div class="circle circle-3"></div>
     </div>
     
+    <!-- 版本信息 -->
+    <div class="version-info">智能考试系统 v1.0</div>
+    
     <!-- 使用单个容器，内部使用grid布局 -->
     <div class="login-box">
       <!-- 左侧医院信息 -->
@@ -309,6 +312,20 @@ const handleRegisterRedirect = () => {
 
 .register-btn:active {
   transform: translateY(0);
+}
+
+/* 版本信息 */
+.version-info {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 14px;
+  opacity: 0.8;
+  z-index: 2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 /* 背景装饰 */
