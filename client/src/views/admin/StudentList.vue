@@ -269,18 +269,18 @@ const showPermissionDialog = async () => {
   if (!form.id) return
   
   try {
-    // 获取当前用户的权限
-    const res = await axios.get(`/users/${form.id}/permissions`)
-    permissionForm.permissions = res.data.permissions || []
+    // 获取当前用户的详细信息
+    const res = await axios.get(`/users/${form.id}`)
+    permissionForm.role = res.data.role || 'user'
   } catch (error) {
-    console.error('获取权限失败:', error)
-    permissionForm.permissions = []
+    console.error('获取用户信息失败:', error)
+    permissionForm.role = form.role
   }
   
   // 填充表单数据
   permissionForm.id = form.id
   permissionForm.username = form.username
-  permissionForm.role = form.role
+  permissionForm.permissions = [] // 重置权限
   
   permissionDialogVisible.value = true
 }
@@ -342,9 +342,14 @@ const handleEdit = (row: any) => {
 // 提交权限分配
 const handlePermissionSubmit = async () => {
   try {
-    await axios.put(`/users/${permissionForm.id}/permissions`, {
-      permissions: permissionForm.permissions
-    })
+    // 根据角色使用不同的API接口
+    if (permissionForm.role === 'admin') {
+      // 提升为管理员
+      await axios.put(`/users/promote/${permissionForm.id}`)
+    } else {
+      // 降低为普通用户
+      await axios.put(`/users/demote/${permissionForm.id}`)
+    }
     
     ElMessage.success('权限分配成功')
     permissionDialogVisible.value = false
@@ -367,25 +372,16 @@ const handleSubmit = async () => {
     const userRes = await axios[method as 'post' | 'put'](url, form)
     const userId = form.id || userRes.data.id
     
-    // 如果是将管理员降为普通用户，需要清除权限
-    if (form.role === 'user') {
-      try {
-        await axios.put(`/users/${userId}/permissions`, { permissions: [] })
-      } catch (permError) {
-        // 权限清除失败不影响用户角色更新
-        console.error('清除权限失败:', permError)
-      }
-    } 
-    // 如果是创建新的管理员用户，需要分配权限
-    else if (form.role === 'admin' && !form.id) {
+    // 如果是创建新的管理员用户，需要后续分配权限
+    if (form.role === 'admin' && !form.id) {
+      // 先关闭用户编辑对话框
+      dialogVisible.value = false
+      
       // 更新权限表单数据
       permissionForm.id = userId
       permissionForm.username = form.username
       permissionForm.role = form.role
       permissionForm.permissions = []
-      
-      // 先关闭用户编辑对话框
-      dialogVisible.value = false
       
       // 弹出权限分配对话框
       permissionDialogVisible.value = true

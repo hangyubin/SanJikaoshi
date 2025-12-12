@@ -3,40 +3,62 @@
     <!-- 页面标题 -->
     <div class="page-header">
       <h1>练习中心</h1>
-      <p class="page-subtitle">选择科目，设置练习参数，开始你的学习之旅</p>
+      <p class="page-subtitle">选择题型，设置练习参数，开始你的学习之旅</p>
     </div>
     
-    <!-- 科目选择 -->
+    <!-- 题型选择 -->
     <el-card class="subject-select-card" shadow="hover">
       <template #header>
         <div class="card-header">
-          <h3>选择练习科目</h3>
-          <el-button type="info" size="small" @click="refreshSubjects">
-            <el-icon><RefreshRight /></el-icon>
-            刷新科目
-          </el-button>
+          <h3>题型练习</h3>
         </div>
       </template>
       <el-row :gutter="20">
-        <el-col :span="8" v-for="subject in subjects" :key="subject.id">
+        <el-col :span="8">
           <el-card 
             class="subject-item" 
-            @click="selectSubject(subject)"
-            :class="{ 'selected': selectedSubject?.id === subject.id }"
+            @click="selectQuestionType(1)"
+            :class="{ 'selected': selectedQuestionType === 1 }"
             shadow="hover"
           >
             <div class="subject-content">
               <div class="subject-header">
-                <h4>{{ subject.name }}</h4>
-                <el-tag size="small" type="success">{{ subject.questionCount }}题</el-tag>
+                <h4>单选题</h4>
+                <el-tag size="small" type="success">{{ questionTypeCount[1] || 0 }}题</el-tag>
               </div>
-              <p class="subject-description">{{ subject.description }}</p>
-              <div class="subject-stats">
-                <span class="stat-item">
-                  <el-icon size="16"><Star /></el-icon>
-                  平均难度: {{ subject.avgDifficulty || '中等' }}
-                </span>
+              <p class="subject-description">从多个选项中选择一个正确答案</p>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card 
+            class="subject-item" 
+            @click="selectQuestionType(2)"
+            :class="{ 'selected': selectedQuestionType === 2 }"
+            shadow="hover"
+          >
+            <div class="subject-content">
+              <div class="subject-header">
+                <h4>多选题</h4>
+                <el-tag size="small" type="success">{{ questionTypeCount[2] || 0 }}题</el-tag>
               </div>
+              <p class="subject-description">从多个选项中选择所有正确答案</p>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card 
+            class="subject-item" 
+            @click="selectQuestionType(3)"
+            :class="{ 'selected': selectedQuestionType === 3 }"
+            shadow="hover"
+          >
+            <div class="subject-content">
+              <div class="subject-header">
+                <h4>是非题</h4>
+                <el-tag size="small" type="success">{{ questionTypeCount[3] || 0 }}题</el-tag>
+              </div>
+              <p class="subject-description">判断陈述是否正确</p>
             </div>
           </el-card>
         </el-col>
@@ -44,43 +66,24 @@
     </el-card>
     
     <!-- 练习设置 -->
-    <el-card class="practice-setting-card" v-if="selectedSubject" shadow="hover">
+    <el-card class="practice-setting-card" v-if="selectedQuestionType" shadow="hover">
       <template #header>
         <div class="card-header">
           <h3>练习设置</h3>
           <div class="selected-subject-info">
-            <el-tag type="primary">{{ selectedSubject.name }}</el-tag>
-            <span class="subject-question-count">{{ selectedSubject.questionCount }}题</span>
+            <el-tag type="primary">{{ getQuestionTypeLabel(selectedQuestionType) }}</el-tag>
+            <span class="subject-question-count">{{ questionTypeCount[selectedQuestionType] || 0 }}题</span>
           </div>
         </div>
       </template>
       <el-form :model="practiceSetting" label-width="120px" class="setting-form">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="题目类型">
-              <el-select v-model="practiceSetting.questionType" multiple placeholder="请选择题目类型" size="large">
-                <el-option label="选择题" :value="1"></el-option>
-                <el-option label="判断题" :value="2"></el-option>
-                <el-option label="填空题" :value="3"></el-option>
-                <el-option label="简答题" :value="4"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="难度等级">
-              <el-select v-model="practiceSetting.difficulty" multiple placeholder="请选择难度等级" size="large">
-                <el-option label="简单" :value="1"></el-option>
-                <el-option label="中等" :value="2"></el-option>
-                <el-option label="困难" :value="3"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
             <el-form-item label="题目数量">
               <el-input-number 
                 v-model="practiceSetting.questionCount" 
                 :min="5" 
-                :max="Math.min(50, selectedSubject.questionCount || 50)" 
+                :max="Math.min(50, questionTypeCount[selectedQuestionType] || 50)" 
                 :step="5"
                 size="large"
               ></el-input-number>
@@ -100,17 +103,6 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="24">
-            <el-form-item label="练习目标">
-              <el-input 
-                v-model="practiceSetting.goal" 
-                placeholder="例如：本次练习希望提高选择题正确率" 
-                type="textarea"
-                :rows="2"
-                size="large"
-              ></el-input>
-            </el-form-item>
-          </el-col>
         </el-row>
         <div class="form-actions">
           <el-button type="primary" size="large" @click="startPractice">
@@ -121,9 +113,9 @@
             <el-icon><RefreshRight /></el-icon>
             重置设置
           </el-button>
-          <el-button size="large" @click="clearSubjectSelection">
+          <el-button size="large" @click="clearQuestionTypeSelection">
             <el-icon><Delete /></el-icon>
-            重新选择科目
+            重新选择题型
           </el-button>
         </div>
       </el-form>
@@ -137,10 +129,10 @@
       <div class="tips-content">
         <el-timeline>
           <el-timeline-item type="primary" timestamp="第一步">
-            从上方选择一个练习科目
+            从上方选择一个练习题型
           </el-timeline-item>
           <el-timeline-item type="success" timestamp="第二步">
-            设置练习参数，如题目类型、难度、数量等
+            设置练习参数，如题目数量、练习模式等
           </el-timeline-item>
           <el-timeline-item type="warning" timestamp="第三步">
             点击「开始练习」按钮，进入练习界面
@@ -164,89 +156,82 @@ import {
 import axios from '@/utils/axios'
 import { ElMessage } from 'element-plus'
 
-// 科目数据，初始为空数组
-const subjects = ref<any[]>([])
-
-const selectedSubject = ref<any>(null)
-const loading = ref(false)
 const router = useRouter()
 
-const practiceSetting = reactive({
-  questionType: [] as number[],
-  difficulty: [] as number[],
-  questionCount: 10,
-  mode: 1,
-  goal: ''
+// 题型选择
+const selectedQuestionType = ref<number | null>(null)
+// 各题型的题目数量
+const questionTypeCount = ref({
+  1: 100, // 单选题数量
+  2: 80,  // 多选题数量
+  3: 50   // 是非题数量
 })
 
-const selectSubject = (subject: any) => {
-  selectedSubject.value = subject
-  // 自动选择最适合的题目类型
-  practiceSetting.questionType = []
-  practiceSetting.difficulty = []
+// 练习设置，简化版本
+const practiceSetting = reactive({
+  questionCount: 10,
+  mode: 1
+})
+
+// 获取题型标签
+const getQuestionTypeLabel = (type: number) => {
+  const labels: Record<number, string> = {
+    1: '单选题',
+    2: '多选题',
+    3: '是非题'
+  }
+  return labels[type] || '未知题型'
 }
 
+// 选择题型
+const selectQuestionType = (type: number) => {
+  selectedQuestionType.value = type
+  // 重置练习设置
+  resetSetting()
+}
+
+// 开始练习
 const startPractice = () => {
-  if (!selectedSubject.value) {
+  if (!selectedQuestionType.value) {
     return
   }
   
-  if (practiceSetting.questionType.length === 0) {
-    // 如果没有选择题目类型，默认选择所有类型
-    practiceSetting.questionType = [1, 2, 3, 4]
-  }
-  
-  if (practiceSetting.difficulty.length === 0) {
-    // 如果没有选择难度，默认选择所有难度
-    practiceSetting.difficulty = [1, 2, 3]
-  }
-  
   // 开始练习逻辑
-  console.log('开始练习', selectedSubject.value, practiceSetting)
+  console.log('开始练习', selectedQuestionType.value, practiceSetting)
   // 跳转到练习页面
   router.push({
     path: '/dashboard/practice/start',
     query: {
-      subjectId: selectedSubject.value.id,
-      ...practiceSetting
+      questionType: selectedQuestionType.value,
+      questionCount: practiceSetting.questionCount,
+      mode: practiceSetting.mode
     }
   })
 }
 
+// 重置设置
 const resetSetting = () => {
-  practiceSetting.questionType = []
-  practiceSetting.difficulty = []
   practiceSetting.questionCount = 10
   practiceSetting.mode = 1
-  practiceSetting.goal = ''
 }
 
-// 获取科目列表
-const fetchSubjects = () => {
-  loading.value = true
-  axios.get('/subjects')
-    .then(res => {
-        subjects.value = res.data || []
-    })
-    .catch(error => {
-      console.error('获取科目列表失败:', error)
-      ElMessage.error('获取科目列表失败')
-    })
-    .finally(() => {
-      loading.value = false
-    })
+// 清除题型选择
+const clearQuestionTypeSelection = () => {
+  selectedQuestionType.value = null
+  resetSetting()
 }
 
-const refreshSubjects = () => {
-  fetchSubjects()
-}
-
-const clearSubjectSelection = () => {
-  selectedSubject.value = null
-}
-
+// 初始化数据
 onMounted(() => {
-  fetchSubjects()
+  // 模拟获取各题型的题目数量
+  // 实际项目中应从API获取
+  setTimeout(() => {
+    questionTypeCount.value = {
+      1: 120, // 单选题数量
+      2: 95,  // 多选题数量
+      3: 60   // 是非题数量
+    }
+  }, 500)
 })
 </script>
 

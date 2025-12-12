@@ -158,17 +158,22 @@ const isAdmin = computed(() => {
     if (parsedInfo.username === 'admin') {
       return true
     }
-    // 检查角色数组
-    const roles = parsedInfo.roles || []
-    // 支持字符串和数组两种格式
-    if (typeof roles === 'string') {
-      return roles.includes('ROLE_ADMIN') || roles.includes('admin') || roles.includes('管理员')
-    } else if (Array.isArray(roles)) {
-      return roles.some((role: any) => {
+    
+    // 检查角色信息，支持多种格式
+    const roleValue = parsedInfo.role || parsedInfo.roles
+    
+    // 支持字符串格式
+    if (typeof roleValue === 'string') {
+      return roleValue === 'admin' || roleValue === 'ROLE_ADMIN' || roleValue === '管理员' || roleValue === 'sysadmin'
+    }
+    
+    // 支持数组格式
+    if (Array.isArray(roleValue)) {
+      return roleValue.some((role: any) => {
         if (typeof role === 'string') {
-          return role === 'ROLE_ADMIN' || role === 'admin' || role === '管理员'
+          return role === 'admin' || role === 'ROLE_ADMIN' || role === '管理员' || role === 'sysadmin'
         } else {
-          return role.code === 'ROLE_ADMIN' || role.name === '管理员'
+          return role.value === 'admin' || role.code === 'ROLE_ADMIN' || role.name === '管理员' || role.value === 'sysadmin'
         }
       })
     }

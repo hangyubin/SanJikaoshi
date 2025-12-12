@@ -28,9 +28,9 @@
                   <div class="profile-info-text">{{ userForm.username }}</div>
                 </el-form-item>
                 
-                <el-form-item label="姓名">
-                  <div class="profile-info-text">{{ userForm.realName }}</div>
-                </el-form-item>
+                <el-form-item label="姓名" prop="realName">
+                <el-input v-model="userForm.realName" placeholder="请输入姓名"></el-input>
+              </el-form-item>
                 
                 <el-form-item label="性别" prop="gender">
                   <el-select v-model="userForm.gender" placeholder="请选择性别">
@@ -182,7 +182,34 @@ const userRole = ref<string>('')
 
 // 计算属性：是否为系统管理员
 const isSystemAdmin = computed(() => {
-  return userRole.value.includes('ROLE_ADMIN')
+  const userInfo = localStorage.getItem('userInfo')
+  if (userInfo) {
+    const parsedInfo = JSON.parse(userInfo)
+    // admin账号直接是系统管理员
+    if (parsedInfo.username === 'admin') {
+      return true
+    }
+    
+    // 检查角色信息
+    const roleValue = parsedInfo.role || parsedInfo.roles || ''
+    
+    // 支持字符串格式
+    if (typeof roleValue === 'string') {
+      return roleValue === 'sysadmin' || roleValue === 'ROLE_SYS_ADMIN' || roleValue === '系统管理员'
+    }
+    
+    // 支持数组格式
+    if (Array.isArray(roleValue)) {
+      return roleValue.some((role: any) => {
+        if (typeof role === 'string') {
+          return role === 'sysadmin' || role === 'ROLE_SYS_ADMIN' || role === '系统管理员'
+        } else {
+          return role.value === 'sysadmin' || role.code === 'ROLE_SYS_ADMIN' || role.name === '系统管理员'
+        }
+      })
+    }
+  }
+  return false
 })
 
 // 表单验证规则
@@ -250,17 +277,12 @@ const handleSubmit = async () => {
     // 调用后端API更新用户信息
     const response = await axios.put(`/users/${userForm.id}`, userForm)
     
-    // 检查API响应是否成功（通常通过HTTP状态码判断）
-    if (response.status >= 200 && response.status < 300) {
-      // 保存用户信息到localStorage
-      const userData = response.data.data || response.data || userForm
-      localStorage.setItem('userInfo', JSON.stringify(userData))
-      // 手动触发storage事件，确保同一标签页内的组件也能收到更新
-      window.dispatchEvent(new Event('storage'))
-      ElMessage.success('保存成功')
-    } else {
-      ElMessage.error('保存失败')
-    }
+    // 保存用户信息到localStorage
+    const userData = response.data || userForm
+    localStorage.setItem('userInfo', JSON.stringify(userData))
+    // 手动触发storage事件，确保同一标签页内的组件也能收到更新
+    window.dispatchEvent(new Event('storage'))
+    ElMessage.success('保存成功')
   } catch (error: any) {
     console.error('保存用户信息失败:', error)
     // 处理不同类型的错误

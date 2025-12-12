@@ -434,7 +434,7 @@ const handleSubmit = async () => {
       // 更新题目
       await axios.put(`/questions/${form.id}`, requestData)
     } else {
-      // 增加题目，去掉/api前缀
+      // 增加题目
       await axios.post('/questions', requestData)
     }
     
@@ -716,8 +716,7 @@ const handleImportSubmit = async () => {
           formData.append('file', importForm.file)
         }
         
-        // 去掉/api前缀
-        await axios.post('/questions/import', formData, {
+                await axios.post('/questions/import/batch', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
