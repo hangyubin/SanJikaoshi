@@ -39,12 +39,19 @@
         </el-table-column>
         <el-table-column prop="permissions" label="权限" width="250">
           <template #default="scope">
-            <el-tag size="small" v-for="perm in scope.row.permissions" :key="perm" :type="'info'" style="margin-right: 5px; margin-bottom: 5px;">
-              {{ perm }}
+            <!-- 系统管理员显示最高权限 -->
+            <el-tag v-if="scope.row.username === 'admin'" :type="'success'" size="small" class="highest-permission">
+              最高权限
             </el-tag>
-            <span v-if="!scope.row.permissions || scope.row.permissions.length === 0" class="no-permission">
-              未分配权限
-            </span>
+            <!-- 普通管理员显示分配的权限 -->
+            <template v-else>
+              <el-tag size="small" v-for="perm in scope.row.permissions" :key="perm" :type="'info'" style="margin-right: 5px; margin-bottom: 5px;">
+                {{ perm }}
+              </el-tag>
+              <span v-if="!scope.row.permissions || scope.row.permissions.length === 0" class="no-permission">
+                未分配权限
+              </span>
+            </template>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -484,6 +491,16 @@ const handleDeleteUser = (row: any) => {
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   padding: 10px;
+}
+
+/* 最高权限标签样式 */
+.highest-permission {
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+  border-color: #67c23a;
+  box-shadow: 0 2px 8px rgba(103, 194, 58, 0.3);
 }
 
 /* 无权限提示 */
