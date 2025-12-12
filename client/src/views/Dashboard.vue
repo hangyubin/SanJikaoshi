@@ -3,7 +3,7 @@
     <!-- 欢迎信息 -->
     <div class="welcome-section">
       <div class="welcome-info">
-        <h1>欢迎回来，{{ userName }}</h1>
+        <h1>欢迎您回来，{{ userName }}</h1>
         <p class="welcome-subtitle">这里是您的智能考试系统工作台</p>
         <el-tag :type="userRole === 'admin' ? 'primary' : 'success'" size="large" class="role-tag">
           {{ userRole === 'admin' ? '管理员' : '学员' }}
@@ -558,15 +558,18 @@ onMounted(() => {
   opacity: 0.85;
   margin-bottom: 8px;
   display: block;
-  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .stat-item .stat-value {
   font-size: 28px;
   font-weight: bold;
   display: block;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   animation: countUp 1s ease-out;
+  transition: all 0.3s ease;
 }
 
 @keyframes countUp {

@@ -33,7 +33,6 @@
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" width="120"></el-table-column>
         <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
-        <el-table-column prop="email" label="邮箱" width="180"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
@@ -42,43 +41,46 @@
               active-value="1"
               inactive-value="0"
               @change="handleStatusChange(scope.row)"
+              :disabled="scope.row.username === 'admin'"
             ></el-switch>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
-            <el-tag :type="scope.row.role === 'admin' ? 'primary' : 'success'">
-              {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
+            <el-tag :type="(scope.row.role === 'admin' || scope.row.username === 'admin') ? 'primary' : 'success'">
+              {{ (scope.row.role === 'admin' || scope.row.username === 'admin') ? '管理员' : '普通用户' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="updateTime" label="更新时间" width="180"></el-table-column>
-        <el-table-column label="操作" width="300">
+        <el-table-column label="操作" width="200">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
-            <el-button type="info" size="small" @click="handleView(scope.row)">查看详情</el-button>
-            <template v-if="scope.row.role === 'user'">
-              <el-button 
-                type="warning" 
-                size="small" 
-                @click="handlePromote(scope.row)"
-                :disabled="scope.row.username === 'admin'"
-              >
-                提权
-              </el-button>
-            </template>
-            <template v-else>
-              <el-button 
-                type="success" 
-                size="small" 
-                @click="handleDemote(scope.row)"
-                :disabled="scope.row.username === 'admin'"
-              >
-                降权
-              </el-button>
-            </template>
+            <!-- 系统管理员admin不能被任何账号操作 -->
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="handleEdit(scope.row)"
+              :disabled="scope.row.username === 'admin'"
+            >
+              编辑
+            </el-button>
+            <el-button 
+              type="danger" 
+              size="small" 
+              @click="handleDelete(scope.row)"
+              :disabled="scope.row.username === 'admin'"
+            >
+              删除
+            </el-button>
+            <el-button 
+              type="info" 
+              size="small" 
+              @click="handleView(scope.row)"
+              :disabled="scope.row.username === 'admin'"
+            >
+              查看详情
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -112,9 +114,6 @@
         </el-form-item>
         <el-form-item label="姓名" prop="realName">
           <el-input v-model="form.realName" placeholder="请输入姓名"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" type="email" placeholder="请输入邮箱"></el-input>
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
@@ -199,7 +198,6 @@ const form = reactive({
   username: '',
   password: '',
   realName: '',
-  email: '',
   phone: '',
   status: '1',
   role: 'user'
@@ -217,10 +215,6 @@ const rules = reactive<FormRules>({
   realName: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
     { pattern: /^[\u4e00-\u9fa5]+$/, message: '请输入有效的中文姓名，不能包含空格或特殊字符', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
   ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
@@ -249,7 +243,6 @@ const handleAdd = () => {
       username: '',
       password: '',
       realName: '',
-      email: '',
       phone: '',
       status: '1',
       role: 'user' // 默认角色为普通用户
@@ -288,47 +281,16 @@ const handleView = (row: any) => {
 }
 
 const handleStatusChange = (row: any) => {
-  // 状态变更逻辑
-  console.log('变更用户状态', row)
-}
-
-const handlePromote = (row: any) => {
-  ElMessageBox.confirm('确定要将该用户提权为管理员吗？', '提权确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
+  // 调用后端API更新状态
+  axios.put(`/users/status/${row.id}`, { status: row.status })
     .then(() => {
-      // 调用后端API进行提权
-      return axios.put(`/users/promote/${row.id}`)
+      ElMessage.success('状态更新成功')
     })
-    .then(() => {
-      ElMessage.success('提权成功，该用户已成为管理员')
-      // 重新获取用户列表，确保数据最新
+    .catch(error => {
+      console.error('更新状态失败:', error)
+      ElMessage.error('状态更新失败')
+      // 恢复原状态
       fetchUsers()
-    })
-    .catch(() => {
-      ElMessage.info('已取消提权操作')
-    })
-}
-
-const handleDemote = (row: any) => {
-  ElMessageBox.confirm('确定要将该管理员降为普通用户吗？', '降权确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      // 调用后端API进行降权
-      return axios.put(`/users/demote/${row.id}`)
-    })
-    .then(() => {
-      ElMessage.success('降权成功，该管理员已成为普通用户')
-      // 重新获取用户列表，确保数据最新
-      fetchUsers()
-    })
-    .catch(() => {
-      ElMessage.info('已取消降权操作')
     })
 }
 

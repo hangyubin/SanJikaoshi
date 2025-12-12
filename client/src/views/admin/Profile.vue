@@ -14,7 +14,7 @@
           <el-form-item label="头像">
             <div class="avatar-section">
               <el-avatar :size="120" :src="userForm.avatar" class="user-avatar"></el-avatar>
-              <div class="avatar-actions">
+              <div class="avatar-actions" v-if="!isSystemAdmin">
                 <el-button type="primary" @click="showAvatarOptions = true">更换头像</el-button>
               </div>
             </div>
@@ -24,12 +24,12 @@
           <template v-if="!isSystemAdmin">
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="用户名" prop="username" disabled>
-                  <el-input v-model="userForm.username" placeholder="用户名"></el-input>
+                <el-form-item label="用户名">
+                  <div class="profile-info-text">{{ userForm.username }}</div>
                 </el-form-item>
                 
-                <el-form-item label="姓名" prop="realName" disabled>
-                  <el-input v-model="userForm.realName" placeholder="姓名"></el-input>
+                <el-form-item label="姓名">
+                  <div class="profile-info-text">{{ userForm.realName }}</div>
                 </el-form-item>
                 
                 <el-form-item label="性别" prop="gender">
@@ -430,6 +430,18 @@ onMounted(() => {
 
 .avatar-uploader {
   margin-top: 10px;
+}
+
+.profile-info-text {
+  padding: 8px 12px;
+  background-color: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #303133;
+  line-height: 1.5;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .dialog-footer {

@@ -64,12 +64,12 @@
         </el-col>
         
         <el-col :span="12">
-          <el-card class="nav-item" @click="navigateTo('admin-list')">
+          <el-card class="nav-item" @click="navigateTo('role-management')">
             <div class="nav-content">
-              <el-icon class="nav-icon"><User /></el-icon>
+              <el-icon class="nav-icon"><Setting /></el-icon>
               <div class="nav-info">
-                <h4>管理员管理</h4>
-                <p>查看和管理所有管理员用户</p>
+                <h4>角色与权限管理</h4>
+                <p>管理系统角色和权限分配</p>
               </div>
             </div>
           </el-card>

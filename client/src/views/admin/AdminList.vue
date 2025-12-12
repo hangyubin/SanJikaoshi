@@ -33,7 +33,6 @@
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
         <el-table-column prop="username" label="用户名" width="120"></el-table-column>
         <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
-        <el-table-column prop="email" label="邮箱" width="180"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
@@ -42,6 +41,7 @@
               active-value="1"
               inactive-value="0"
               @change="handleStatusChange(scope.row)"
+              :disabled="scope.row.username === 'admin'"
             ></el-switch>
           </template>
         </el-table-column>
@@ -49,8 +49,23 @@
         <el-table-column prop="updateTime" label="更新时间" width="180"></el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <!-- 系统管理员admin不能被普通管理员修改或删除 -->
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="handleEdit(scope.row)"
+              :disabled="scope.row.username === 'admin'"
+            >
+              编辑
+            </el-button>
+            <el-button 
+              type="danger" 
+              size="small" 
+              @click="handleDelete(scope.row)"
+              :disabled="scope.row.username === 'admin'"
+            >
+              删除
+            </el-button>
             <el-button type="info" size="small" @click="handleView(scope.row)">查看详情</el-button>
           </template>
         </el-table-column>
@@ -85,9 +100,6 @@
         </el-form-item>
         <el-form-item label="姓名" prop="realName">
           <el-input v-model="form.realName" placeholder="请输入姓名"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" type="email" placeholder="请输入邮箱"></el-input>
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
