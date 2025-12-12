@@ -12,7 +12,7 @@
       <!-- 左侧医院信息 -->
       <div class="hospital-info">
         <div class="hospital-logo">
-          <el-icon class="hospital-icon"><User /></el-icon>
+          <img src="/logo.svg" alt="医疗标志" class="logo-image" />
         </div>
         <h2 class="hospital-name">衡南县第四人民医院</h2>
         <p class="hospital-desc">致力于为医务人员提供高质量的三基学习服务</p>
@@ -411,9 +411,10 @@ onMounted(() => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.hospital-icon {
-  font-size: 50px;
-  color: white;
+.logo-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
 }
 
 .hospital-name {

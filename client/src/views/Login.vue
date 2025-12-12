@@ -15,7 +15,7 @@
       <!-- 左侧医院信息 -->
       <div class="hospital-info">
         <div class="hospital-logo">
-          <el-icon class="hospital-icon"><component :is="currentHospitalIcon" /></el-icon>
+          <img src="/logo.svg" alt="医疗标志" class="logo-image" />
         </div>
         <h2 class="hospital-name">{{ hospitalInfo.name }}</h2>
         <p class="hospital-desc">{{ hospitalInfo.description }}</p>
@@ -121,10 +121,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import axios from '@/utils/axios'
 
@@ -206,10 +205,7 @@ onMounted(() => {
   generateCaptcha()
 })
 
-// 计算当前医院图标组件
-const currentHospitalIcon = computed(() => {
-  return ElementPlusIconsVue[hospitalInfo.icon as keyof typeof ElementPlusIconsVue] || ElementPlusIconsVue.User
-})
+
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
@@ -447,9 +443,10 @@ const handleRegisterRedirect = () => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.hospital-icon {
-  font-size: 50px;
-  color: white;
+.logo-image {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
 }
 
 .hospital-name {
