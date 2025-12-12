@@ -245,7 +245,7 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     
     // 调用后端API更新用户信息
-    const response = await axios.put(`/users/${userForm.id}`, userForm)
+    const response = await axios.put(`/users/${userForm.id}`, userForm) as any
     if (response.code === 200) {
       // 保存用户信息到localStorage
       localStorage.setItem('userInfo', JSON.stringify(response.data))
@@ -304,7 +304,7 @@ const confirmAvatarChange = async () => {
     // 调用后端API更新头像
     const response = await axios.put(`/users/${userForm.id}`, {
       avatar: userForm.avatar
-    })
+    }) as any
     
     if (response.code === 200) {
       // 将更新后的用户信息保存到localStorage
