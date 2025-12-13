@@ -79,7 +79,24 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="题目内容" min-width="200"></el-table-column>
+        <el-table-column prop="content" label="题目内容" min-width="300" show-overflow-tooltip></el-table-column>
+        <el-table-column label="选项" min-width="250" show-overflow-tooltip>
+          <template #default="scope">
+            <div class="option-list">
+              <div v-if="scope.row.options" class="option-item" v-for="(option, key) in parseOptions(scope.row.options)" :key="key">
+                <span class="option-key">{{ key }}. </span>
+                <span class="option-value">{{ option }}</span>
+              </div>
+              <span v-else class="empty-text">无选项</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="正确答案" width="100">
+          <template #default="scope">
+            <el-tag type="success" v-if="scope.row.answer">{{ scope.row.answer }}</el-tag>
+            <span v-else class="empty-text">未设置</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="score" label="分值" width="80"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
         <el-table-column label="操作" width="200">
@@ -270,6 +287,20 @@ const getDifficultyText = (difficulty: number) => {
     case 3: return '困难'
     default: return '未知难度'
   }
+}
+
+// 解析选项
+const parseOptions = (options: string) => {
+  if (!options) return {};
+  try {
+    const parsed = JSON.parse(options);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return parsed;
+    }
+  } catch (e) {
+    // 解析失败，返回空对象
+  }
+  return {};
 }
 
 // 获取科目列表
