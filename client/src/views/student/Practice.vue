@@ -224,19 +224,42 @@ const clearQuestionTypeSelection = () => {
 onMounted(async () => {
   try {
     // 从API获取各题型的题目数量
-    const response = await axios.get('/questions/count')
-    const countData = response.data
-    // 确保countData是对象格式
-    if (typeof countData === 'object' && countData !== null) {
-      questionTypeCount.value = countData
-    } else {
-      // 处理无效数据，设置默认值
-      questionTypeCount.value = {
-        1: 0, // 单选题数量
-        2: 0,  // 多选题数量
-        3: 0   // 是非题数量
+    // 使用/questions端点，通过设置pageSize为0或一个很大的值来获取所有题目，然后在前端统计数量
+    const response = await axios.get('/questions', {
+      params: {
+        pageSize: 1000 // 获取足够多的题目，确保能统计所有题型数量
       }
+    })
+    const responseData = response.data
+    
+    // 处理不同的返回格式
+    let questions: any[] = []
+    if (responseData.records) {
+      // 如果是分页格式
+      questions = responseData.records
+    } else if (Array.isArray(responseData)) {
+      // 如果直接是数组格式
+      questions = responseData
+    } else if (responseData.data) {
+      // 如果是data包裹的格式
+      questions = responseData.data
     }
+    
+    // 统计各题型的题目数量
+    const count: Record<number, number> = {
+      1: 0, // 单选题数量
+      2: 0, // 多选题数量
+      3: 0  // 是非题数量
+    }
+    
+    questions.forEach(question => {
+      const type = question.type
+      if (count[type] !== undefined) {
+        count[type]++
+      }
+    })
+    
+    questionTypeCount.value = count
   } catch (error) {
     console.error('获取题型数量失败:', error)
     // 发生错误时，使用默认值
