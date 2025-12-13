@@ -22,13 +22,13 @@
               </el-select>
             </el-form-item>
             
-            <el-form-item label="考试科目" prop="subjectIds">
-              <el-select v-model="taskForm.subjectIds" placeholder="请选择考试科目" multiple>
+            <el-form-item label="考试题型" prop="questionTypeIds">
+              <el-select v-model="taskForm.questionTypeIds" placeholder="请选择考试题型" multiple>
                 <el-option 
-                  v-for="subject in subjects" 
-                  :key="subject.id" 
-                  :label="subject.name" 
-                  :value="subject.id"></el-option>
+                  v-for="type in questionTypes" 
+                  :key="type.value" 
+                  :label="type.label" 
+                  :value="type.value"></el-option>
               </el-select>
             </el-form-item>
             
@@ -191,7 +191,7 @@ const taskForm = reactive({
   id: '',
   name: '',
   type: 1,
-  subjectIds: [],
+  questionTypeIds: [],
   duration: 60,
   startTime: '',
   endTime: '',
@@ -236,8 +236,8 @@ const taskRules = reactive<FormRules>({
   type: [
     { required: true, message: '请选择任务类型', trigger: 'change' }
   ],
-  subjectIds: [
-    { required: true, message: '请选择考试科目', trigger: 'change' }
+  questionTypeIds: [
+    { required: true, message: '请选择考试题型', trigger: 'change' }
   ],
   duration: [
     { required: true, message: '请输入考试时长', trigger: 'blur' }
@@ -265,19 +265,7 @@ const updateDifficultyDistribution = () => {
   // 目前简化处理，允许总和不等于100%
 }
 
-// 科目列表，从API获取
-const subjects = ref<any[]>([])
 
-// 获取科目列表
-const fetchSubjects = async () => {
-  try {
-    const res = await axios.get('/subjects')
-    subjects.value = res.data || []
-  } catch (error) {
-    console.error('获取科目列表失败:', error)
-    ElMessage.error('获取科目列表失败')
-  }
-}
 
 // 获取题库列表
 const fetchPapers = async () => {
@@ -293,11 +281,35 @@ const fetchPapers = async () => {
 // 获取科室列表
 const fetchDepartments = async () => {
   try {
-    const res = await axios.get('/departments')
-    departments.value = res.data || []
+    const res = await axios.get('/departments', {
+      params: {
+        pageSize: 1000 // 获取足够多的科室，确保能显示所有科室
+      }
+    })
+    const responseData = res.data
+    // 处理不同的返回格式
+    if (responseData && typeof responseData === 'object') {
+      // 如果是分页格式，取records字段
+      if (responseData.records) {
+        departments.value = responseData.records
+      } else if (Array.isArray(responseData)) {
+        // 如果直接是数组格式，直接使用
+        departments.value = responseData
+      } else {
+        // 其他情况，使用空数组
+        departments.value = []
+      }
+    } else if (Array.isArray(responseData)) {
+      // 直接数组格式
+      departments.value = responseData
+    } else {
+      // 无效数据，使用空数组
+      departments.value = []
+    }
   } catch (error) {
     console.error('获取科室列表失败:', error)
     ElMessage.error('获取科室列表失败')
+    departments.value = []
   }
 }
 
@@ -313,7 +325,6 @@ const handleSubmit = async () => {
     // 构建请求数据
     const requestData = {
       ...taskForm,
-      subject: { id: taskForm.subjectIds[0] },
       paperId: selectedPaper.value?.id,
       questionTypes: selectedTypes.value,
       difficultyDistribution: {
@@ -348,7 +359,6 @@ const handleCancel = () => {
 
 // 组件挂载时获取数据
 onMounted(() => {
-  fetchSubjects()
   fetchPapers()
   fetchDepartments()
 })
