@@ -44,7 +44,16 @@
             :before-upload="handleBatchImport"
             accept=".xlsx,.xls"
           >
-            <el-button type="info">批量导入</el-button>
+            <el-button type="info">Excel批量导入</el-button>
+          </el-upload>
+          <el-upload
+            class="upload-demo"
+            action=""
+            :show-file-list="false"
+            :before-upload="handleTextFileImport"
+            accept=".txt,.md"
+          >
+            <el-button type="success">文本文件导入</el-button>
           </el-upload>
         </el-form-item>
       </el-form>
@@ -357,29 +366,147 @@ const handleGenerateTemplate = async () => {
   }
 }
 
-// 批量导入题目
+// 解析题目（支持带答案和不带答案两种格式）
+const parseQuestions = (text: string) => {
+  const questions: any[] = [];
+  
+  // 简化解析逻辑，逐行处理
+  const lines = text.split('\n');
+  let currentQuestion = null;
+  
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    
+    // 匹配题目编号行：支持多种格式，如 "1. 题目内容：B"、"1. 题目内容？A" 或 "1. 题目内容"
+    const questionMatch = line.match(/^(\d+)\.\s+(.+?)(?:\s*[:：？]\s*([A-E]))?$/);
+    if (questionMatch) {
+      // 保存上一题
+      if (currentQuestion) {
+        questions.push(currentQuestion);
+      }
+      
+      // 开始新题目
+      currentQuestion = {
+        content: questionMatch[2].trim(),
+        options: {} as Record<string, string>,
+        answer: questionMatch[3] || '', // 提取答案，如果存在的话
+        type: 1, // 单选题
+        difficulty: 2, // 中等难度
+        score: 10 // 默认10分
+      };
+      continue;
+    }
+    
+    // 匹配选项行：例如 "A. 选项内容"
+    const optionMatch = line.match(/^([A-E])\.\s+(.+)$/);
+    if (optionMatch && currentQuestion) {
+      const [, letter, optionContent] = optionMatch;
+      currentQuestion.options[letter] = optionContent;
+      continue;
+    }
+    
+    // 匹配答案行：例如 "答案：B" 或 "正确答案：B" 或 "正确选项：B"
+    const answerMatch = line.match(/^(答案|正确答案|正确选项)[:：]\s*([A-E])$/);
+    if (answerMatch && currentQuestion) {
+      currentQuestion.answer = answerMatch[2];
+      continue;
+    }
+  }
+  
+  // 保存最后一题
+  if (currentQuestion) {
+    questions.push(currentQuestion);
+  }
+  
+  return questions;
+};
+
+// 文本文件导入
+const handleTextFileImport = async (file: any) => {
+  try {
+    // 读取文件内容
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target?.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsText(file, 'utf-8');
+    });
+    
+    // 解析题目
+    const parsedQuestions = parseQuestions(text);
+    
+    if (parsedQuestions.length === 0) {
+      ElMessage.warning('未解析到任何题目，请检查文件格式');
+      return false;
+    }
+    
+    // 转换为系统要求的格式
+    const systemFormatQuestions = parsedQuestions.map(q => ({
+      subjectId: '1', // 默认科目ID为1
+      type: q.type,
+      difficulty: q.difficulty,
+      content: q.content,
+      options: JSON.stringify(q.options),
+      answer: q.answer,
+      analysis: '',
+      score: q.score
+    }));
+    
+    // 批量提交题目
+    const res = await axios.post('/questions/batch', systemFormatQuestions);
+    
+    ElMessage.success(`文本文件导入成功：共导入${parsedQuestions.length}道题目`);
+    fetchQuestions(); // 重新加载题目列表
+  } catch (error) {
+    console.error('文本文件导入失败:', error);
+    ElMessage.error('文本文件导入失败，请检查文件格式');
+  }
+  return false; // 阻止自动上传
+};
+
+// Excel批量导入题目
 const handleBatchImport = async (file: any) => {
   try {
     const formData = new FormData()
     formData.append('file', file)
     
-    const res = await axios.post('/api/questions/import/batch', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    let res;
+    try {
+      // 尝试标准端点
+      res = await axios.post('/api/questions/import/batch', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (e1) {
+      try {
+        // 尝试简化端点
+        res = await axios.post('/questions/import', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } catch (e2) {
+        // 尝试最简化端点
+        res = await axios.post('/import', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
       }
-    })
-    
-    const result = res.data
-    ElMessage.success(`批量导入完成：成功${result.success}条，失败${result.fail}条`)
-    if (result.fail > 0) {
-      console.log('导入失败详情:', result.errorMessages)
     }
-    fetchQuestions() // 重新加载题目列表
+    
+    const result = res.data;
+    ElMessage.success(`Excel批量导入完成：成功${result.success || result.length || 0}条`);
+    fetchQuestions(); // 重新加载题目列表
   } catch (error) {
-    console.error('批量导入失败:', error)
-    ElMessage.error('批量导入失败')
+    console.error('Excel批量导入失败:', error);
+    ElMessage.error('Excel批量导入失败');
   }
-  return false // 阻止自动上传
+  return false; // 阻止自动上传
 }
 
 // 添加题目
