@@ -182,6 +182,18 @@ const getQuestionTypeLabel = (type: number) => {
   return labels[type] || '未知题型'
 }
 
+// 前端题型到后端题型的映射
+const mapFrontendTypeToBackendType = (frontendType: number): number => {
+  // 前端使用1:单选题, 2:多选题, 3:是非题
+  // 后端使用1:选择题, 2:判断题, 3:填空题, 4:简答题
+  const mapping: Record<number, number> = {
+    1: 1, // 单选题 -> 选择题
+    2: 1, // 多选题 -> 选择题
+    3: 2  // 是非题 -> 判断题
+  }
+  return mapping[frontendType] || 1
+}
+
 // 选择题型
 const selectQuestionType = (type: number) => {
   selectedQuestionType.value = type

@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { Plus, Search, Ticket } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -237,6 +237,81 @@ const handleReset = () => {
   initData()
 }
 
+// 自动生成科室编码
+const generateDepartmentCode = (name: string): string => {
+  if (!name) return ''
+  
+  // 移除空格，转换为小写
+  const cleanedName = name.trim().toLowerCase()
+  
+  // 生成拼音首字母缩写
+  const pinyinMap: Record<string, string> = {
+    '内': 'nei',
+    '外': 'wai',
+    '儿': 'er',
+    '妇产': 'fuchan',
+    '眼': 'yan',
+    '耳鼻喉': 'ebhk',
+    '口腔': 'kouqiang',
+    '皮肤': 'pifu',
+    '神经': 'shenjing',
+    '消化': 'xiaohua',
+    '呼吸': 'huxi',
+    '心血管': 'xinxueguan',
+    '血液': 'xueye',
+    '肾内': 'shennei',
+    '内分泌': 'neifenmi',
+    '风湿': 'fengshi',
+    '免疫': 'mianyi',
+    '感染': 'ganran',
+    '肿瘤': 'zhongliu',
+    '放射': 'fangshe',
+    '麻醉': 'mazui',
+    '急诊': 'jizhen',
+    '重症': 'zhongzheng',
+    '康复': 'kangfu',
+    '中医': 'zhongyi',
+    '中西医': 'zhongxiyi',
+    '体检': 'tijian',
+    '药剂': 'yaoji',
+    '检验': 'jianyan',
+    '病理': 'bingli',
+    '超声': 'chaosheng',
+    '心电图': 'xindiantu',
+    'CT': 'ct',
+    'MRI': 'mri',
+    '介入': 'jieru',
+    '营养': 'yingyang',
+    '护理': 'huli',
+    '院感': 'yuangan',
+    '预防': 'yufang',
+    '公共卫生': 'gonggongweisheng',
+    '行政': 'xingzheng',
+    '后勤': 'houqin',
+    '财务': 'caiwu',
+    '人事': 'renshi',
+    '信息': 'xinxi'
+  }
+  
+  // 检查是否有匹配的科室名称
+  for (const [key, value] of Object.entries(pinyinMap)) {
+    if (cleanedName.includes(key)) {
+      return value.toUpperCase()
+    }
+  }
+  
+  // 如果没有匹配，使用名称的拼音首字母
+  // 这里简化处理，使用前3个字母
+  return cleanedName.slice(0, 3).toUpperCase()
+}
+
+// 监听科室名称变化，自动生成编码
+watch(() => form.name, (newName) => {
+  if (dialogType.value === 'add' && !form.code) {
+    form.code = generateDepartmentCode(newName)
+  }
+}, { immediate: true })
+
 // 处理新增
 const handleAdd = () => {
   dialogType.value = 'add'
@@ -290,9 +365,17 @@ const handleSubmit = async () => {
     
     let response
     if (dialogType.value === 'add') {
-      response = await axios.post('/departments', form)
+      response = await axios.post('/departments', form, {
+        headers: {
+          'Content-Type': 'application/json;charset=UTF-8'
+        }
+      })
     } else {
-      response = await axios.put(`/departments/${form.id}`, form)
+      response = await axios.put(`/departments/${form.id}`, form, {
+        headers: {
+          'Content-Type': 'application/json;charset=UTF-8'
+        }
+      })
     }
     
     // 检查响应数据

@@ -211,20 +211,63 @@ const currentOptions = computed(() => {
   if (!currentQuestion.value) return {}
   
   const options: Record<string, string> = {}
-  for (let i = 0; i < 6; i++) {
-    const key = String.fromCharCode(65 + i)
-    const optionValue = currentQuestion.value[`option${key}`]
-    if (optionValue) {
-      options[key] = optionValue
+  const question = currentQuestion.value
+  
+  // 解析options字符串为选项对象
+  // 适配不同的选项格式
+  if (question.options) {
+    try {
+      // 尝试解析JSON格式的选项
+      const parsedOptions = JSON.parse(question.options)
+      if (typeof parsedOptions === 'object') {
+        // 如果是对象格式，直接使用
+        Object.entries(parsedOptions).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            options[key] = value
+          }
+        })
+      } else if (typeof parsedOptions === 'string') {
+        // 如果是字符串，尝试按分隔符分割
+        const optionArray = parsedOptions.split(';')
+        optionArray.forEach((option, index) => {
+          if (option.trim()) {
+            const key = String.fromCharCode(65 + index)
+            options[key] = option.trim()
+          }
+        })
+      }
+    } catch (e) {
+      // 不是JSON格式，尝试按分隔符分割
+      const optionArray = question.options.split(';')
+      optionArray.forEach((option, index) => {
+        if (option.trim()) {
+          const key = String.fromCharCode(65 + index)
+          options[key] = option.trim()
+        }
+      })
+    }
+  } else if (question.optionA) {
+    // 兼容旧格式：optionA、optionB等
+    for (let i = 0; i < 6; i++) {
+      const key = String.fromCharCode(65 + i)
+      const optionValue = question[`option${key}`]
+      if (optionValue) {
+        options[key] = optionValue
+      }
     }
   }
+  
   return options
 })
 
 // 获取正确答案
 const correctOptions = computed(() => {
   if (!currentQuestion.value) return []
-  const correctAnswer = currentQuestion.value.correctAnswer
+  const question = currentQuestion.value
+  
+  // 获取正确答案，适配不同字段名
+  let correctAnswer = question.correctAnswer || question.answer
+  
   if (Array.isArray(correctAnswer)) {
     return correctAnswer
   } else if (typeof correctAnswer === 'string') {
@@ -244,11 +287,16 @@ const correctCount = computed(() => {
   for (let i = 0; i < questions.value.length; i++) {
     const question = questions.value[i]
     let correct: string[] = []
-    if (Array.isArray(question.correctAnswer)) {
-      correct = question.correctAnswer
-    } else if (typeof question.correctAnswer === 'string') {
-      correct = question.type === 2 ? question.correctAnswer.split(',') : [question.correctAnswer]
+    
+    // 获取正确答案，适配不同字段名
+    const correctAnswer = question.correctAnswer || question.answer
+    
+    if (Array.isArray(correctAnswer)) {
+      correct = correctAnswer
+    } else if (typeof correctAnswer === 'string') {
+      correct = question.type === 2 ? correctAnswer.split(',') : [correctAnswer]
     }
+    
     const userAnswer = userAnswers.value[i]
     if (question.type === 2) {
       // 多选题，需要全部答对才算正确
@@ -271,24 +319,42 @@ const score = computed(() => {
   return Math.round((correctCount.value / questionCount) * 100)
 })
 
+// 前端题型到后端题型的映射
+const mapFrontendTypeToBackendType = (frontendType: number): number => {
+  // 前端使用1:单选题, 2:多选题, 3:是非题
+  // 后端使用1:选择题, 2:判断题, 3:填空题, 4:简答题
+  const mapping: Record<number, number> = {
+    1: 1, // 单选题 -> 选择题
+    2: 1, // 多选题 -> 选择题
+    3: 2  // 是非题 -> 判断题
+  }
+  return mapping[frontendType] || 1
+}
+
 // 获取练习题
 const fetchPracticeQuestions = async () => {
   try {
     loading.value = true
+    
+    // 前端题型转换为后端题型
+    const backendQuestionType = mapFrontendTypeToBackendType(questionType)
+    
     // 使用现有的questions端点获取练习题
     const response = await axios.get('/questions', {
       params: {
         page: 1,
         pageSize: questionCount,
-        type: questionType,
+        type: backendQuestionType,
         sortBy: 'createTime',
         sortDirection: mode === 1 ? 'asc' : 'desc' // 顺序练习使用升序，随机练习使用降序
       }
     })
     // 处理API返回的数据
     questions.value = response.data.records || []
+    
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
+    
     // 如果没有获取到题目，显示提示信息
     if (questions.value.length === 0) {
       ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')

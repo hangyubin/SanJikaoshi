@@ -66,7 +66,7 @@
             >
               删除
             </el-button>
-            <el-button type="info" size="small" @click="handleView(scope.row)">查看详情</el-button>
+
           </template>
         </el-table-column>
       </el-table>
@@ -271,10 +271,7 @@ const handleDelete = (row: any) => {
   console.log('删除管理员', row)
 }
 
-const handleView = (row: any) => {
-  // 查看详情逻辑
-  console.log('查看管理员详情', row)
-}
+
 
 const handleStatusChange = (row: any) => {
   // 状态变更逻辑

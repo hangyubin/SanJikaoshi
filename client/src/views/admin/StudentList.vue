@@ -57,14 +57,7 @@
             >
               删除
             </el-button>
-            <el-button 
-              type="info" 
-              size="small" 
-              @click="handleView(scope.row)"
-              :disabled="scope.row.username === 'admin'"
-            >
-              查看详情
-            </el-button>
+
           </template>
         </el-table-column>
       </el-table>
@@ -410,10 +403,7 @@ const handleDelete = (row: any) => {
   console.log('删除用户', row)
 }
 
-const handleView = (row: any) => {
-  // 查看详情逻辑
-  console.log('查看用户详情', row)
-}
+
 
 
 

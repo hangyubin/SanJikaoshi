@@ -133,12 +133,24 @@
         <!-- 选择题选项 -->
         <!-- 选择题选项，所有题型都显示 -->
         <el-form-item label="选项" prop="options">
-          <div v-for="(_, index) in form.options" :key="index" class="option-item">
+          <div 
+            v-for="(option, key) in optionsObject" 
+            :key="key" 
+            class="option-item"
+          >
             <el-input 
-              v-model="form.options[index]"
+              v-model="optionsObject[key]"
               placeholder="请输入选项内容"
             ></el-input>
           </div>
+          <!-- 添加选项按钮 -->
+          <el-button 
+            type="text" 
+            @click="addOption" 
+            v-if="Object.keys(optionsObject).length < 5"
+          >
+            <el-icon><Plus /></el-icon> 添加选项
+          </el-button>
         </el-form-item>
         
         <el-form-item label="正确答案" prop="answer">
@@ -163,10 +175,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '@/utils/axios'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 
 // 真实题目数据
 const questions = ref<any[]>([])
@@ -194,10 +207,19 @@ const form = reactive({
   type: 1,
   difficulty: 1,
   content: '',
-  options: ['', '', '', '', ''],
+  options: '', // 存储JSON格式的选项
   answer: '',
   analysis: '',
   score: 10
+})
+
+// 选项对象，用于表单编辑
+const optionsObject = reactive<Record<string, string>>({
+  A: '',
+  B: '',
+  C: '',
+  D: '',
+  E: ''
 })
 
 const rules = reactive<FormRules>({
@@ -294,8 +316,7 @@ const handleReset = () => {
 // 生成题目模板
 const handleGenerateTemplate = async () => {
   try {
-    // 修复API地址，去掉/api前缀
-    const response = await axios.get('/questions/import/template', { 
+    const response = await axios.get('/api/questions/import/template', { 
       responseType: 'blob' 
     })
     
@@ -322,8 +343,7 @@ const handleBatchImport = async (file: any) => {
     const formData = new FormData()
     formData.append('file', file)
     
-    // 修复API地址，去掉/api前缀
-    const res = await axios.post('/questions/import/batch', formData, {
+    const res = await axios.post('/api/questions/import/batch', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -345,38 +365,108 @@ const handleBatchImport = async (file: any) => {
 // 添加题目
 const handleAdd = () => {
   dialogTitle.value = '添加题目'
-  // 重置表单
+  // 重置基本表单
   Object.assign(form, {
     id: '',
     subjectId: '',
     type: 1,
     difficulty: 1,
     content: '',
-    options: ['', '', '', '', ''],
+    options: '',
     answer: '',
     analysis: '',
     score: 10
   })
+  
+  // 重置选项
+  Object.keys(optionsObject).forEach(key => {
+    optionsObject[key] = ''
+  })
+  
   dialogVisible.value = true
 }
 
 // 编辑题目
 const handleEdit = (row: any) => {
   dialogTitle.value = '编辑题目'
-  // 填充表单
+  
+  // 填充基本表单数据
   Object.assign(form, {
     id: row.id,
     subjectId: row.subject?.id || '',
     type: row.type,
     difficulty: row.difficulty,
     content: row.content,
-    options: row.options ? JSON.parse(row.options) : ['', '', '', '', ''],
+    options: row.options || '',
     answer: row.answer,
     analysis: row.analysis,
     score: row.score
   })
+  
+  // 解析并填充选项
+  if (row.options) {
+    try {
+      const parsedOptions = JSON.parse(row.options)
+      if (typeof parsedOptions === 'object') {
+        // 清空当前选项
+        Object.keys(optionsObject).forEach(key => {
+          optionsObject[key] = ''
+        })
+        // 填充解析后的选项
+        Object.entries(parsedOptions).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            optionsObject[key] = value
+          }
+        })
+      }
+    } catch (e) {
+      // 解析失败，使用默认空选项
+      Object.keys(optionsObject).forEach(key => {
+        optionsObject[key] = ''
+      })
+    }
+  } else {
+    // 没有选项，使用默认空选项
+    Object.keys(optionsObject).forEach(key => {
+      optionsObject[key] = ''
+    })
+  }
+  
   dialogVisible.value = true
 }
+
+// 添加选项方法
+const addOption = () => {
+  const keys = Object.keys(optionsObject)
+  const currentLength = keys.length
+  if (currentLength < 5) {
+    const nextKey = String.fromCharCode(65 + currentLength) // A, B, C, D, E
+    optionsObject[nextKey] = ''
+  }
+}
+
+// 监听options变化，更新optionsObject
+watch(() => form.options, (newOptions) => {
+  if (newOptions) {
+    try {
+      const parsed = JSON.parse(newOptions)
+      if (typeof parsed === 'object') {
+        // 清空当前选项
+        Object.keys(optionsObject).forEach(key => {
+          optionsObject[key] = ''
+        })
+        // 填充解析后的选项
+        Object.entries(parsed).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            optionsObject[key] = value
+          }
+        })
+      }
+    } catch (e) {
+      // 不是JSON格式，忽略
+    }
+  }
+}, { immediate: true })
 
 // 提交题目
 const handleSubmit = async () => {
@@ -385,28 +475,26 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     
+    // 处理选项
+    const validOptions: Record<string, string> = {}
+    Object.entries(optionsObject).forEach(([key, value]) => {
+      if (value && value.trim()) {
+        validOptions[key] = value.trim()
+      }
+    })
+    
     // 构建请求数据
     const requestData = {
       ...form,
-      subject: form.subjectId ? { id: form.subjectId } : null
+      subject: form.subjectId ? { id: form.subjectId } : null,
+      options: Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
     }
-    
-    // 处理选项
-    const validOptions: any = {}
-    form.options.forEach((option: string, index: number) => {
-      if (option && option.trim()) {
-        const key = String.fromCharCode(65 + index) // A, B, C, D, E
-        validOptions[key] = option.trim()
-      }
-    })
-    // 使用类型断言解决类型不匹配问题
-    ;(requestData as any).options = Object.keys(validOptions).length > 0 ? JSON.stringify(validOptions) : undefined
     
     if (form.id) {
       // 更新题目
       await axios.put(`/questions/${form.id}`, requestData)
     } else {
-      // 添加题目，去掉/api前缀
+      // 添加题目
       await axios.post('/questions', requestData)
     }
     
@@ -414,7 +502,7 @@ const handleSubmit = async () => {
     dialogVisible.value = false
     fetchQuestions() // 重新加载题目列表
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error('操作失败:', error)
     ElMessage.error('操作失败，请检查输入内容')
   }
 }

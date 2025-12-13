@@ -30,7 +30,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             authorities = user.getRoles().stream()
-                    .map(role -> new SimpleGrantedAuthority(role.getName()))
+                    .map(role -> new SimpleGrantedAuthority(role.getCode())) // 使用角色代码作为权限名称
                     .collect(Collectors.toList());
         }
         
