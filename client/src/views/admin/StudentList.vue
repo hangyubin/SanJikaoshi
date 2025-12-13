@@ -11,13 +11,7 @@
         <el-form-item label="姓名">
           <el-input v-model="searchForm.realName" placeholder="请输入姓名"></el-input>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="启用" :value="1"></el-option>
-            <el-option label="禁用" :value="0"></el-option>
-          </el-select>
-        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -34,17 +28,7 @@
         <el-table-column prop="username" label="用户名" width="120"></el-table-column>
         <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="scope">
-            <el-switch
-              v-model="scope.row.status"
-              :active-value="'1'"
-              :inactive-value="'0'"
-              @change="handleStatusChange(scope.row)"
-              :disabled="scope.row.username === 'admin'"
-            ></el-switch>
-          </template>
-        </el-table-column>
+
         <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
@@ -118,9 +102,7 @@
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号"></el-input>
         </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-switch v-model="form.status" active-value="1" inactive-value="0"></el-switch>
-        </el-form-item>
+
         <el-form-item label="角色" prop="role">
           <el-select v-model="form.role" placeholder="请选择角色">
             <el-option 
@@ -190,8 +172,7 @@ const users = ref<any[]>([])
 
 const searchForm = reactive({
   username: '',
-  realName: '',
-  status: ''
+  realName: ''
 })
 
 const currentPage = ref(1)
@@ -207,8 +188,7 @@ const fetchUsers = () => {
       page: currentPage.value,
       pageSize: pageSize.value,
       username: searchForm.username,
-      realName: searchForm.realName,
-      status: searchForm.status
+      realName: searchForm.realName
     }
   })
   .then(res => {
@@ -240,7 +220,6 @@ const form = reactive({
   password: '',
   realName: '',
   phone: '',
-  status: '1',
   role: 'user'
 })
 
@@ -312,7 +291,6 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.username = ''
   searchForm.realName = ''
-  searchForm.status = ''
   currentPage.value = 1
   fetchUsers()
 }
@@ -463,38 +441,7 @@ const handleView = (row: any) => {
   console.log('查看用户详情', row)
 }
 
-const handleStatusChange = async (row: any) => {
-  // 保存原状态，用于失败时恢复
-  const originalStatus = row.status
-  try {
-    // 调用后端API更新状态
-    await axios.put(`/users/${row.id}/status`, {
-      status: row.status
-    })
-    ElMessage.success('状态更新成功')
-  } catch (error: any) {
-    console.error('更新状态失败:', error)
-    // 更详细的错误处理
-    let errorMsg = '状态更新失败'
-    if (error.response) {
-      // 服务器返回了错误响应
-      if (error.response.status === 403) {
-        errorMsg = '您没有权限执行此操作'
-      } else {
-        errorMsg = error.response.data?.message || errorMsg
-      }
-    } else if (error.request) {
-      // 请求已发送但没有收到响应
-      errorMsg = '服务器无响应，请稍后重试'
-    } else {
-      // 请求配置错误
-      errorMsg = error.message || errorMsg
-    }
-    ElMessage.error(errorMsg)
-    // 恢复原状态
-    row.status = originalStatus
-  }
-}
+
 
 const handleSizeChange = (size: number) => {
   pageSize.value = size

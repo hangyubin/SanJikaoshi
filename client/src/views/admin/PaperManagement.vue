@@ -39,7 +39,7 @@
             <div class="question-title">{{ scope.row.title.substring(0, 50) }}...</div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
+        <el-table-column prop="createTime" label="创建时间" width="180" :formatter="formatDate"></el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -402,6 +402,8 @@ const handleAdd = () => {
     optionB: '',
     optionC: '',
     optionD: '',
+    optionE: '',
+    optionF: '',
     correctAnswer: '',
     analysis: ''
   })
@@ -420,7 +422,9 @@ const handleEdit = (row: any) => {
     optionB: row.optionB,
     optionC: row.optionC,
     optionD: row.optionD,
-    correctAnswer: row.correctAnswer,
+    optionE: row.optionE || '',
+    optionF: row.optionF || '',
+    correctAnswer: row.type === 2 && typeof row.correctAnswer === 'string' ? row.correctAnswer.split(',') : row.correctAnswer,
     analysis: row.analysis
   })
   dialogVisible.value = true
@@ -435,7 +439,9 @@ const handleSubmit = async () => {
     
     // 构建请求数据
     const requestData = {
-      ...form
+      ...form,
+      // 处理多选题正确答案，将数组转换为逗号分隔的字符串
+      correctAnswer: form.type === 2 && Array.isArray(form.correctAnswer) ? form.correctAnswer.join(',') : form.correctAnswer
     }
     
     if (form.id) {
@@ -555,6 +561,13 @@ const handleDownloadTemplate = async () => {
 // 导入XLSX库用于Excel文件解析
 import * as XLSX from 'xlsx'
 import { Loading } from '@element-plus/icons-vue'
+
+// 日期格式化函数
+const formatDate = (_row: any, _column: any, cellValue: any) => {
+  if (!cellValue) return ''
+  const date = new Date(cellValue)
+  return date.toLocaleString()
+}
 
 // 处理文件选择
 const handleImport = (file: any) => {

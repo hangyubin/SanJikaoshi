@@ -201,8 +201,15 @@ const initData = () => {
     }
   })
   .then(res => {
-      departments.value = res.data
-      pagination.total = res.data.total || 0
+      // 适应后端返回的分页格式
+      if (res.data.records) {
+        departments.value = res.data.records
+        pagination.total = res.data.total || 0
+      } else {
+        // 直接列表格式
+        departments.value = res.data || []
+        pagination.total = res.data?.length || 0
+      }
     }
   )
   .catch(error => {
