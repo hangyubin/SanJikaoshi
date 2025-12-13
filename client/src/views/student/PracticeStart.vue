@@ -203,10 +203,7 @@ const modeLabel = computed(() => {
 
 // 获取当前题目
 const currentQuestion = computed(() => {
-  const question = questions.value[currentIndex.value]
-  console.log('当前题目索引:', currentIndex.value)
-  console.log('当前题目数据:', question)
-  return question
+  return questions.value[currentIndex.value]
 })
 
 // 格式化选项
@@ -215,8 +212,6 @@ const currentOptions = computed(() => {
   
   const options: Record<string, string> = {}
   const question = currentQuestion.value
-  
-  console.log('当前题目数据:', question)
   
   // 适配多种选项格式
   if (question.options) {
@@ -247,7 +242,6 @@ const currentOptions = computed(() => {
         processStringOptions(parsedOptions, options)
       }
     } catch (e) {
-      console.error('JSON解析失败，尝试字符串处理:', e)
       // 直接处理字符串格式
       processStringOptions(question.options, options)
     }
@@ -277,7 +271,6 @@ const currentOptions = computed(() => {
     }
   }
   
-  console.log('解析后的选项:', options)
   return options
 })
 
@@ -386,16 +379,9 @@ const mapFrontendTypeToBackendType = (frontendType: number): number => {
 const fetchPracticeQuestions = async () => {
   try {
     loading.value = true
-    console.log('开始获取练习题...')
-    console.log('请求参数:', {
-      questionType,
-      questionCount,
-      mode
-    })
     
     // 前端题型转换为后端题型
     const backendQuestionType = mapFrontendTypeToBackendType(questionType)
-    console.log('转换后的后端题型:', backendQuestionType)
     
     // 使用现有的questions端点获取练习题
     const response = await axios.get('/questions', {
@@ -408,33 +394,20 @@ const fetchPracticeQuestions = async () => {
       }
     })
     
-    console.log('API响应数据:', response.data)
-    
     // 处理API返回的数据
     questions.value = response.data.records || []
     
-    // 添加调试日志，检查题目数据结构
-    console.log('获取到的题目列表:', questions.value)
-    console.log('题目列表长度:', questions.value.length)
-    
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
-    console.log('初始化的用户答案数组:', userAnswers.value)
     
     // 如果没有获取到题目，显示提示信息
     if (questions.value.length === 0) {
-      console.log('未获取到题目')
       ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')
-    } else {
-      console.log('成功获取到题目，第一题数据:', questions.value[0])
-      console.log('第一题内容字段:', questions.value[0].content)
     }
   } catch (error: any) {
-    console.error('获取练习题失败:', error)
     // 更详细的错误信息
     let errorMsg = '获取练习题失败，请稍后重试'
     if (error.response) {
-      console.error('响应错误:', error.response)
       if (error.response.status === 404) {
         errorMsg = '暂无相关题型的练习题，请联系管理员添加'
       } else if (error.response.status === 500) {
@@ -443,10 +416,8 @@ const fetchPracticeQuestions = async () => {
         errorMsg = error.response.data?.message || errorMsg
       }
     } else if (error.request) {
-      console.error('请求错误:', error.request)
       errorMsg = '服务器无响应，请稍后重试'
     } else {
-      console.error('其他错误:', error.message)
       errorMsg = error.message || errorMsg
     }
     ElMessage.error(errorMsg)
@@ -454,7 +425,6 @@ const fetchPracticeQuestions = async () => {
     userAnswers.value = []
   } finally {
     loading.value = false
-    console.log('获取练习题完成，加载状态:', loading.value)
   }
 }
 
