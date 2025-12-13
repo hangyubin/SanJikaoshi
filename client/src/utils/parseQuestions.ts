@@ -23,21 +23,25 @@ export const parseQuestions = (text: string): Question[] => {
   let match;
   
   while ((match = questionRegex.exec(text)) !== null) {
-    const [, id, content, optionsText] = match;
+    const [, , content, optionsText] = match;
     
     // 解析选项
     const options: Record<string, string> = {};
     const optionRegex = /([A-E])\.\s+(.+?)(?=\n[A-E]\.|$)/gs;
     let optionMatch;
     
-    while ((optionMatch = optionRegex.exec(optionsText)) !== null) {
-      const [, letter, optionContent] = optionMatch;
-      options[letter] = optionContent.trim();
+    if (optionsText) {
+      while ((optionMatch = optionRegex.exec(optionsText)) !== null) {
+        const [, letter, optionContent] = optionMatch;
+        if (letter && optionContent) {
+          options[letter] = optionContent.trim();
+        }
+      }
     }
     
     // 暂时将答案设为空，需要手动填写
     questions.push({
-      content: content.trim(),
+      content: content?.trim() || '',
       options,
       answer: '', // 正确答案需要手动填写
       type: 1, // 单选题

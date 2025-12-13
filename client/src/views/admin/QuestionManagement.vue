@@ -388,7 +388,7 @@ const parseQuestions = (text: string) => {
       
       // 开始新题目
       currentQuestion = {
-        content: questionMatch[2].trim(),
+        content: questionMatch[2]?.trim() || '',
         options: {} as Record<string, string>,
         answer: questionMatch[3] || '', // 提取答案，如果存在的话
         type: 1, // 单选题
@@ -402,14 +402,16 @@ const parseQuestions = (text: string) => {
     const optionMatch = line.match(/^([A-E])\.\s+(.+)$/);
     if (optionMatch && currentQuestion) {
       const [, letter, optionContent] = optionMatch;
-      currentQuestion.options[letter] = optionContent;
+      if (letter && optionContent) {
+        currentQuestion.options[letter] = optionContent;
+      }
       continue;
     }
     
     // 匹配答案行：例如 "答案：B" 或 "正确答案：B" 或 "正确选项：B"
     const answerMatch = line.match(/^(答案|正确答案|正确选项)[:：]\s*([A-E])$/);
     if (answerMatch && currentQuestion) {
-      currentQuestion.answer = answerMatch[2];
+      currentQuestion.answer = answerMatch[2] || '';
       continue;
     }
   }
@@ -456,7 +458,7 @@ const handleTextFileImport = async (file: any) => {
     }));
     
     // 批量提交题目
-    const res = await axios.post('/questions/batch', systemFormatQuestions);
+    await axios.post('/questions/batch', systemFormatQuestions);
     
     ElMessage.success(`文本文件导入成功：共导入${parsedQuestions.length}道题目`);
     fetchQuestions(); // 重新加载题目列表
