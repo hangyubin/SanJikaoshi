@@ -277,9 +277,32 @@ const fetchUserInfo = async () => {
 // 获取科室列表
 const fetchDepartments = async () => {
   try {
-    // 调用后端API获取科室列表
-    const response = await axios.get('/departments')
-    departments.value = response.data || []
+    // 调用后端API获取科室列表，不使用分页
+    const response = await axios.get('/departments', {
+      params: {
+        pageSize: 1000 // 获取足够多的科室，确保能显示所有科室
+      }
+    })
+    const responseData = response.data
+    // 处理不同的返回格式
+    if (responseData && typeof responseData === 'object') {
+      // 如果是分页格式，取records字段
+      if (responseData.records) {
+        departments.value = responseData.records
+      } else if (Array.isArray(responseData)) {
+        // 如果直接是数组格式，直接使用
+        departments.value = responseData
+      } else {
+        // 其他情况，使用空数组
+        departments.value = []
+      }
+    } else if (Array.isArray(responseData)) {
+      // 直接数组格式
+      departments.value = responseData
+    } else {
+      // 无效数据，使用空数组
+      departments.value = []
+    }
   } catch (error) {
     console.error('获取科室列表失败:', error)
     // 如果API调用失败，使用空数组
