@@ -353,31 +353,15 @@ const handleSubmit = async () => {
       const originalUserRes = await axios.get(`/users/${form.id}`)
       const originalUser = originalUserRes.data
       
-      // 如果角色从普通用户变为管理员
+      // 直接更新用户信息，包括角色变更
+      await axios.put(`/users/${form.id}`, {
+        ...form
+      })
+      
+      // 如果角色从普通用户变为管理员，弹出权限分配对话框
       if (originalUser.role === 'user' && form.role === 'admin') {
-        // 先更新用户角色
-        await axios.put(`/users/${form.id}`, {
-          ...form
-        })
-        
-        // 然后弹出权限分配对话框
+        // 弹出权限分配对话框
         await showPermissionDialog()
-      } 
-      // 如果角色从管理员变为普通用户
-      else if (originalUser.role === 'admin' && form.role === 'user') {
-        // 先将用户从管理员降级
-        await axios.put(`/users/demote/${form.id}`)
-        // 然后更新用户基本信息
-        await axios.put(`/users/${form.id}`, {
-          ...form
-        })
-      } 
-      // 普通信息修改（非角色变更）
-      else {
-        // 直接更新用户信息
-        await axios.put(`/users/${form.id}`, {
-          ...form
-        })
       }
     } 
     // 新用户创建

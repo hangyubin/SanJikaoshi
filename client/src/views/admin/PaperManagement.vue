@@ -354,10 +354,14 @@ const importHistory = ref<any[]>([])
 // 获取题目列表
 const fetchPapers = async () => {
   try {
-    const params = {
+    // 构建参数，仅当type有值时才传递
+    const params: any = {
       page: currentPage.value,
-      pageSize: pageSize.value,
-      type: searchForm.type
+      pageSize: pageSize.value
+    }
+    // 仅当type有值时才添加到参数中
+    if (searchForm.type) {
+      params.type = searchForm.type
     }
     const response = await axios.get('/questions', { params })
     // 适应后端返回的格式，正确获取response.data
@@ -411,23 +415,32 @@ const handleAdd = () => {
 }
 
 // 编辑题目
-const handleEdit = (row: any) => {
+const handleEdit = async (row: any) => {
   dialogTitle.value = '编辑题库'
-  // 填充表单
-  Object.assign(form, {
-    id: row.id,
-    type: row.type,
-    title: row.title,
-    optionA: row.optionA,
-    optionB: row.optionB,
-    optionC: row.optionC,
-    optionD: row.optionD,
-    optionE: row.optionE || '',
-    optionF: row.optionF || '',
-    correctAnswer: row.type === 2 && typeof row.correctAnswer === 'string' ? row.correctAnswer.split(',') : row.correctAnswer,
-    analysis: row.analysis
-  })
-  dialogVisible.value = true
+  try {
+    // 单独请求获取完整的题目信息
+    const response = await axios.get(`/questions/${row.id}`)
+    const fullQuestion = response.data
+    
+    // 填充表单
+    Object.assign(form, {
+      id: fullQuestion.id,
+      type: fullQuestion.type,
+      title: fullQuestion.title,
+      optionA: fullQuestion.optionA,
+      optionB: fullQuestion.optionB,
+      optionC: fullQuestion.optionC,
+      optionD: fullQuestion.optionD,
+      optionE: fullQuestion.optionE || '',
+      optionF: fullQuestion.optionF || '',
+      correctAnswer: fullQuestion.type === 2 && typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer.split(',') : fullQuestion.correctAnswer,
+      analysis: fullQuestion.analysis
+    })
+    dialogVisible.value = true
+  } catch (error) {
+    console.error('获取题目详情失败:', error)
+    ElMessage.error('获取题目详情失败，无法编辑')
+  }
 }
 
 // 提交题目
@@ -500,9 +513,14 @@ const handleDownloadTemplate = async () => {
   try {
     // 根据模板类型构建不同的URL
     let templateUrl = '/questions/import/template'
-    // 根据模板类型添加查询参数
-    if (templateType.value !== 'all') {
-      templateUrl += `?type=${templateType.value}`
+    // 根据模板类型添加查询参数，将前端类型转换为后端期望的格式
+    const typeMap: Record<string, string> = {
+      'single': '1',
+      'multiple': '2',
+      'truefalse': '3'
+    }
+    if (templateType.value !== 'all' && typeMap[templateType.value]) {
+      templateUrl += `?type=${typeMap[templateType.value]}`
     }
     
     const response = await axios.get(templateUrl, {
