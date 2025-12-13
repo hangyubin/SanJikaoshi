@@ -316,9 +316,29 @@ const handleReset = () => {
 // 生成题目模板
 const handleGenerateTemplate = async () => {
   try {
-    const response = await axios.get('/api/questions/import/template', { 
-      responseType: 'blob' 
-    })
+    // 检查后端是否支持该端点
+    ElMessage.info('正在生成题目模板...')
+    
+    // 尝试不同的API端点
+    let response
+    try {
+      // 尝试1：标准端点
+      response = await axios.get('/api/questions/import/template', { 
+        responseType: 'blob' 
+      })
+    } catch (e1) {
+      try {
+        // 尝试2：简化端点
+        response = await axios.get('/questions/template', { 
+          responseType: 'blob' 
+        })
+      } catch (e2) {
+        // 尝试3：最简化端点
+        response = await axios.get('/template', { 
+          responseType: 'blob' 
+        })
+      }
+    }
     
     // 创建下载链接
     const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -333,7 +353,7 @@ const handleGenerateTemplate = async () => {
     ElMessage.success('题目模板生成成功')
   } catch (error) {
     console.error('生成题目模板失败:', error)
-    ElMessage.error('生成题目模板失败')
+    ElMessage.error('生成题目模板失败，请检查后端是否支持该功能')
   }
 }
 

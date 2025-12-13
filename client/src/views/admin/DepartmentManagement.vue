@@ -408,9 +408,13 @@ const handleSubmit = async () => {
     
     let response
     if (dialogType.value === 'add') {
-      response = await axios.post('/departments', form)
+      // 简化请求，移除可能不支持的字段
+      const { id, ...createData } = form
+      response = await axios.post('/departments', createData)
     } else {
-      response = await axios.put(`/departments/${form.id}`, form)
+      // 简化请求，移除可能不支持的字段
+      const { id, ...updateData } = form
+      response = await axios.put(`/departments/${form.id}`, updateData)
     }
     
     // 检查响应数据

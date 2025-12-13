@@ -365,14 +365,9 @@ const score = computed(() => {
 
 // 前端题型到后端题型的映射
 const mapFrontendTypeToBackendType = (frontendType: number): number => {
+  // 简化题型映射，直接返回前端题型
   // 前端使用1:单选题, 2:多选题, 3:是非题
-  // 后端使用1:选择题, 2:判断题, 3:填空题, 4:简答题
-  const mapping: Record<number, number> = {
-    1: 1, // 单选题 -> 选择题
-    2: 1, // 多选题 -> 选择题
-    3: 2  // 是非题 -> 判断题
-  }
-  return mapping[frontendType] || 1
+  return frontendType
 }
 
 // 获取练习题
@@ -383,19 +378,18 @@ const fetchPracticeQuestions = async () => {
     // 前端题型转换为后端题型
     const backendQuestionType = mapFrontendTypeToBackendType(questionType)
     
-    // 使用现有的questions端点获取练习题
+    // 使用现有的questions端点获取练习题，调整参数名称以匹配后端
     const response = await axios.get('/questions', {
       params: {
-        page: 1,
+        pageNum: 1, // 后端可能使用pageNum而不是page
         pageSize: questionCount,
-        type: backendQuestionType,
-        sortBy: 'createTime',
-        sortDirection: mode === 1 ? 'asc' : 'desc' // 顺序练习使用升序，随机练习使用降序
+        type: backendQuestionType
+        // 移除可能不支持的排序参数
       }
     })
     
-    // 处理API返回的数据
-    questions.value = response.data.records || []
+    // 处理API返回的数据，适配不同的响应格式
+    questions.value = response.data.records || response.data || []
     
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
@@ -405,22 +399,8 @@ const fetchPracticeQuestions = async () => {
       ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')
     }
   } catch (error: any) {
-    // 更详细的错误信息
-    let errorMsg = '获取练习题失败，请稍后重试'
-    if (error.response) {
-      if (error.response.status === 404) {
-        errorMsg = '暂无相关题型的练习题，请联系管理员添加'
-      } else if (error.response.status === 500) {
-        errorMsg = '服务器内部错误，无法获取练习题'
-      } else {
-        errorMsg = error.response.data?.message || errorMsg
-      }
-    } else if (error.request) {
-      errorMsg = '服务器无响应，请稍后重试'
-    } else {
-      errorMsg = error.message || errorMsg
-    }
-    ElMessage.error(errorMsg)
+    console.error('获取练习题失败:', error)
+    ElMessage.error('获取练习题失败，请检查网络连接或联系管理员')
     questions.value = []
     userAnswers.value = []
   } finally {
