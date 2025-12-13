@@ -422,19 +422,19 @@ const handleEdit = async (row: any) => {
     const response = await axios.get(`/questions/${row.id}`)
     const fullQuestion = response.data
     
-    // 填充表单
+    // 填充表单，确保所有选项都有默认值
     Object.assign(form, {
       id: fullQuestion.id,
       type: fullQuestion.type,
-      title: fullQuestion.title,
-      optionA: fullQuestion.optionA,
-      optionB: fullQuestion.optionB,
-      optionC: fullQuestion.optionC,
-      optionD: fullQuestion.optionD,
+      title: fullQuestion.title || '',
+      optionA: fullQuestion.optionA || '',
+      optionB: fullQuestion.optionB || '',
+      optionC: fullQuestion.optionC || '',
+      optionD: fullQuestion.optionD || '',
       optionE: fullQuestion.optionE || '',
       optionF: fullQuestion.optionF || '',
-      correctAnswer: fullQuestion.type === 2 && typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer.split(',') : fullQuestion.correctAnswer,
-      analysis: fullQuestion.analysis
+      correctAnswer: fullQuestion.type === 2 && typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer.split(',') : fullQuestion.correctAnswer || '',
+      analysis: fullQuestion.analysis || ''
     })
     dialogVisible.value = true
   } catch (error) {
