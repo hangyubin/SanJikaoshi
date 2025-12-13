@@ -2,6 +2,52 @@
   <div class="paper-management">
     <h1>题库管理</h1>
     
+    <!-- 题型统计卡片 -->
+    <el-row :gutter="20" style="margin-bottom: 20px;">
+      <el-col :span="8">
+        <el-card class="stat-card" hoverable @click="handleAddByType(1)">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">单选题</p>
+              <h3 class="stat-value">{{ questionTypeCount[1] || 0 }}道</h3>
+              <p class="stat-desc">共{{ questionTypeCount[1] || 0 }}道，新增{{ todayAddedCount[1] || 0 }}道</p>
+            </div>
+            <div class="stat-icon question-icon">
+              <el-icon><Document /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card class="stat-card" hoverable @click="handleAddByType(2)">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">多选题</p>
+              <h3 class="stat-value">{{ questionTypeCount[2] || 0 }}道</h3>
+              <p class="stat-desc">共{{ questionTypeCount[2] || 0 }}道，新增{{ todayAddedCount[2] || 0 }}道</p>
+            </div>
+            <div class="stat-icon question-icon">
+              <el-icon><DocumentCopy /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card class="stat-card" hoverable @click="handleAddByType(3)">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">是非题</p>
+              <h3 class="stat-value">{{ questionTypeCount[3] || 0 }}道</h3>
+              <p class="stat-desc">共{{ questionTypeCount[3] || 0 }}道，新增{{ todayAddedCount[3] || 0 }}道</p>
+            </div>
+            <div class="stat-icon question-icon">
+              <el-icon><Check /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+    
     <!-- 搜索和筛选 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="80px" inline>
@@ -251,6 +297,7 @@ import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '@/utils/axios'
 import { ElMessage } from 'element-plus'
+import { Document, DocumentCopy, Check } from '@element-plus/icons-vue'
 
 // 题目数据
 const papers = ref<any[]>([])
@@ -262,6 +309,20 @@ const searchForm = reactive({
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+// 各题型的题目数量统计
+const questionTypeCount = ref<Record<number, number>>({
+  1: 0, // 单选题数量
+  2: 0, // 多选题数量
+  3: 0  // 是非题数量
+})
+
+// 今日新增题目数量统计
+const todayAddedCount = ref<Record<number, number>>({
+  1: 0, // 今日新增单选题数量
+  2: 0, // 今日新增多选题数量
+  3: 0  // 今日新增是非题数量
+})
 
 // 对话框
 const dialogVisible = ref(false)
@@ -351,6 +412,13 @@ const importLoading = ref(false)
 // 导入历史记录
 const importHistory = ref<any[]>([])
 
+// 检查是否是今日新增的题目
+const isToday = (dateString: string) => {
+  const today = new Date()
+  const date = new Date(dateString)
+  return date.toDateString() === today.toDateString()
+}
+
 // 获取题目列表
 const fetchPapers = async () => {
   try {
@@ -366,15 +434,55 @@ const fetchPapers = async () => {
     const response = await axios.get('/questions', { params })
     // 适应后端返回的格式，正确获取response.data
     const responseData = response.data as any
+    let allQuestions: any[] = []
+    
     if (responseData.records) {
       // 如果是分页格式
       papers.value = responseData.records
       total.value = responseData.total
+      
+      // 获取所有题目用于统计
+      const allResponse = await axios.get('/questions', {
+        params: {
+          pageSize: 1000 // 获取足够多的题目，确保能统计所有题型数量
+        }
+      })
+      const allResponseData = allResponse.data as any
+      allQuestions = allResponseData.records || allResponseData || []
     } else {
       // 如果是直接列表格式
       papers.value = responseData
       total.value = responseData.length
+      allQuestions = responseData
     }
+    
+    // 统计各题型的题目数量和今日新增数量
+    const count: Record<number, number> = {
+      1: 0,
+      2: 0,
+      3: 0
+    }
+    
+    const todayCount: Record<number, number> = {
+      1: 0,
+      2: 0,
+      3: 0
+    }
+    
+    allQuestions.forEach(question => {
+      const type = question.type
+      if (count[type] !== undefined) {
+        count[type]++
+        
+        // 检查是否是今日新增
+        if (isToday(question.createTime)) {
+          todayCount[type]++
+        }
+      }
+    })
+    
+    questionTypeCount.value = count
+    todayAddedCount.value = todayCount
   } catch (error) {
     console.error('获取题目列表失败:', error)
     ElMessage.error('获取题目列表失败')
@@ -392,6 +500,26 @@ const handleReset = () => {
   searchForm.type = ''
   currentPage.value = 1
   fetchPapers()
+}
+
+// 按题型增加题目
+const handleAddByType = (type: number) => {
+  dialogTitle.value = type === 1 ? '增加单选题' : type === 2 ? '增加多选题' : '增加是非题'
+  // 重置表单
+  Object.assign(form, {
+    id: '',
+    type: type,
+    title: '',
+    optionA: '',
+    optionB: '',
+    optionC: '',
+    optionD: '',
+    optionE: '',
+    optionF: '',
+    correctAnswer: '',
+    analysis: ''
+  })
+  dialogVisible.value = true
 }
 
 // 增加题目
