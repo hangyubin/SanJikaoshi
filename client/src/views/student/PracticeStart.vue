@@ -120,6 +120,11 @@
       <div class="result-content">
         <div class="result-stats">
           <div class="stat-item">
+            <h3>{{ totalScore }}</h3>
+            <p>得分</p>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
             <h3>{{ correctCount }}</h3>
             <p>答对题数</p>
           </div>
@@ -361,6 +366,14 @@ const correctCount = computed(() => {
 // 计算正确率
 const score = computed(() => {
   return Math.round((correctCount.value / questionCount) * 100)
+})
+
+// 计算总得分，总分100分，根据题目数量动态计算每题分值
+const totalScore = computed(() => {
+  // 总分100分，根据题目数量动态计算每题分值
+  const perQuestionScore = questionCount > 0 ? 100 / questionCount : 0
+  // 计算总得分，保留一位小数
+  return Math.round(correctCount.value * perQuestionScore * 10) / 10
 })
 
 // 前端题型到后端题型的映射
