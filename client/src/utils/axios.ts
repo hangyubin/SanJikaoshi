@@ -4,7 +4,15 @@ import { ElMessage } from 'element-plus'
 // 创建axios实例
 const service = axios.create({
   baseURL: '/api',
-  timeout: 15000
+  timeout: 15000,
+  // 确保请求体正确转换为JSON格式
+  transformRequest: [function (data, headers) {
+    // 确保请求体是JSON格式
+    if (data && typeof data === 'object') {
+      return JSON.stringify(data)
+    }
+    return data
+  }]
 })
 
 // 请求拦截器

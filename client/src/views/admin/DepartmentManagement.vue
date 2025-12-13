@@ -293,10 +293,26 @@ const generateDepartmentCode = (name: string): string => {
     '信息': 'xinxi'
   }
   
+  // 复合科室名称处理，优先匹配最长的关键词
+  // 按关键词长度降序排序
+  const sortedKeys = Object.keys(pinyinMap).sort((a, b) => b.length - a.length)
+  
   // 检查是否有匹配的科室名称
-  for (const [key, value] of Object.entries(pinyinMap)) {
+  for (const key of sortedKeys) {
     if (cleanedName.includes(key)) {
-      return value.toUpperCase()
+      // 提取匹配的关键词
+      const matchedValue = pinyinMap[key]
+      // 检查是否还有其他关键词
+      const remainingName = cleanedName.replace(key, '')
+      
+      // 查找剩余名称中的其他关键词
+      for (const subKey of sortedKeys) {
+        if (remainingName.includes(subKey) && subKey !== key) {
+          return (matchedValue + pinyinMap[subKey]).toUpperCase()
+        }
+      }
+      
+      return matchedValue.toUpperCase()
     }
   }
   
