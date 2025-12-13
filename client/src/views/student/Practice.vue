@@ -149,10 +149,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  RefreshRight, Star, Menu, 
-  Delete 
+import {
+  RefreshRight, Star, Menu,
+  Delete
 } from '@element-plus/icons-vue'
+import axios from '@/utils/axios'
 
 const router = useRouter()
 
@@ -220,16 +221,31 @@ const clearQuestionTypeSelection = () => {
 }
 
 // 初始化数据
-onMounted(() => {
-  // 模拟获取各题型的题目数量
-  // 实际项目中应从API获取
-  setTimeout(() => {
-    questionTypeCount.value = {
-      1: 120, // 单选题数量
-      2: 95,  // 多选题数量
-      3: 60   // 是非题数量
+onMounted(async () => {
+  try {
+    // 从API获取各题型的题目数量
+    const response = await axios.get('/questions/count')
+    const countData = response.data
+    // 确保countData是对象格式
+    if (typeof countData === 'object' && countData !== null) {
+      questionTypeCount.value = countData
+    } else {
+      // 处理无效数据，设置默认值
+      questionTypeCount.value = {
+        1: 0, // 单选题数量
+        2: 0,  // 多选题数量
+        3: 0   // 是非题数量
+      }
     }
-  }, 500)
+  } catch (error) {
+    console.error('获取题型数量失败:', error)
+    // 发生错误时，使用默认值
+    questionTypeCount.value = {
+      1: 0, // 单选题数量
+      2: 0,  // 多选题数量
+      3: 0   // 是非题数量
+    }
+  }
 })
 </script>
 

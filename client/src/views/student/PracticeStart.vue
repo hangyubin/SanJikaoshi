@@ -282,12 +282,52 @@ const fetchPracticeQuestions = async () => {
         mode: mode
       }
     })
-    questions.value = response.data || []
+    // 处理API返回的数据，适应不同的返回格式
+    let questionsData = response.data
+    // 如果是分页格式或其他嵌套格式，尝试获取正确的数据
+    if (questionsData && typeof questionsData === 'object') {
+      // 尝试从records、data或其他常见字段中获取数据
+      if (questionsData.records) {
+        questions.value = questionsData.records
+      } else if (questionsData.data) {
+        questions.value = questionsData.data
+      } else if (Array.isArray(questionsData)) {
+        questions.value = questionsData
+      } else {
+        // 如果没有找到合适的字段，将整个对象视为单个问题
+        questions.value = [questionsData]
+      }
+    } else if (Array.isArray(questionsData)) {
+      questions.value = questionsData
+    } else {
+      questions.value = []
+    }
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
-  } catch (error) {
+    // 如果没有获取到题目，显示提示信息
+    if (questions.value.length === 0) {
+      ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')
+    }
+  } catch (error: any) {
     console.error('获取练习题失败:', error)
-    ElMessage.error('获取练习题失败，请稍后重试')
+    // 更详细的错误信息
+    let errorMsg = '获取练习题失败，请稍后重试'
+    if (error.response) {
+      if (error.response.status === 404) {
+        errorMsg = '暂无相关题型的练习题，请联系管理员添加'
+      } else if (error.response.status === 500) {
+        errorMsg = '服务器内部错误，无法获取练习题'
+      } else {
+        errorMsg = error.response.data?.message || errorMsg
+      }
+    } else if (error.request) {
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
+    questions.value = []
+    userAnswers.value = []
   } finally {
     loading.value = false
   }
