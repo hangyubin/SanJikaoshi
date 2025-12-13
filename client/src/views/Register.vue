@@ -81,26 +81,7 @@
             ></el-input>
           </el-form-item>
           
-          <!-- 姓名字段改为可选，可在个人中心完善 -->
-          <el-form-item label="姓名" prop="realName">
-            <el-input
-              v-model="registerForm.realName"
-              placeholder="请输入姓名（可选，可在个人中心完善）"
-              prefix-icon="UserFilled"
-              size="large"
-              class="custom-input"
-            ></el-input>
-          </el-form-item>
-          
-          <el-form-item label="手机号" prop="phone">
-            <el-input
-              v-model="registerForm.phone"
-              placeholder="请输入手机号（可选）"
-              prefix-icon="Phone"
-              size="large"
-              class="custom-input"
-            ></el-input>
-          </el-form-item>
+
           
           <el-form-item label="验证码" prop="code">
             <div class="captcha-container">
@@ -179,8 +160,6 @@ const registerForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  realName: '',
-  phone: '',
   code: ''
 })
 
@@ -202,14 +181,6 @@ const registerRules = reactive<FormRules>({
           callback()
         }
       }, trigger: 'blur' }
-  ],
-  realName: [
-    { required: false, message: '请输入姓名', trigger: 'blur' },
-    { pattern: /^[\u4e00-\u9fa5]+$/, message: '请输入有效的中文姓名，不能包含空格或特殊字符', trigger: 'blur' }
-  ],
-  phone: [
-    { required: false, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
   ],
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },

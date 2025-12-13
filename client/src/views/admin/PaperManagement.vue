@@ -181,6 +181,12 @@
         </el-form-item>
         
         <el-form-item>
+          <el-select v-model="templateType" placeholder="选择题型模板" style="margin-right: 10px;">
+            <el-option label="全部题型模板" value="all"></el-option>
+            <el-option label="单选题模板" value="single"></el-option>
+            <el-option label="多选题模板" value="multiple"></el-option>
+            <el-option label="是非题模板" value="truefalse"></el-option>
+          </el-select>
           <el-button type="info" @click="handleDownloadTemplate">下载模板</el-button>
           <span class="template-desc">下载模板，按照模板格式填写题目后导入</span>
         </el-form-item>
@@ -333,6 +339,9 @@ const importForm = reactive({
   file: null as File | null
 })
 
+// 模板类型选择
+const templateType = ref('all')
+
 // 导入预览数据
 const previewData = ref<any[]>([])
 // 导入错误信息
@@ -350,10 +359,9 @@ const fetchPapers = async () => {
       pageSize: pageSize.value,
       type: searchForm.type
     }
-    // 修复API地址，去掉/api前缀
     const response = await axios.get('/questions', { params })
-    // 适应后端返回的格式
-    const responseData = response as any
+    // 适应后端返回的格式，正确获取response.data
+    const responseData = response.data as any
     if (responseData.records) {
       // 如果是分页格式
       papers.value = responseData.records
@@ -440,10 +448,22 @@ const handleSubmit = async () => {
     
     ElMessage.success(form.id ? '更新题目成功' : '增加题目成功')
     dialogVisible.value = false
-    fetchPapers() // 重新加载题目列表
-  } catch (error) {
-    console.error('表单验证失败:', error)
-    ElMessage.error('操作失败，请检查表单')
+    
+    // 重新加载题目列表，确保新增/修改的题目能立即显示
+    currentPage.value = 1 // 重置到第一页，确保能看到新增的题目
+    await fetchPapers() // 等待重新加载完成
+  } catch (error: any) {
+    console.error('提交题目失败:', error)
+    // 更详细的错误处理
+    let errorMsg = form.id ? '更新题目失败' : '增加题目失败'
+    if (error.response) {
+      errorMsg = error.response.data?.message || errorMsg
+    } else if (error.request) {
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
   }
 }
 
@@ -472,7 +492,14 @@ const handleImportClick = () => {
 // 下载题库模板
 const handleDownloadTemplate = async () => {
   try {
-    const response = await axios.get('/questions/import/template', {
+    // 根据模板类型构建不同的URL
+    let templateUrl = '/questions/import/template'
+    // 根据模板类型添加查询参数
+    if (templateType.value !== 'all') {
+      templateUrl += `?type=${templateType.value}`
+    }
+    
+    const response = await axios.get(templateUrl, {
       responseType: 'blob'
     })
     
@@ -480,16 +507,48 @@ const handleDownloadTemplate = async () => {
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', '题目导入模板.xlsx')
+    
+    // 根据模板类型设置不同的文件名
+    let fileName = '题目导入模板.xlsx'
+    switch (templateType.value) {
+      case 'single':
+        fileName = '单选题导入模板.xlsx'
+        break
+      case 'multiple':
+        fileName = '多选题导入模板.xlsx'
+        break
+      case 'truefalse':
+        fileName = '是非题导入模板.xlsx'
+        break
+      default:
+        fileName = '题目导入模板.xlsx'
+    }
+    
+    link.setAttribute('download', fileName)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
     
     ElMessage.success('题目模板下载成功')
-  } catch (error) {
+  } catch (error: any) {
     console.error('下载题目模板失败:', error)
-    ElMessage.error('下载题目模板失败')
+    // 更详细的错误信息
+    let errorMsg = '下载题目模板失败'
+    if (error.response) {
+      if (error.response.status === 404) {
+        errorMsg = '模板文件不存在'
+      } else if (error.response.status === 500) {
+        errorMsg = '服务器内部错误，无法生成模板'
+      } else {
+        errorMsg = error.response.data?.message || errorMsg
+      }
+    } else if (error.request) {
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
   }
 }
 

@@ -63,7 +63,17 @@
           </el-card>
         </el-col>
         
-
+        <el-col :span="12">
+          <el-card class="nav-item" @click="navigateTo('department-management')">
+            <div class="nav-content">
+              <el-icon class="nav-icon"><OfficeBuilding /></el-icon>
+              <div class="nav-info">
+                <h4>科室管理</h4>
+                <p>设置和管理科室信息</p>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
       </el-row>
     </el-card>
   </div>
@@ -72,7 +82,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Avatar, Setting } from '@element-plus/icons-vue'
+import { User, Avatar, Setting, OfficeBuilding } from '@element-plus/icons-vue'
 
 const router = useRouter()
 

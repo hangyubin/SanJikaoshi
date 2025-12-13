@@ -64,7 +64,7 @@
             </el-form-item>
             
             <el-form-item label="参与科室" prop="departmentIds">
-              <el-select v-model="taskForm.departmentIds" placeholder="请选择参与科室" multiple filterable @change="handleDepartmentChange">
+              <el-select v-model="taskForm.departmentIds" placeholder="请选择参与科室" multiple filterable>
                 <el-option 
                   v-for="dept in departments" 
                   :key="dept.id" 
@@ -73,16 +73,7 @@
               </el-select>
             </el-form-item>
             
-            <el-form-item label="参与人员" prop="participantIds">
-              <el-select v-model="taskForm.participantIds" placeholder="请选择参与人员" multiple filterable>
-                <el-option 
-                  v-for="participant in participants" 
-                  :key="participant.id" 
-                  :label="participant.department" 
-                  :value="participant.id"></el-option>
-              </el-select>
-              <div class="form-tip">显示格式：科室，不显示姓名和人员ID</div>
-            </el-form-item>
+
             
             <el-form-item label="状态" prop="status">
               <el-select v-model="taskForm.status" placeholder="请选择状态">
@@ -206,7 +197,6 @@ const taskForm = reactive({
   endTime: '',
   lateAllowedTime: 0, // 开考后允许进入的时间（分钟）
   departmentIds: [], // 参与科室ID列表
-  participantIds: [], // 参与人员ID列表
   status: 0,
   description: '',
   instructions: ''
@@ -214,11 +204,6 @@ const taskForm = reactive({
 
 // 科室列表
 const departments = ref<any[]>([])
-
-// 人员列表
-const participants = ref<any[]>([])
-
-
 
 // 题库列表
 const papers = ref<any[]>([])
@@ -269,9 +254,6 @@ const taskRules = reactive<FormRules>({
   departmentIds: [
     { required: true, message: '请选择参与科室', trigger: 'change' }
   ],
-  participantIds: [
-    { required: true, message: '请选择参与人员', trigger: 'change' }
-  ],
   status: [
     { required: true, message: '请选择状态', trigger: 'change' }
   ]
@@ -319,26 +301,7 @@ const fetchDepartments = async () => {
   }
 }
 
-// 获取参与人员列表
-const fetchParticipants = async () => {
-  try {
-    const params = {
-      departmentIds: taskForm.departmentIds.length > 0 ? taskForm.departmentIds : undefined
-    }
-    const res = await axios.get('/users/participants', { params })
-    participants.value = res.data || []
-  } catch (error) {
-    console.error('获取参与人员列表失败:', error)
-    ElMessage.error('获取参与人员列表失败')
-  }
-}
 
-// 科室选择变化时，重新获取人员列表
-const handleDepartmentChange = () => {
-  fetchParticipants()
-  // 清空已选择的人员，避免无效选择
-  taskForm.participantIds = []
-}
 
 // 提交表单
 const handleSubmit = async () => {
@@ -388,7 +351,6 @@ onMounted(() => {
   fetchSubjects()
   fetchPapers()
   fetchDepartments()
-  fetchParticipants()
 })
 </script>
 

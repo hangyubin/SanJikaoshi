@@ -476,6 +476,13 @@ onMounted(() => {
   fetchUserInfo()
   fetchLatestResources()
   console.log('Dashboard mounted')
+  
+  // 添加storage事件监听，当localStorage中的userInfo变化时更新显示
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'userInfo' || !e.key) {
+      fetchUserInfo()
+    }
+  })
 })
 </script>
 
@@ -548,12 +555,10 @@ onMounted(() => {
   font-size: 16px;
   animation: fadeInUp 0.6s ease 0.4s both;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  margin-right: 10px;
 }
 
 .user-info-tags {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
 }

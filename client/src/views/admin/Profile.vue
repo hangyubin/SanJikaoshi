@@ -47,7 +47,14 @@
               
               <el-col :span="12">
                 <el-form-item label="科室" prop="department">
-                  <el-input v-model="userForm.department" placeholder="请输入科室"></el-input>
+                  <el-select v-model="userForm.department" placeholder="请选择科室">
+                    <el-option
+                      v-for="dept in departments"
+                      :key="dept.id"
+                      :label="dept.name"
+                      :value="dept.name"
+                    ></el-option>
+                  </el-select>
                 </el-form-item>
                 
                 <el-form-item label="职称" prop="jobTitle">
@@ -177,6 +184,9 @@ const userForm = reactive({
   jobTitle: ''
 })
 
+// 科室列表
+const departments = ref<any[]>([])
+
 // 用户角色
 const userRole = ref<string>('')
 
@@ -261,6 +271,19 @@ const fetchUserInfo = async () => {
     userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
     userRole.value = 'ROLE_ADMIN'
     selectedSystemAvatar.value = userForm.avatar
+  }
+}
+
+// 获取科室列表
+const fetchDepartments = async () => {
+  try {
+    // 调用后端API获取科室列表
+    const response = await axios.get('/departments')
+    departments.value = response.data || []
+  } catch (error) {
+    console.error('获取科室列表失败:', error)
+    // 如果API调用失败，使用空数组
+    departments.value = []
   }
 }
 
@@ -360,8 +383,9 @@ const confirmAvatarChange = async () => {
 }
 
 // 初始化
-onMounted(() => {
-  fetchUserInfo()
+onMounted(async () => {
+  await fetchUserInfo()
+  await fetchDepartments()
 })
 </script>
 
