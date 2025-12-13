@@ -58,6 +58,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/admin/UserManagement.vue')
       },
       {        path: 'student-list',        name: 'StudentList',        component: () => import('../views/admin/StudentList.vue')      },
+      {        path: 'department-management',        name: 'DepartmentManagement',        component: () => import('../views/admin/DepartmentManagement.vue')      },
 
       {        path: 'paper-management',        name: 'PaperManagement',        component: () => import('../views/admin/PaperManagement.vue')      },
 

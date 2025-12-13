@@ -281,31 +281,45 @@ const handleDelete = (row: any) => {
 }
 
 // 处理提交
-const handleSubmit = () => {
-  formRef.value?.validate((valid: boolean) => {
-    if (valid) {
-      loading.value = true
-      let request
-      if (dialogType.value === 'add') {
-        request = axios.post('/departments', form)
-      } else {
-        request = axios.put(`/departments/${form.id}`, form)
-      }
-      
-      request.then(() => {
-          ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
-          dialogVisible.value = false
-          initData()
-        })
-      .catch(error => {
-        console.error(dialogType.value === 'add' ? '新增科室失败:' : '编辑科室失败:', error)
-        ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
-      })
-      .finally(() => {
-        loading.value = false
-      })
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    loading.value = true
+    
+    let response
+    if (dialogType.value === 'add') {
+      response = await axios.post('/departments', form)
+    } else {
+      response = await axios.put(`/departments/${form.id}`, form)
     }
-  })
+    
+    // 检查响应数据
+    if (response.data) {
+      ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
+      dialogVisible.value = false
+      initData() // 刷新列表
+    } else {
+      ElMessage.error(dialogType.value === 'add' ? '新增失败，服务器返回无效数据' : '编辑失败，服务器返回无效数据')
+    }
+  } catch (error: any) {
+    console.error(dialogType.value === 'add' ? '新增科室失败:' : '编辑科室失败:', error)
+    
+    // 处理不同类型的错误
+    if (error.response) {
+      // 服务器返回了错误响应
+      ElMessage.error(error.response.data?.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
+    } else if (error.request) {
+      // 请求已发送但没有收到响应
+      ElMessage.error('服务器无响应，请稍后重试')
+    } else {
+      // 请求配置出错
+      ElMessage.error(error.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
+    }
+  } finally {
+    loading.value = false
+  }
 }
 
 // 处理分页大小变化
