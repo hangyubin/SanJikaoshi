@@ -325,15 +325,10 @@ const handleSubmit = async () => {
       const originalUserRes = await axios.get(`/users/${form.id}`)
       const originalUser = originalUserRes.data
       
-      // 1. 直接更新用户信息，包括角色变更
+      // 直接更新用户信息，包括角色变更
       await axios.put(`/users/${form.id}`, {
         ...form
       })
-      
-      // 2. 如果角色从普通用户变为管理员，调用升级API
-      if (originalUser.role === 'user' && form.role === 'admin') {
-        await axios.put(`/users/promote/${form.id}`)
-      }
       
       // 2. 如果角色从普通用户变为管理员，弹出权限分配对话框
       if (originalUser.role === 'user' && form.role === 'admin') {

@@ -4,15 +4,7 @@ import { ElMessage } from 'element-plus'
 // 创建axios实例
 const service = axios.create({
   baseURL: '/api',
-  timeout: 15000,
-  // 确保请求体正确转换为JSON格式
-  transformRequest: [function (data, _headers) {
-    // 确保请求体是JSON格式
-    if (data && typeof data === 'object') {
-      return JSON.stringify(data)
-    }
-    return data
-  }]
+  timeout: 15000
 })
 
 // 请求拦截器
@@ -24,9 +16,11 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // 设置默认Content-Type
-    if (!config.headers['Content-Type']) {
-      config.headers['Content-Type'] = 'application/json'
+    // 对于POST、PUT、PATCH请求，确保设置了正确的Content-Type
+    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json'
+      }
     }
     
     // 添加请求日志
