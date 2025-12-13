@@ -95,7 +95,12 @@
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
         <el-form-item label="科室名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入科室名称" />
+          <el-input 
+            v-model="form.name" 
+            placeholder="请输入科室名称" 
+            @keyup.enter="handleNameInput" 
+            @blur="handleNameInput"
+          />
         </el-form-item>
         
         <el-form-item label="科室编码" prop="code">
@@ -328,8 +333,13 @@ const generateDepartmentCode = (name: string): string => {
 
 // 监听科室名称变化，自动生成编码
 watch(() => form.name, (newName) => {
-  if (dialogType.value === 'add' && !form.code) {
-    form.code = generateDepartmentCode(newName)
+  if (dialogType.value === 'add') {
+    // 如果科室名称为空，清除编码
+    if (!newName || newName.trim() === '') {
+      form.code = ''
+    } else if (!form.code || form.code.trim() === '') {
+      form.code = generateDepartmentCode(newName)
+    }
   }
 }, { immediate: true })
 
@@ -344,6 +354,18 @@ const handleAdd = () => {
     status: 1
   })
   dialogVisible.value = true
+}
+
+// 处理科室名称输入事件（回车或失去焦点）
+const handleNameInput = () => {
+  if (dialogType.value === 'add') {
+    const name = form.name.trim()
+    if (name) {
+      form.code = generateDepartmentCode(name)
+    } else {
+      form.code = ''
+    }
+  }
 }
 
 // 处理编辑
@@ -386,17 +408,9 @@ const handleSubmit = async () => {
     
     let response
     if (dialogType.value === 'add') {
-      response = await axios.post('/departments', form, {
-        headers: {
-          'Content-Type': 'application/json;charset=UTF-8'
-        }
-      })
+      response = await axios.post('/departments', form)
     } else {
-      response = await axios.put(`/departments/${form.id}`, form, {
-        headers: {
-          'Content-Type': 'application/json;charset=UTF-8'
-        }
-      })
+      response = await axios.put(`/departments/${form.id}`, form)
     }
     
     // 检查响应数据
