@@ -42,7 +42,7 @@
         <el-table-column prop="createTime" label="创建时间" width="180" :formatter="formatDate"></el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(scope.row)">修改</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -414,18 +414,26 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-// 编辑题目
+// 修改题目
 const handleEdit = async (row: any) => {
-  dialogTitle.value = '编辑题库'
+  dialogTitle.value = '修改题库'
   try {
     // 单独请求获取完整的题目信息
     const response = await axios.get(`/questions/${row.id}`)
     const fullQuestion = response.data
     
+    // 确保fullQuestion是对象格式
+    if (typeof fullQuestion !== 'object' || fullQuestion === null) {
+      ElMessage.error('获取到的题目数据无效，无法编辑')
+      return
+    }
+    
+    console.log('完整题目数据:', fullQuestion)
+    
     // 填充表单，确保所有选项都有默认值
     Object.assign(form, {
-      id: fullQuestion.id,
-      type: fullQuestion.type,
+      id: fullQuestion.id || '',
+      type: fullQuestion.type || 1,
       title: fullQuestion.title || '',
       optionA: fullQuestion.optionA || '',
       optionB: fullQuestion.optionB || '',
@@ -433,13 +441,27 @@ const handleEdit = async (row: any) => {
       optionD: fullQuestion.optionD || '',
       optionE: fullQuestion.optionE || '',
       optionF: fullQuestion.optionF || '',
-      correctAnswer: fullQuestion.type === 2 && typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer.split(',') : fullQuestion.correctAnswer || '',
+      correctAnswer: fullQuestion.type === 2 && typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer.split(',') : 
+                    (Array.isArray(fullQuestion.correctAnswer) ? fullQuestion.correctAnswer : 
+                    (typeof fullQuestion.correctAnswer === 'string' ? fullQuestion.correctAnswer : '')),
       analysis: fullQuestion.analysis || ''
     })
+    
+    console.log('表单数据:', form)
+    
     dialogVisible.value = true
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取题目详情失败:', error)
-    ElMessage.error('获取题目详情失败，无法编辑')
+    // 提供更详细的错误信息
+    let errorMsg = '获取题目详情失败，无法编辑'
+    if (error.response) {
+      errorMsg = error.response.data?.message || errorMsg
+    } else if (error.request) {
+      errorMsg = '服务器无响应，请稍后重试'
+    } else {
+      errorMsg = error.message || errorMsg
+    }
+    ElMessage.error(errorMsg)
   }
 }
 
