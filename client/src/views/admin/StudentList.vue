@@ -198,7 +198,7 @@ const fetchUsers = () => {
 }
 
 // 格式化日期
-const formatDate = (row: any, column: any, cellValue: any) => {
+const formatDate = (_row: any, _column: any, cellValue: any) => {
   if (!cellValue) return ''
   const date = new Date(cellValue)
   return date.toLocaleString('zh-CN')

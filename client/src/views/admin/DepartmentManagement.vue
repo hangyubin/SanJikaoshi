@@ -308,11 +308,16 @@ const generateDepartmentCode = (name: string): string => {
       // 查找剩余名称中的其他关键词
       for (const subKey of sortedKeys) {
         if (remainingName.includes(subKey) && subKey !== key) {
-          return (matchedValue + pinyinMap[subKey]).toUpperCase()
+          const subValue = pinyinMap[subKey]
+          if (matchedValue && subValue) {
+            return (matchedValue + subValue).toUpperCase()
+          }
         }
       }
       
-      return matchedValue.toUpperCase()
+      if (matchedValue) {
+        return matchedValue.toUpperCase()
+      }
     }
   }
   

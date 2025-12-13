@@ -53,7 +53,7 @@
           
           <!-- 题干 -->
           <div class="question-title">
-            {{ currentQuestion.title }}
+            {{ currentQuestion.content }}
           </div>
           
           <!-- 选项 -->
@@ -213,52 +213,100 @@ const currentOptions = computed(() => {
   const options: Record<string, string> = {}
   const question = currentQuestion.value
   
-  // 解析options字符串为选项对象
-  // 适配不同的选项格式
+  console.log('当前题目数据:', question)
+  
+  // 适配多种选项格式
   if (question.options) {
     try {
-      // 尝试解析JSON格式的选项
+      // 尝试解析JSON格式
       const parsedOptions = JSON.parse(question.options)
+      
       if (typeof parsedOptions === 'object') {
-        // 如果是对象格式，直接使用
-        Object.entries(parsedOptions).forEach(([key, value]) => {
-          if (typeof value === 'string') {
-            options[key] = value
-          }
-        })
+        // 处理对象格式的选项
+        if (Array.isArray(parsedOptions)) {
+          // 如果是数组格式，如["选项1", "选项2"]
+          parsedOptions.forEach((option, index) => {
+            if (typeof option === 'string' && option.trim()) {
+              const key = String.fromCharCode(65 + index)
+              options[key] = option.trim()
+            }
+          })
+        } else {
+          // 如果是对象格式，如{A: "选项1", B: "选项2"}
+          Object.entries(parsedOptions).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+              options[key.toUpperCase()] = value
+            }
+          })
+        }
       } else if (typeof parsedOptions === 'string') {
-        // 如果是字符串，尝试按分隔符分割
-        const optionArray = parsedOptions.split(';')
-        optionArray.forEach((option, index) => {
-          if (option.trim()) {
-            const key = String.fromCharCode(65 + index)
-            options[key] = option.trim()
-          }
-        })
+        // 处理字符串格式
+        processStringOptions(parsedOptions, options)
       }
     } catch (e) {
-      // 不是JSON格式，尝试按分隔符分割
-      const optionArray = question.options.split(';')
-      optionArray.forEach((option: string, index: number) => {
-        if (option.trim()) {
-          const key = String.fromCharCode(65 + index)
-          options[key] = option.trim()
-        }
-      })
+      console.error('JSON解析失败，尝试字符串处理:', e)
+      // 直接处理字符串格式
+      processStringOptions(question.options, options)
     }
-  } else if (question.optionA) {
+  } 
+  
+  // 处理独立选项字段
+  if (!Object.keys(options).length) {
     // 兼容旧格式：optionA、optionB等
     for (let i = 0; i < 6; i++) {
       const key = String.fromCharCode(65 + i)
-      const optionValue = question[`option${key}`]
-      if (optionValue) {
-        options[key] = optionValue
+      const optionKey = `option${key}`
+      const optionValue = question[optionKey]
+      if (optionValue && typeof optionValue === 'string' && optionValue.trim()) {
+        options[key] = optionValue.trim()
       }
     }
   }
   
+  // 处理直接的选项字段（如A、B、C、D）
+  if (!Object.keys(options).length) {
+    for (let i = 0; i < 6; i++) {
+      const key = String.fromCharCode(65 + i)
+      const optionValue = question[key]
+      if (optionValue && typeof optionValue === 'string' && optionValue.trim()) {
+        options[key] = optionValue.trim()
+      }
+    }
+  }
+  
+  console.log('解析后的选项:', options)
   return options
 })
+
+// 处理字符串格式的选项
+const processStringOptions = (optionsString: string, optionsObj: Record<string, string>) => {
+  // 支持多种分隔符：; 、\n 、\r\n 、| 等
+  const separators = [';', '、', '\n', '\r\n', '|']
+  let bestSeparator = ';'
+  let maxParts = 1
+  
+  // 找到最佳分隔符
+  separators.forEach(sep => {
+    const parts = optionsString.split(sep)
+    if (parts.length > maxParts) {
+      maxParts = parts.length
+      bestSeparator = sep
+    }
+  })
+  
+  // 使用最佳分隔符分割
+  const optionArray = optionsString.split(bestSeparator)
+  
+  optionArray.forEach((option, index) => {
+    if (typeof option === 'string') {
+      const trimmedOption = option.trim()
+      if (trimmedOption) {
+        const key = String.fromCharCode(65 + index)
+        optionsObj[key] = trimmedOption
+      }
+    }
+  })
+}
 
 // 获取正确答案
 const correctOptions = computed(() => {
@@ -294,11 +342,11 @@ const correctCount = computed(() => {
     if (Array.isArray(correctAnswer)) {
       correct = correctAnswer
     } else if (typeof correctAnswer === 'string') {
-      correct = question.type === 2 ? correctAnswer.split(',') : [correctAnswer]
+      correct = questionType === 2 ? correctAnswer.split(',') : [correctAnswer]
     }
     
     const userAnswer = userAnswers.value[i]
-    if (question.type === 2) {
+    if (questionType === 2) {
       // 多选题，需要全部答对才算正确
       const userAnswersArray = typeof userAnswer === 'string' ? userAnswer.split(',') : []
       if (correct.length === userAnswersArray.length && correct.every(val => userAnswersArray.includes(val))) {
@@ -351,6 +399,9 @@ const fetchPracticeQuestions = async () => {
     })
     // 处理API返回的数据
     questions.value = response.data.records || []
+    
+    // 添加调试日志，检查题目数据结构
+    console.log('获取到的题目数据:', questions.value)
     
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
