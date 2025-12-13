@@ -174,7 +174,7 @@ const questionTypes = ref([
 ])
 
 // 题型分配比例
-const questionTypeDistribution = reactive({
+const questionTypeDistribution = reactive<Record<number, number>>({
   1: 40, // 单选题比例
   2: 40, // 多选题比例
   3: 20 // 是非题比例

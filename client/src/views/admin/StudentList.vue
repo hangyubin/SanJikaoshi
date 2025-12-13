@@ -161,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import axios from '@/utils/axios'
@@ -232,37 +232,9 @@ const permissionForm = reactive({
   permissions: [] as string[]
 })
 
-// 监听角色变化，当角色变为admin时，自动弹出权限分配对话框
-watch(
-  () => form.role,
-  (newRole, oldRole) => {
-    if (form.id && newRole === 'admin' && oldRole !== 'admin') {
-      // 当编辑用户并将角色改为管理员时，自动弹出权限分配对话框
-      showPermissionDialog()
-    }
-  }
-)
 
-// 显示权限分配对话框
-const showPermissionDialog = async () => {
-  if (!form.id) return
-  
-  try {
-    // 获取当前用户的详细信息
-    const res = await axios.get(`/users/${form.id}`)
-    permissionForm.role = res.data.role || 'user'
-  } catch (error) {
-    console.error('获取用户信息失败:', error)
-    permissionForm.role = form.role
-  }
-  
-  // 填充表单数据
-  permissionForm.id = form.id
-  permissionForm.username = form.username
-  permissionForm.permissions = [] // 重置权限
-  
-  permissionDialogVisible.value = true
-}
+
+
 
 const rules = reactive<FormRules>({
   username: [
@@ -347,51 +319,69 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
     
-    // 对于已有用户的角色变更，先处理权限
+    // 对于已有用户的角色变更
     if (form.id) {
       // 获取原始用户信息
       const originalUserRes = await axios.get(`/users/${form.id}`)
       const originalUser = originalUserRes.data
       
-      // 直接更新用户信息，包括角色变更
+      // 1. 直接更新用户信息，包括角色变更
       await axios.put(`/users/${form.id}`, {
         ...form
       })
       
-      // 如果角色从普通用户变为管理员，弹出权限分配对话框
+      // 2. 如果角色从普通用户变为管理员，弹出权限分配对话框
       if (originalUser.role === 'user' && form.role === 'admin') {
-        // 弹出权限分配对话框
-        await showPermissionDialog()
+        // 3. 先关闭用户编辑对话框
+        dialogVisible.value = false
+        
+        // 4. 重新获取最新的用户数据，确保角色已更新
+        const updatedUserRes = await axios.get(`/users/${form.id}`)
+        const updatedUser = updatedUserRes.data
+        
+        // 5. 更新权限表单数据，确保角色为admin
+        permissionForm.id = updatedUser.id
+        permissionForm.username = updatedUser.username
+        permissionForm.role = updatedUser.role // 确保角色是最新的admin
+        permissionForm.permissions = updatedUser.permissions || []
+        
+        // 6. 弹出权限分配对话框
+        permissionDialogVisible.value = true
+      } else {
+        // 7. 非管理员角色变更，直接关闭对话框
+        dialogVisible.value = false
       }
     } 
     // 新用户创建
     else {
-      // 提交用户信息
+      // 1. 提交用户信息
       const userRes = await axios.post('/users', form)
       const userId = userRes.data.id
       
-      // 如果是创建新的管理员用户，需要分配权限
+      // 2. 如果是创建新的管理员用户，需要分配权限
       if (form.role === 'admin') {
-        // 更新权限表单数据
-        permissionForm.id = userId
-        permissionForm.username = form.username
-        permissionForm.role = form.role
-        permissionForm.permissions = []
-        
-        // 先关闭用户编辑对话框
+        // 3. 先关闭用户编辑对话框
         dialogVisible.value = false
         
-        // 弹出权限分配对话框
+        // 4. 获取最新创建的用户数据
+        const updatedUserRes = await axios.get(`/users/${userId}`)
+        const updatedUser = updatedUserRes.data
+        
+        // 5. 更新权限表单数据
+        permissionForm.id = updatedUser.id
+        permissionForm.username = updatedUser.username
+        permissionForm.role = updatedUser.role // 确保角色是最新的admin
+        permissionForm.permissions = []
+        
+        // 6. 弹出权限分配对话框
         permissionDialogVisible.value = true
+      } else {
+        // 7. 非管理员新用户，直接关闭对话框
+        dialogVisible.value = false
       }
     }
     
     ElMessage.success(form.id ? '编辑用户成功' : '添加用户成功')
-    
-    // 关闭对话框（除了新创建管理员用户的情况，已经在上面处理）
-    if (!(form.role === 'admin' && !form.id)) {
-      dialogVisible.value = false
-    }
     
     fetchUsers() // 刷新用户列表
   } catch (error: any) {

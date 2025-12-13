@@ -345,7 +345,7 @@ const handleQuickAction = (action: any) => {
 }
 
 // 查看考试详情
-const viewExamDetail = (exam: any) => {
+const viewExamDetail = (_exam: any) => {
   router.push('/dashboard/exam-center')
 }
 

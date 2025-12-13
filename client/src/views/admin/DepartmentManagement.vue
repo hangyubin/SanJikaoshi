@@ -164,7 +164,7 @@ const departments = ref<any[]>([])
 
 // 表单数据
 const form = reactive({
-  id: '',
+  id: null,
   name: '',
   code: '',
   description: '',
@@ -241,7 +241,7 @@ const handleReset = () => {
 const handleAdd = () => {
   dialogType.value = 'add'
   Object.assign(form, {
-    id: '',
+    id: null,
     name: '',
     code: '',
     description: '',
