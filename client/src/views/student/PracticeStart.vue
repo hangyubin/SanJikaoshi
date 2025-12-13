@@ -239,7 +239,7 @@ const currentOptions = computed(() => {
     } catch (e) {
       // 不是JSON格式，尝试按分隔符分割
       const optionArray = question.options.split(';')
-      optionArray.forEach((option, index) => {
+      optionArray.forEach((option: string, index: number) => {
         if (option.trim()) {
           const key = String.fromCharCode(65 + index)
           options[key] = option.trim()

@@ -134,7 +134,7 @@
         <!-- 选择题选项，所有题型都显示 -->
         <el-form-item label="选项" prop="options">
           <div 
-            v-for="(option, key) in optionsObject" 
+            v-for="(_, key) in optionsObject" 
             :key="key" 
             class="option-item"
           >
@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '@/utils/axios'
 import { ElMessage } from 'element-plus'
