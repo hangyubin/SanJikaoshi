@@ -445,6 +445,16 @@ const handleTextFileImport = async (file: any) => {
 // Excel批量导入题目
 const handleBatchImport = async (file: any) => {
   try {
+    // 检查文件类型
+    const fileName = file.name;
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+      ElMessage.error('请上传 XLSX、XLS 或 CSV 格式的文件!');
+      return false;
+    }
+    
     const formData = new FormData()
     formData.append('file', file)
     
@@ -465,21 +475,35 @@ const handleBatchImport = async (file: any) => {
           }
         });
       } catch (e2) {
-        // 尝试最简化端点
-        res = await axios.post('/import', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
+        try {
+          // 尝试CSV专用端点
+          res = await axios.post('/questions/import/csv', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        } catch (e3) {
+          // 尝试最简化端点
+          res = await axios.post('/import', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        }
       }
     }
     
     const result = res.data;
-    ElMessage.success(`Excel批量导入完成：成功${result.success || result.length || 0}条`);
+    ElMessage.success(`${fileExtension === '.csv' ? 'CSV' : 'Excel'}批量导入完成：成功${result.success || result.length || 0}条`);
     fetchQuestions(); // 重新加载题目列表
-  } catch (error) {
-    console.error('Excel批量导入失败:', error);
-    ElMessage.error('Excel批量导入失败');
+  } catch (error: any) {
+    console.error('批量导入失败:', error);
+    // 检查错误信息，显示更友好的提示
+    if (error.response?.data?.message?.includes('XLSX、XLS')) {
+      ElMessage.error('后端仅支持 XLSX、XLS 格式的文件，请使用 Excel 文件导入!');
+    } else {
+      ElMessage.error('批量导入失败，请检查文件格式或后端接口');
+    }
   }
   return false; // 阻止自动上传
 }
