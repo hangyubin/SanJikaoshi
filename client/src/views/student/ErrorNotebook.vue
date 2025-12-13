@@ -61,19 +61,19 @@
         <div class="question-item" v-for="(question, index) in filteredQuestions" :key="question.id">
           <div class="question-header">
             <span class="question-type">{{ getQuestionType(question.type) }}</span>
-            <span class="question-subject">{{ question.subject }}</span>
-            <span class="question-date">{{ question.errorDate }}</span>
+            <span class="question-subject">{{ typeof question.subject === 'object' ? question.subject.name : question.subject || '默认科目' }}</span>
+            <span class="question-date">{{ question.errorDate || new Date().toLocaleString() }}</span>
           </div>
           <div class="question-content">
-            <p class="question-title">{{ index + 1 }}. {{ question.title }}</p>
-            <div class="question-options" v-if="question.type === 1">
-              <div v-for="(option, optIndex) in question.options" :key="optIndex">
-                <el-radio :label="optIndex + 1" disabled>
-                  {{ String.fromCharCode(65 + optIndex) }}. {{ option }}
+            <p class="question-title">{{ index + 1 }}. {{ question.content || question.title || '无题目内容' }}</p>
+            <div class="question-options" v-if="question.type === 1 || question.type === 2">
+              <div v-for="(option, key) in parseOptions(question.options)" :key="key">
+                <el-radio :label="key" disabled>
+                  {{ key }}. {{ option }}
                 </el-radio>
               </div>
             </div>
-            <div class="question-options" v-else-if="question.type === 2">
+            <div class="question-options" v-else-if="question.type === 3">
               <el-radio-group disabled>
                 <el-radio label="1">正确</el-radio>
                 <el-radio label="0">错误</el-radio>
@@ -83,11 +83,11 @@
           <div class="question-answer">
             <div class="answer-item">
               <label>正确答案：</label>
-              <span class="correct-answer">{{ question.answer }}</span>
+              <span class="correct-answer">{{ question.correctAnswer || question.answer || '未设置' }}</span>
             </div>
             <div class="answer-item">
               <label>你的答案：</label>
-              <span class="wrong-answer">{{ question.userAnswer }}</span>
+              <span class="wrong-answer">{{ question.userAnswer || '未作答' }}</span>
             </div>
             <div class="answer-item" v-if="question.analysis">
               <label>解析：</label>
@@ -174,30 +174,51 @@ const getQuestionType = (type: number) => {
   }
 }
 
-// 获取错题列表
-const fetchErrorQuestions = () => {
-  loading.value = true
-  // 从localStorage获取当前用户ID，这里假设用户信息存储在localStorage中
-  const userId = localStorage.getItem('userId') || '1' // 默认使用ID为1的用户
-  axios.get(`/practice/wrong-questions/${userId}`, {
-    params: {
-      subjectId: filterForm.value.subject,
-      type: filterForm.value.questionType
+// 解析选项
+const parseOptions = (options: string) => {
+  if (!options) return {};
+  try {
+    const parsed = JSON.parse(options);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return parsed;
     }
-  })
-  .then(res => {
-    errorQuestions.value = res.data || []
-    total.value = res.data.length || 0
-  })
-  .catch(error => {
+  } catch (e) {
+    // 解析失败，返回空对象
+  }
+  return {};
+}
+
+// 获取错题列表
+const fetchErrorQuestions = async () => {
+  loading.value = true
+  try {
+    // 使用更简洁的API端点，与PracticeStart.vue保持一致
+    const response = await axios.get('/practice/wrong-questions', {
+      params: {
+        subjectId: filterForm.value.subject,
+        type: filterForm.value.questionType
+      }
+    })
+    
+    // 处理不同的返回格式
+    if (response.data && response.data.records) {
+      errorQuestions.value = response.data.records
+      total.value = response.data.total || 0
+    } else if (Array.isArray(response.data)) {
+      errorQuestions.value = response.data
+      total.value = response.data.length || 0
+    } else {
+      errorQuestions.value = []
+      total.value = 0
+    }
+  } catch (error) {
     console.error('获取错题列表失败:', error)
     // 显示空数据，避免页面出错
     errorQuestions.value = []
     total.value = 0
-  })
-  .finally(() => {
+  } finally {
     loading.value = false
-  })
+  }
 }
 
 const filterQuestions = () => {

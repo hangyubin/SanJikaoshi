@@ -547,9 +547,52 @@ const submitPractice = async () => {
   try {
     loading.value = true
     
-    // 提交练习结果
-    // 注意：当前后端可能没有专门的练习结果提交端点，这里暂时注释掉API调用
-    // 直接显示结果
+    // 计算练习结果
+    const practiceResult = {
+      questions: questions.value.map((question, index) => ({
+        questionId: question.id,
+        userAnswer: userAnswers.value[index],
+        correctAnswer: question.answer,
+        isCorrect: userAnswers.value[index] === question.answer
+      })),
+      correctCount: correctCount.value,
+      totalCount: questionCount,
+      score: score.value,
+      totalScore: totalScore.value
+    }
+    
+    // 收集错题信息
+    const wrongQuestions = practiceResult.questions
+      .filter(item => !item.isCorrect)
+      .map(item => {
+        const originalQuestion = questions.value.find(q => q.id === item.questionId)
+        return {
+          questionId: item.questionId,
+          content: originalQuestion?.content || '',
+          options: originalQuestion?.options || '',
+          correctAnswer: item.correctAnswer,
+          userAnswer: item.userAnswer,
+          analysis: originalQuestion?.analysis || '',
+          type: originalQuestion?.type || 1,
+          subject: originalQuestion?.subject || { id: 1, name: '默认科目' }
+        }
+      })
+    
+    // 提交练习结果和错题信息
+    try {
+      // 尝试提交练习结果
+      await axios.post('/practice/result', practiceResult)
+      
+      // 如果有错题，提交到错题集
+      if (wrongQuestions.length > 0) {
+        await axios.post('/practice/wrong-questions', wrongQuestions)
+      }
+      
+      console.log('练习结果提交成功')
+    } catch (apiError) {
+      console.warn('提交练习结果到后端失败，可能后端未实现该功能:', apiError)
+      // 继续执行，不影响前端显示
+    }
     
     // 显示练习结果
     showResultDialog.value = true
