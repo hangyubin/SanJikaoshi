@@ -292,7 +292,7 @@ const rules = reactive<FormRules>({
     { required: true, message: '请输入题干', trigger: 'blur' }
   ],
   optionA: [
-    { required: true, message: '请输入选项A', trigger: 'blur', validator: (_rule, value, callback) => {
+    { message: '请输入选项A', trigger: 'blur', validator: (_rule, value, callback) => {
       // 只有单选题和多选题需要验证选项，是非题不需要
       if ((form.type === 1 || form.type === 2) && !value) {
         callback(new Error('请输入选项A'))
@@ -302,7 +302,7 @@ const rules = reactive<FormRules>({
     }}
   ],
   optionB: [
-    { required: true, message: '请输入选项B', trigger: 'blur', validator: (_rule, value, callback) => {
+    { message: '请输入选项B', trigger: 'blur', validator: (_rule, value, callback) => {
       if ((form.type === 1 || form.type === 2) && !value) {
         callback(new Error('请输入选项B'))
       } else {
@@ -311,7 +311,7 @@ const rules = reactive<FormRules>({
     }}
   ],
   optionC: [
-    { required: true, message: '请输入选项C', trigger: 'blur', validator: (_rule, value, callback) => {
+    { message: '请输入选项C', trigger: 'blur', validator: (_rule, value, callback) => {
       if ((form.type === 1 || form.type === 2) && !value) {
         callback(new Error('请输入选项C'))
       } else {
@@ -320,7 +320,7 @@ const rules = reactive<FormRules>({
     }}
   ],
   optionD: [
-    { required: true, message: '请输入选项D', trigger: 'blur', validator: (_rule, value, callback) => {
+    { message: '请输入选项D', trigger: 'blur', validator: (_rule, value, callback) => {
       if ((form.type === 1 || form.type === 2) && !value) {
         callback(new Error('请输入选项D'))
       } else {
