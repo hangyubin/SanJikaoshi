@@ -38,6 +38,17 @@ public class Task {
     
     // 考试说明
     private String instructions;
+    
+    // 与ExamPaper实体的关联
+    @ManyToOne
+    @JoinColumn(name = "paper_id")
+    private ExamPaper examPaper;
+    
+    // 题型分配比例
+    private String questionTypeDistribution;
+    
+    // 试卷总题数
+    private Integer totalQuestions;
 }
 
 

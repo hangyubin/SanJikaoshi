@@ -471,7 +471,7 @@ const fetchPapers = async () => {
     
     allQuestions.forEach(question => {
       const type = question.type
-      if (count[type] !== undefined) {
+      if (count[type] !== undefined && todayCount[type] !== undefined) {
         count[type]++
         
         // 检查是否是今日新增

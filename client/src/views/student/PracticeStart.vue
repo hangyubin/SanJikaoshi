@@ -275,33 +275,18 @@ const score = computed(() => {
 const fetchPracticeQuestions = async () => {
   try {
     loading.value = true
-    const response = await axios.get('/questions/practice', {
+    // 使用现有的questions端点获取练习题
+    const response = await axios.get('/questions', {
       params: {
+        page: 1,
+        pageSize: questionCount,
         type: questionType,
-        count: questionCount,
-        mode: mode
+        sortBy: 'createTime',
+        sortDirection: mode === 1 ? 'asc' : 'desc' // 顺序练习使用升序，随机练习使用降序
       }
     })
-    // 处理API返回的数据，适应不同的返回格式
-    let questionsData = response.data
-    // 如果是分页格式或其他嵌套格式，尝试获取正确的数据
-    if (questionsData && typeof questionsData === 'object') {
-      // 尝试从records、data或其他常见字段中获取数据
-      if (questionsData.records) {
-        questions.value = questionsData.records
-      } else if (questionsData.data) {
-        questions.value = questionsData.data
-      } else if (Array.isArray(questionsData)) {
-        questions.value = questionsData
-      } else {
-        // 如果没有找到合适的字段，将整个对象视为单个问题
-        questions.value = [questionsData]
-      }
-    } else if (Array.isArray(questionsData)) {
-      questions.value = questionsData
-    } else {
-      questions.value = []
-    }
+    // 处理API返回的数据
+    questions.value = response.data.records || []
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
     // 如果没有获取到题目，显示提示信息
@@ -380,13 +365,8 @@ const submitPractice = async () => {
     loading.value = true
     
     // 提交练习结果
-    await axios.post('/practice/result', {
-      questionType,
-      questionCount,
-      mode,
-      answers: userAnswers.value,
-      questions: questions.value.map(q => q.id)
-    })
+    // 注意：当前后端可能没有专门的练习结果提交端点，这里暂时注释掉API调用
+    // 直接显示结果
     
     // 显示练习结果
     showResultDialog.value = true

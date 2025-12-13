@@ -16,10 +16,21 @@
         <el-table-column prop="duration" label="时长(分钟)" width="100"></el-table-column>
         <el-table-column prop="startTime" label="开始时间" width="180"></el-table-column>
         <el-table-column prop="endTime" label="结束时间" width="180"></el-table-column>
+        <el-table-column label="倒计时" width="150">
+          <template #default="scope">
+            <div v-if="getTimeLeft(scope.row) > 0" class="countdown">
+              <span v-if="getTimeLeft(scope.row) > 3600" class="countdown-part">{{ Math.floor(getTimeLeft(scope.row) / 3600) }}小时</span>
+              <span class="countdown-part">{{ Math.floor((getTimeLeft(scope.row) % 3600) / 60) }}分钟</span>
+              <span class="countdown-part">{{ getTimeLeft(scope.row) % 60 }}秒</span>
+            </div>
+            <span v-else-if="getTimeLeft(scope.row) === 0" class="countdown-started">考试开始</span>
+            <span v-else class="countdown-ended">考试结束</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.status === '进行中' ? 'success' : scope.row.status === '未开始' ? 'info' : 'danger'">
-              {{ scope.row.status }}
+            <el-tag :type="getExamStatus(scope.row) === '进行中' ? 'success' : getExamStatus(scope.row) === '未开始' ? 'info' : 'danger'">
+              {{ getExamStatus(scope.row) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -29,7 +40,7 @@
               type="primary" 
               size="small" 
               @click="joinExam(scope.row)"
-              :disabled="scope.row.status !== '进行中'"
+              :disabled="getTimeLeft(scope.row) > 0"
             >
               参加考试
             </el-button>
@@ -84,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 
@@ -97,6 +108,9 @@ const examList = ref<any[]>([])
 const finishedExams = ref<any[]>([])
 
 const loading = ref(false)
+
+// 定时器
+let countdownTimer: number | null = null
 
 // 获取可参加的考试列表
 const fetchAvailableExams = () => {
@@ -136,6 +150,36 @@ const fetchFinishedExams = () => {
     })
 }
 
+// 获取考试剩余时间（秒）
+const getTimeLeft = (exam: any) => {
+  const now = new Date().getTime()
+  const startTime = new Date(exam.startTime).getTime()
+  const endTime = new Date(exam.endTime).getTime()
+  
+  if (now < startTime) {
+    // 考试未开始，返回距离开始的秒数
+    return Math.ceil((startTime - now) / 1000)
+  } else if (now <= endTime) {
+    // 考试进行中，返回0表示可以参加
+    return 0
+  } else {
+    // 考试已结束，返回负数
+    return -1
+  }
+}
+
+// 获取考试状态
+const getExamStatus = (exam: any) => {
+  const timeLeft = getTimeLeft(exam)
+  if (timeLeft > 0) {
+    return '未开始'
+  } else if (timeLeft === 0) {
+    return '进行中'
+  } else {
+    return '已结束'
+  }
+}
+
 const joinExam = (exam: any) => {
   // 参加考试逻辑
   console.log('参加考试', exam)
@@ -152,9 +196,25 @@ const viewErrorNotebook = () => {
   router.push('/dashboard/error-notebook')
 }
 
+// 更新倒计时
+const updateCountdown = () => {
+  // 触发视图更新
+  examList.value = [...examList.value]
+}
+
 onMounted(() => {
   fetchAvailableExams()
   fetchFinishedExams()
+  
+  // 设置定时器，每秒更新一次倒计时
+  countdownTimer = window.setInterval(updateCountdown, 1000)
+})
+
+onUnmounted(() => {
+  // 清除定时器
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
 })
 </script>
 
@@ -173,6 +233,41 @@ onMounted(() => {
   margin: 0;
   font-size: 18px;
   font-weight: bold;
+}
+
+/* 倒计时样式 */
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: #667eea;
+  background-color: #ecf5ff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #c6e2ff;
+}
+
+.countdown-part {
+  display: inline-block;
+}
+
+.countdown-started {
+  color: #67c23a;
+  font-weight: 600;
+  background-color: #f0f9eb;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #e1f3d8;
+}
+
+.countdown-ended {
+  color: #f56c6c;
+  font-weight: 600;
+  background-color: #fef0f0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #fbc4c4;
 }
 </style>
 

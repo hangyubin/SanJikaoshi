@@ -1,15 +1,17 @@
 package com.smartexam.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartexam.backend.entity.ExamPaper;
+import com.smartexam.backend.entity.Question;
 import com.smartexam.backend.entity.Task;
+import com.smartexam.backend.repository.ExamPaperRepository;
 import com.smartexam.backend.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -17,6 +19,12 @@ public class TaskController {
 
     @Autowired
     private TaskRepository taskRepository;
+    
+    @Autowired
+    private ExamPaperRepository examPaperRepository;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // 获取所有任务
     @GetMapping
@@ -145,31 +153,153 @@ public class TaskController {
 
     // 创建任务
     @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody Task task) {
+    public ResponseEntity<?> createTask(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
         try {
-            // 设置默认值
-            if (task.getCreateTime() == null) {
-                task.setCreateTime(System.currentTimeMillis());
-            }
-            if (task.getUpdateTime() == null) {
-                task.setUpdateTime(System.currentTimeMillis());
-            }
-            if (task.getStatus() == null) {
-                task.setStatus(1); // 默认待处理
-            }
-            if (task.getType() == null) {
-                task.setType(1); // 默认普通任务
+            // 创建任务对象
+            Task task = new Task();
+            
+            // 设置基本信息
+            task.setTitle((String) request.get("name"));
+            task.setContent((String) request.get("description"));
+            task.setType((Integer) request.get("type"));
+            task.setStartTime((Long) request.get("startTime"));
+            task.setEndTime((Long) request.get("endTime"));
+            task.setDuration((Integer) request.get("duration"));
+            task.setInstructions((String) request.get("instructions"));
+            task.setStatus(1); // 默认待处理
+            task.setCreateTime(System.currentTimeMillis());
+            task.setUpdateTime(System.currentTimeMillis());
+            
+            // 获取试卷ID和题型分配比例
+            Long paperId = ((Number) request.get("paperId")).longValue();
+            Map<String, Integer> questionTypeDistribution = (Map<String, Integer>) request.get("questionTypeDistribution");
+            Integer totalQuestions = (Integer) request.get("totalQuestions");
+            if (totalQuestions == null) {
+                totalQuestions = 50; // 默认50题
             }
             
+            // 保存题型分配比例到任务
+            task.setQuestionTypeDistribution(objectMapper.writeValueAsString(questionTypeDistribution));
+            task.setTotalQuestions(totalQuestions);
+            
+            // 获取模板试卷
+            Optional<ExamPaper> optionalPaper = examPaperRepository.findById(paperId);
+            if (!optionalPaper.isPresent()) {
+                response.put("code", 404);
+                response.put("message", "题库不存在");
+                return ResponseEntity.ok(response);
+            }
+            ExamPaper templatePaper = optionalPaper.get();
+            
+            // 创建新试卷
+            ExamPaper generatedPaper = new ExamPaper();
+            generatedPaper.setName(templatePaper.getName() + "_" + task.getTitle());
+            generatedPaper.setDescription(templatePaper.getDescription());
+            generatedPaper.setType(templatePaper.getType());
+            generatedPaper.setDifficulty(templatePaper.getDifficulty());
+            generatedPaper.setTotalQuestions(totalQuestions);
+            generatedPaper.setDuration(task.getDuration());
+            generatedPaper.setSubject(templatePaper.getSubject());
+            generatedPaper.setStatus(1); // 默认启用
+            generatedPaper.setCreateTime(System.currentTimeMillis());
+            generatedPaper.setUpdateTime(System.currentTimeMillis());
+            
+            // 获取题库中的所有题目
+            Set<Question> allQuestions = templatePaper.getQuestions();
+            if (allQuestions == null || allQuestions.isEmpty()) {
+                response.put("code", 400);
+                response.put("message", "题库中没有题目");
+                return ResponseEntity.ok(response);
+            }
+            
+            // 将Set转换为List以便随机选择
+            List<Question> questionList = new ArrayList<>(allQuestions);
+            
+            // 根据题型比例选择题目
+            Set<Question> selectedQuestions = new HashSet<>();
+            int totalSelected = 0;
+            int totalScore = 0;
+            
+            // 遍历题型比例，选择对应数量的题目
+            for (Map.Entry<String, Integer> entry : questionTypeDistribution.entrySet()) {
+                Integer questionType = Integer.parseInt(entry.getKey());
+                Integer percentage = entry.getValue();
+                
+                // 计算该题型需要的题目数量
+                int count = (int) Math.round(totalQuestions * percentage / 100.0);
+                if (count == 0) continue;
+                
+                // 筛选该题型的题目
+                List<Question> typeQuestions = questionList.stream()
+                    .filter(q -> q.getType().equals(questionType))
+                    .filter(q -> q.getStatus().equals(1)) // 只选择启用的题目
+                    .collect(Collectors.toList());
+                
+                if (typeQuestions.isEmpty()) {
+                    response.put("code", 400);
+                    response.put("message", "题型 " + questionType + " 没有可用题目");
+                    return ResponseEntity.ok(response);
+                }
+                
+                // 随机选择题目
+                Collections.shuffle(typeQuestions);
+                int actualCount = Math.min(count, typeQuestions.size());
+                List<Question> selectedTypeQuestions = typeQuestions.subList(0, actualCount);
+                
+                // 添加到选中题目集合
+                selectedQuestions.addAll(selectedTypeQuestions);
+                totalSelected += actualCount;
+                
+                // 计算总分
+                for (Question question : selectedTypeQuestions) {
+                    totalScore += question.getScore() != null ? question.getScore() : 10;
+                }
+            }
+            
+            // 如果选中的题目数量不足，补充随机题目
+            if (totalSelected < totalQuestions) {
+                // 筛选未被选中的启用题目
+                List<Question> remainingQuestions = questionList.stream()
+                    .filter(q -> q.getStatus().equals(1))
+                    .filter(q -> !selectedQuestions.contains(q))
+                    .collect(Collectors.toList());
+                
+                Collections.shuffle(remainingQuestions);
+                int needMore = totalQuestions - totalSelected;
+                int canAdd = Math.min(needMore, remainingQuestions.size());
+                List<Question> additionalQuestions = remainingQuestions.subList(0, canAdd);
+                
+                selectedQuestions.addAll(additionalQuestions);
+                totalSelected += canAdd;
+                
+                // 计算补充题目的分数
+                for (Question question : additionalQuestions) {
+                    totalScore += question.getScore() != null ? question.getScore() : 10;
+                }
+            }
+            
+            // 设置试卷的题目和总分
+            generatedPaper.setQuestions(selectedQuestions);
+            generatedPaper.setTotalScore(totalScore);
+            
+            // 保存生成的试卷
+            ExamPaper savedPaper = examPaperRepository.save(generatedPaper);
+            
+            // 关联试卷到任务
+            task.setExamPaper(savedPaper);
+            
+            // 保存任务
             Task savedTask = taskRepository.save(task);
+            
             response.put("code", 200);
-            response.put("message", "创建成功");
+            response.put("message", "任务创建成功，试卷已生成");
             response.put("data", savedTask);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("code", 500);
             response.put("message", "创建失败: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.ok(response);
         }
     }

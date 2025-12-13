@@ -346,7 +346,7 @@ const handleQuickAction = (action: any) => {
 
 // 查看考试详情
 const viewExamDetail = (exam: any) => {
-  router.push(`/dashboard/exam-detail/${exam.id}`)
+  router.push('/dashboard/exam-center')
 }
 
 // 从localStorage获取用户信息

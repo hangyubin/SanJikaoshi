@@ -22,13 +22,13 @@
               </el-select>
             </el-form-item>
             
-            <el-form-item label="考试题型" prop="questionTypeIds">
-              <el-select v-model="taskForm.questionTypeIds" placeholder="请选择考试题型" multiple>
+            <el-form-item label="考试题库" prop="paperId">
+              <el-select v-model="taskForm.paperId" placeholder="请选择考试题库" filterable>
                 <el-option 
-                  v-for="type in questionTypes" 
-                  :key="type.value" 
-                  :label="type.label" 
-                  :value="type.value"></el-option>
+                  v-for="paper in papers" 
+                  :key="paper.id" 
+                  :label="paper.name" 
+                  :value="paper.id"></el-option>
               </el-select>
             </el-form-item>
             
@@ -72,82 +72,40 @@
                   :value="dept.id"></el-option>
               </el-select>
             </el-form-item>
-            
-
-            
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="taskForm.status" placeholder="请选择状态">
-                <el-option label="未开始" :value="0"></el-option>
-                <el-option label="进行中" :value="1"></el-option>
-                <el-option label="已结束" :value="2"></el-option>
-              </el-select>
-            </el-form-item>
           </el-col>
         </el-row>
         
-        <!-- 题库选择 -->
-        <el-divider>题库设置</el-divider>
+        <!-- 题型分配 -->
+        <el-divider>题型分配</el-divider>
         
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="选择题库">
-              <el-select v-model="selectedPaper" placeholder="请选择题库" filterable>
-                <el-option 
-                  v-for="paper in papers" 
-                  :key="paper.id" 
-                  :label="paper.name" 
-                  :value="paper"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="选择题型">
-              <el-select v-model="selectedTypes" placeholder="请选择题型" multiple>
-                <el-option 
-                  v-for="type in questionTypes" 
-                  :key="type.value" 
-                  :label="type.label" 
-                  :value="type.value"></el-option>
-              </el-select>
+            <el-form-item label="总题数" prop="totalQuestions">
+              <el-input-number 
+                v-model="taskForm.totalQuestions" 
+                :min="10" 
+                :max="200" 
+                :step="5" 
+                placeholder="请输入总题数"></el-input-number>
             </el-form-item>
           </el-col>
         </el-row>
         
-        <!-- 难度分配比例 -->
-        <el-form-item label="难度分配比例">
-          <div class="difficulty-distribution">
-            <div class="distribution-item">
-              <span class="distribution-label">简单题:</span>
+        <!-- 题型比例分配 -->
+        <el-form-item label="题型比例分配">
+          <div class="question-type-distribution">
+            <div class="distribution-item" v-for="type in questionTypes" :key="type.value">
+              <span class="distribution-label">{{ type.label }}:</span>
               <el-slider 
-                v-model="difficultyDistribution.easy" 
+                v-model="questionTypeDistribution[type.value]" 
                 :min="0" 
                 :max="100" 
                 :step="5"
-                @change="updateDifficultyDistribution"></el-slider>
-              <span class="distribution-value">{{ difficultyDistribution.easy }}%</span>
-            </div>
-            <div class="distribution-item">
-              <span class="distribution-label">中等题:</span>
-              <el-slider 
-                v-model="difficultyDistribution.medium" 
-                :min="0" 
-                :max="100" 
-                :step="5"
-                @change="updateDifficultyDistribution"></el-slider>
-              <span class="distribution-value">{{ difficultyDistribution.medium }}%</span>
-            </div>
-            <div class="distribution-item">
-              <span class="distribution-label">困难题:</span>
-              <el-slider 
-                v-model="difficultyDistribution.hard" 
-                :min="0" 
-                :max="100" 
-                :step="5"
-                @change="updateDifficultyDistribution"></el-slider>
-              <span class="distribution-value">{{ difficultyDistribution.hard }}%</span>
+                @change="updateQuestionTypeDistribution"></el-slider>
+              <span class="distribution-value">{{ questionTypeDistribution[type.value] }}%</span>
             </div>
           </div>
-          <div class="distribution-total">总比例: {{ difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard }}%</div>
+          <div class="distribution-total">总比例: {{ totalQuestionTypeRatio }}%</div>
         </el-form-item>
         
         <el-form-item label="任务描述" prop="description">
@@ -177,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -191,13 +149,13 @@ const taskForm = reactive({
   id: '',
   name: '',
   type: 1,
-  questionTypeIds: [],
+  paperId: '',
   duration: 60,
   startTime: '',
   endTime: '',
   lateAllowedTime: 0, // 开考后允许进入的时间（分钟）
   departmentIds: [], // 参与科室ID列表
-  status: 0,
+  totalQuestions: 50, // 总题数，默认50题
   description: '',
   instructions: ''
 })
@@ -208,9 +166,6 @@ const departments = ref<any[]>([])
 // 题库列表
 const papers = ref<any[]>([])
 
-// 选择的题库
-const selectedPaper = ref<any>(null)
-
 // 题型列表
 const questionTypes = ref([
   { label: '单选题', value: 1 },
@@ -218,15 +173,23 @@ const questionTypes = ref([
   { label: '是非题', value: 3 }
 ])
 
-// 选择的题型
-const selectedTypes = ref<any[]>([])
-
-// 难度分配比例
-const difficultyDistribution = reactive({
-  easy: 30, // 简单题比例
-  medium: 50, // 中等题比例
-  hard: 20 // 困难题比例
+// 题型分配比例
+const questionTypeDistribution = reactive({
+  1: 40, // 单选题比例
+  2: 40, // 多选题比例
+  3: 20 // 是非题比例
 })
+
+// 计算总题型比例
+const totalQuestionTypeRatio = computed(() => {
+  return Object.values(questionTypeDistribution).reduce((sum, ratio) => sum + ratio, 0)
+})
+
+// 更新题型分配比例
+const updateQuestionTypeDistribution = () => {
+  // 这里可以添加逻辑，确保题型比例总和为100%
+  // 目前简化处理，允许总和不等于100%
+}
 
 // 表单验证规则
 const taskRules = reactive<FormRules>({
@@ -236,8 +199,11 @@ const taskRules = reactive<FormRules>({
   type: [
     { required: true, message: '请选择任务类型', trigger: 'change' }
   ],
-  questionTypeIds: [
-    { required: true, message: '请选择考试题型', trigger: 'change' }
+  paperId: [
+    { required: true, message: '请选择考试题库', trigger: 'change' }
+  ],
+  totalQuestions: [
+    { required: true, message: '请输入总题数', trigger: 'blur' }
   ],
   duration: [
     { required: true, message: '请输入考试时长', trigger: 'blur' }
@@ -253,17 +219,8 @@ const taskRules = reactive<FormRules>({
   ],
   departmentIds: [
     { required: true, message: '请选择参与科室', trigger: 'change' }
-  ],
-  status: [
-    { required: true, message: '请选择状态', trigger: 'change' }
   ]
 })
-
-// 更新难度分配比例，确保总和为100%
-const updateDifficultyDistribution = () => {
-  // 这里可以添加逻辑，确保三个难度比例总和为100%
-  // 目前简化处理，允许总和不等于100%
-}
 
 
 
@@ -325,19 +282,15 @@ const handleSubmit = async () => {
     // 构建请求数据
     const requestData = {
       ...taskForm,
-      paperId: selectedPaper.value?.id,
-      questionTypes: selectedTypes.value,
-      difficultyDistribution: {
-        easy: difficultyDistribution.easy,
-        medium: difficultyDistribution.medium,
-        hard: difficultyDistribution.hard
+      questionTypeDistribution: {
+        ...questionTypeDistribution
       }
     }
     
     // 发送创建任务请求
     await axios.post('/tasks', requestData)
     
-    ElMessage.success('任务创建成功')
+    ElMessage.success('任务创建成功，试卷已生成')
     router.push('/dashboard/task-management')
   } catch (error: any) {
     console.error('创建任务失败:', error)
@@ -390,8 +343,8 @@ onMounted(() => {
   margin-top: 4px;
 }
 
-/* 难度分配比例样式 */
-.difficulty-distribution {
+/* 题型分配比例样式 */
+.question-type-distribution {
   display: flex;
   flex-direction: column;
   gap: 15px;
