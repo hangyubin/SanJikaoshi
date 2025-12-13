@@ -29,7 +29,7 @@
         <el-table-column prop="realName" label="姓名" width="120"></el-table-column>
         <el-table-column prop="phone" label="手机号" width="150"></el-table-column>
 
-        <el-table-column prop="createTime" label="创建时间" width="180"></el-table-column>
+        <el-table-column prop="createTime" label="创建时间" width="180" :formatter="formatDate"></el-table-column>
         <el-table-column prop="role" label="角色" width="120">
           <template #default="scope">
             <el-tag :type="getRoleType(scope.row.role, scope.row.username)">
@@ -197,6 +197,13 @@ const fetchUsers = () => {
   })
 }
 
+// 格式化日期
+const formatDate = (row: any, column: any, cellValue: any) => {
+  if (!cellValue) return ''
+  const date = new Date(cellValue)
+  return date.toLocaleString('zh-CN')
+}
+
 // 页面加载时获取用户列表
 onMounted(() => {
   fetchUsers()
@@ -322,6 +329,11 @@ const handleSubmit = async () => {
       await axios.put(`/users/${form.id}`, {
         ...form
       })
+      
+      // 2. 如果角色从普通用户变为管理员，调用升级API
+      if (originalUser.role === 'user' && form.role === 'admin') {
+        await axios.put(`/users/promote/${form.id}`)
+      }
       
       // 2. 如果角色从普通用户变为管理员，弹出权限分配对话框
       if (originalUser.role === 'user' && form.role === 'admin') {
