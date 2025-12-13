@@ -249,86 +249,128 @@ const generateDepartmentCode = (name: string): string => {
   // 移除空格，转换为小写
   const cleanedName = name.trim().toLowerCase()
   
-  // 生成拼音首字母缩写
+  // 简化的拼音缩写映射，使用更直观的缩写
   const pinyinMap: Record<string, string> = {
-    '内': 'nei',
-    '外': 'wai',
-    '儿': 'er',
-    '妇产': 'fuchan',
-    '眼': 'yan',
-    '耳鼻喉': 'ebhk',
-    '口腔': 'kouqiang',
-    '皮肤': 'pifu',
-    '神经': 'shenjing',
-    '消化': 'xiaohua',
-    '呼吸': 'huxi',
-    '心血管': 'xinxueguan',
-    '血液': 'xueye',
-    '肾内': 'shennei',
-    '内分泌': 'neifenmi',
-    '风湿': 'fengshi',
-    '免疫': 'mianyi',
-    '感染': 'ganran',
-    '肿瘤': 'zhongliu',
-    '放射': 'fangshe',
-    '麻醉': 'mazui',
-    '急诊': 'jizhen',
-    '重症': 'zhongzheng',
-    '康复': 'kangfu',
-    '中医': 'zhongyi',
-    '中西医': 'zhongxiyi',
-    '体检': 'tijian',
-    '药剂': 'yaoji',
-    '检验': 'jianyan',
-    '病理': 'bingli',
-    '超声': 'chaosheng',
-    '心电图': 'xindiantu',
-    'CT': 'ct',
-    'MRI': 'mri',
-    '介入': 'jieru',
-    '营养': 'yingyang',
-    '护理': 'huli',
-    '院感': 'yuangan',
-    '预防': 'yufang',
-    '公共卫生': 'gonggongweisheng',
-    '行政': 'xingzheng',
-    '后勤': 'houqin',
-    '财务': 'caiwu',
-    '人事': 'renshi',
-    '信息': 'xinxi'
+    // 一级科室
+    '内科': 'NK',
+    '外科': 'WK',
+    '儿科': 'EK',
+    '妇产科': 'FCK',
+    '眼科': 'YK',
+    '耳鼻喉科': 'EBHK',
+    '口腔科': 'KQK',
+    '皮肤科': 'PFK',
+    '神经内科': 'SNK',
+    '消化内科': 'XHK',
+    '呼吸内科': 'HXK',
+    '心血管内科': 'XXGK',
+    '血液内科': 'XYK',
+    '肾内科': 'SNK',
+    '内分泌科': 'NMFK',
+    '风湿免疫科': 'FSK',
+    '感染科': 'GRK',
+    '肿瘤科': 'ZLK',
+    '放射科': 'FSK',
+    '麻醉科': 'MZK',
+    '急诊科': 'JZK',
+    '重症医学科': 'ZZK',
+    '康复科': 'FK',
+    '中医科': 'ZYK',
+    '中西医结合科': 'ZXK',
+    '体检科': 'TJK',
+    '药剂科': 'YJK',
+    '检验科': 'JK',
+    '病理科': 'BLK',
+    '超声科': 'CSK',
+    '心电图室': 'XDT',
+    'CT室': 'CT',
+    'MRI室': 'MRI',
+    '介入科': 'JRK',
+    '营养科': 'YYK',
+    '护理部': 'HLB',
+    '院感科': 'YGK',
+    '预防保健科': 'YFK',
+    '公共卫生科': 'GWK',
+    '行政科': 'XZK',
+    '后勤科': 'HQK',
+    '财务科': 'CWK',
+    '人事科': 'RSK',
+    '信息科': 'XXK',
+    // 单个字的映射
+    '内': 'NK',
+    '外': 'WK',
+    '儿': 'EK',
+    '眼': 'YK',
+    '口': 'KQK',
+    '皮': 'PFK',
+    '神': 'SNK',
+    '消': 'XHK',
+    '呼': 'HXK',
+    '心': 'XXGK',
+    '血': 'XYK',
+    '肾': 'SNK',
+    '肿': 'ZLK',
+    '放': 'FSK',
+    '麻': 'MZK',
+    '急': 'JZK',
+    '重': 'ZZK',
+    '康': 'FK',
+    '中': 'ZYK',
+    '体': 'TJK',
+    '药': 'YJK',
+    '检': 'JK',
+    '病': 'BLK',
+    '超': 'CSK'
   }
   
-  // 复合科室名称处理，优先匹配最长的关键词
-  // 按关键词长度降序排序
-  const sortedKeys = Object.keys(pinyinMap).sort((a, b) => b.length - a.length)
+  // 1. 优先匹配完整科室名称
+  for (const [fullName, code] of Object.entries(pinyinMap)) {
+    if (cleanedName === fullName) {
+      return code
+    }
+  }
   
-  // 检查是否有匹配的科室名称
-  for (const key of sortedKeys) {
-    if (cleanedName.includes(key)) {
-      // 提取匹配的关键词
-      const matchedValue = pinyinMap[key]
-      // 检查是否还有其他关键词
-      const remainingName = cleanedName.replace(key, '')
-      
-      // 查找剩余名称中的其他关键词
-      for (const subKey of sortedKeys) {
-        if (remainingName.includes(subKey) && subKey !== key) {
-          const subValue = pinyinMap[subKey]
-          if (matchedValue && subValue) {
-            return (matchedValue + subValue).toUpperCase()
+  // 2. 匹配科室名称包含的关键词
+  for (const [keyword, code] of Object.entries(pinyinMap)) {
+    if (cleanedName.includes(keyword)) {
+      return code
+    }
+  }
+  
+  // 3. 如果没有匹配，使用名称的拼音首字母缩写
+  // 处理中文名称，生成拼音首字母缩写
+  let code = ''
+  for (let i = 0; i < cleanedName.length && i < 4; i++) {
+    const char = cleanedName[i]
+    if (char) {
+      if (/[a-zA-Z]/.test(char)) {
+        // 英文直接使用
+        code += char.toUpperCase()
+      } else {
+        // 中文取首字母，简化处理
+        const charCode = char.charCodeAt(0)
+        if (charCode >= 0x4e00 && charCode <= 0x9fa5) {
+          // 这里使用简单的拼音首字母映射，实际项目中可以使用pinyin库
+          const pinyinFirstLetterMap: Record<string, string> = {
+            '一': 'Y', '乙': 'Y', '二': 'E', '三': 'S', '四': 'S', '五': 'W',
+            '六': 'L', '七': 'Q', '八': 'B', '九': 'J', '十': 'S'
           }
+          const pinyinChar = char as string
+          code += pinyinFirstLetterMap[pinyinChar] || pinyinChar.charAt(0).toUpperCase()
+        } else {
+          // 其他字符直接使用
+          code += char.toUpperCase()
         }
-      }
-      
-      if (matchedValue) {
-        return matchedValue.toUpperCase()
       }
     }
   }
   
-  // 如果没有匹配，使用名称的拼音首字母
-  // 这里简化处理，使用前3个字母
-  return cleanedName.slice(0, 3).toUpperCase()
+  // 确保编码至少3个字符
+  while (code.length < 3) {
+    code += '0'
+  }
+  
+  return code
 }
 
 // 监听科室名称变化，自动生成编码
@@ -406,24 +448,38 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     loading.value = true
     
-    let response
-    if (dialogType.value === 'add') {
-      // 简化请求，移除可能不支持的字段
-      const { id, ...createData } = form
-      response = await axios.post('/departments', createData)
-    } else {
-      // 简化请求，移除可能不支持的字段
-      const { id, ...updateData } = form
-      response = await axios.put(`/departments/${form.id}`, updateData)
+    // 简化请求数据，确保只包含必要字段
+    const requestData = {
+      name: form.name.trim(),
+      code: form.code.trim(),
+      description: form.description.trim(),
+      status: form.status
     }
     
-    // 检查响应数据
-    if (response.data) {
+    let response
+    if (dialogType.value === 'add') {
+      // 新增科室，使用POST请求，明确不设置Content-Type
+      response = await axios.post('/departments', requestData, {
+        headers: {
+          'Content-Type': undefined // 明确不设置Content-Type，让浏览器自动处理
+        }
+      })
+    } else {
+      // 编辑科室，使用PUT请求
+      response = await axios.put(`/departments/${form.id}`, requestData, {
+        headers: {
+          'Content-Type': undefined // 明确不设置Content-Type，让浏览器自动处理
+        }
+      })
+    }
+    
+    // 检查响应数据，使用更宽松的判断条件
+    if (response && response.status >= 200 && response.status < 300) {
       ElMessage.success(dialogType.value === 'add' ? '新增成功' : '编辑成功')
       dialogVisible.value = false
       initData() // 刷新列表
     } else {
-      ElMessage.error(dialogType.value === 'add' ? '新增失败，服务器返回无效数据' : '编辑失败，服务器返回无效数据')
+      ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
     }
   } catch (error: any) {
     console.error(dialogType.value === 'add' ? '新增科室失败:' : '编辑科室失败:', error)
@@ -431,7 +487,8 @@ const handleSubmit = async () => {
     // 处理不同类型的错误
     if (error.response) {
       // 服务器返回了错误响应
-      ElMessage.error(error.response.data?.message || (dialogType.value === 'add' ? '新增失败' : '编辑失败'))
+      const errorMsg = error.response.data?.message || error.response.statusText || (dialogType.value === 'add' ? '新增失败' : '编辑失败')
+      ElMessage.error(errorMsg)
     } else if (error.request) {
       // 请求已发送但没有收到响应
       ElMessage.error('服务器无响应，请稍后重试')
