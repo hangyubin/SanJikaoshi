@@ -16,12 +16,9 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // 对于POST、PUT、PATCH请求，确保设置了正确的Content-Type
-    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
-      if (!config.headers['Content-Type']) {
-        config.headers['Content-Type'] = 'application/json'
-      }
-    }
+    // 不再自动设置Content-Type，让浏览器自动处理
+    // 避免后端不支持application/json格式的问题
+    delete config.headers['Content-Type']
     
     // 添加请求日志
     console.log('请求配置:', {

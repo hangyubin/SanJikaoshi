@@ -98,7 +98,6 @@
       <el-button 
           type="info" 
           @click="showResult = !showResult"
-          v-if="!isLastQuestion"
         >
           <el-icon v-if="!showResult"><HelpFilled /></el-icon>
           <el-icon v-else><Hide /></el-icon>
@@ -109,7 +108,7 @@
         type="primary" 
         @click="nextQuestion"
         :loading="loading"
-        :disabled="!userAnswers[currentIndex] && !showResult"
+        :disabled="loading"
       >
         {{ isLastQuestion ? '提交练习' : '下一题' }}
       </el-button>
@@ -391,18 +390,95 @@ const fetchPracticeQuestions = async () => {
     // 前端题型转换为后端题型
     const backendQuestionType = mapFrontendTypeToBackendType(questionType)
     
-    // 使用现有的questions端点获取练习题，调整参数名称以匹配后端
-    const response = await axios.get('/questions', {
-      params: {
-        pageNum: 1, // 后端可能使用pageNum而不是page
-        pageSize: questionCount,
-        type: backendQuestionType
-        // 移除可能不支持的排序参数
-      }
-    })
+    // 尝试多种参数组合，确保兼容性
+    let questionsData: any[] = []
     
-    // 处理API返回的数据，适配不同的响应格式
-    questions.value = response.data.records || response.data || []
+    // 尝试1：使用page和type参数（标准RESTful）
+    try {
+      const response1 = await axios.get('/questions', {
+        params: {
+          page: 1,
+          pageSize: questionCount,
+          type: backendQuestionType
+        }
+      })
+      
+      // 处理不同的返回格式
+      if (response1.data && response1.data.records) {
+        questionsData = response1.data.records
+      } else if (Array.isArray(response1.data)) {
+        questionsData = response1.data
+      } else if (response1.data && response1.data.data) {
+        questionsData = response1.data.data
+      }
+    } catch (e1) {
+      console.log('尝试1失败，尝试2：使用pageNum参数')
+      
+      // 尝试2：使用pageNum参数
+      try {
+        const response2 = await axios.get('/questions', {
+          params: {
+            pageNum: 1,
+            pageSize: questionCount,
+            type: backendQuestionType
+          }
+        })
+        
+        if (response2.data && response2.data.records) {
+          questionsData = response2.data.records
+        } else if (Array.isArray(response2.data)) {
+          questionsData = response2.data
+        } else if (response2.data && response2.data.data) {
+          questionsData = response2.data.data
+        }
+      } catch (e2) {
+        console.log('尝试2失败，尝试3：获取所有题目')
+        
+        // 尝试3：获取所有题目，不使用分页
+        try {
+          const response3 = await axios.get('/questions', {
+            params: {
+              type: backendQuestionType
+            }
+          })
+          
+          if (response3.data && response3.data.records) {
+            questionsData = response3.data.records
+          } else if (Array.isArray(response3.data)) {
+            questionsData = response3.data
+          } else if (response3.data && response3.data.data) {
+            questionsData = response3.data.data
+          }
+        } catch (e3) {
+          console.log('尝试3失败，尝试4：使用API前缀')
+          
+          // 尝试4：使用/api前缀
+          try {
+            const response4 = await axios.get('/api/questions', {
+              params: {
+                page: 1,
+                pageSize: questionCount,
+                type: backendQuestionType
+              }
+            })
+            
+            if (response4.data && response4.data.records) {
+              questionsData = response4.data.records
+            } else if (Array.isArray(response4.data)) {
+              questionsData = response4.data
+            } else if (response4.data && response4.data.data) {
+              questionsData = response4.data.data
+            }
+          } catch (e4) {
+            console.error('所有尝试都失败:', e4)
+            throw new Error('无法获取题目，请检查API配置')
+          }
+        }
+      }
+    }
+    
+    // 限制题目数量
+    questions.value = questionsData.slice(0, questionCount)
     
     // 初始化用户答案数组
     userAnswers.value = new Array(questions.value.length).fill('')
@@ -410,10 +486,12 @@ const fetchPracticeQuestions = async () => {
     // 如果没有获取到题目，显示提示信息
     if (questions.value.length === 0) {
       ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')
+    } else {
+      console.log(`成功获取 ${questions.value.length} 道题目`)
     }
   } catch (error: any) {
     console.error('获取练习题失败:', error)
-    ElMessage.error('获取练习题失败，请检查网络连接或联系管理员')
+    ElMessage.error(`获取练习题失败：${error.message || '请检查网络连接或联系管理员'}`)
     questions.value = []
     userAnswers.value = []
   } finally {
@@ -447,9 +525,11 @@ const selectOption = (optionKey: string) => {
 
 // 下一题
 const nextQuestion = async () => {
+  // 允许跳过未答题
   if (!userAnswers.value[currentIndex.value] && !showResult.value) {
-    ElMessage.warning('请先选择答案')
-    return
+    // 提示用户，但允许继续
+    ElMessage.warning('您还未选择答案，是否继续？')
+    // 继续执行，不阻止
   }
   
   if (isLastQuestion.value) {
