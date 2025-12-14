@@ -402,6 +402,13 @@ const handleGenerateTemplate = async () => {
 // 文本文件导入
 const handleTextFileImport = async (file: any) => {
   try {
+    // 检查文件大小（不超过10MB）
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      ElMessage.error('文件大小不能超过 10MB!');
+      return false;
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     
@@ -452,6 +459,13 @@ const handleBatchImport = async (file: any) => {
     
     if (!allowedExtensions.includes(fileExtension)) {
       ElMessage.error('请上传 XLSX、XLS 或 CSV 格式的文件!');
+      return false;
+    }
+    
+    // 检查文件大小（不超过10MB）
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      ElMessage.error('文件大小不能超过 10MB!');
       return false;
     }
     
@@ -553,7 +567,7 @@ const handleEdit = (row: any) => {
   if (row.options) {
     try {
       const parsedOptions = JSON.parse(row.options)
-      if (typeof parsedOptions === 'object') {
+      if (typeof parsedOptions === 'object' && parsedOptions !== null) {
         // 清空当前选项
         Object.keys(optionsObject).forEach(key => {
           optionsObject[key] = ''
@@ -561,15 +575,84 @@ const handleEdit = (row: any) => {
         // 填充解析后的选项
         Object.entries(parsedOptions).forEach(([key, value]) => {
           if (typeof value === 'string') {
-            optionsObject[key] = value
+            // 处理不同大小写的选项键，确保A-E格式
+            const normalizedKey = key.toUpperCase()
+            // 只处理A-E范围内的选项
+            if (/^[A-E]$/.test(normalizedKey)) {
+              optionsObject[normalizedKey] = value
+            }
           }
         })
+        // 兼容旧格式：如果没有解析到选项，尝试其他格式
+        if (Object.values(optionsObject).every(val => val === '')) {
+          // 尝试直接将字符串作为选项（如"A选项|B选项|C选项|D选项"）
+          const optionsStr = row.options
+          if (typeof optionsStr === 'string') {
+            // 尝试多种分隔符
+            const separators = ['|', ';', ',', '，', '\n', '\r\n']
+            let bestSeparator = '|'
+            let maxParts = 1
+            
+            // 找到最佳分隔符
+            separators.forEach(sep => {
+              const parts = optionsStr.split(sep)
+              if (parts.length > maxParts) {
+                maxParts = parts.length
+                bestSeparator = sep
+              }
+            })
+            
+            const optionsArray = optionsStr.split(bestSeparator)
+            optionsArray.forEach((option, index) => {
+              if (option && option.trim()) {
+                const optionKey = String.fromCharCode(65 + index) // A, B, C, D, E
+                if (optionKey in optionsObject) {
+                  optionsObject[optionKey] = option.trim()
+                }
+              }
+            })
+          }
+        }
       }
     } catch (e) {
-      // 解析失败，使用默认空选项
-      Object.keys(optionsObject).forEach(key => {
-        optionsObject[key] = ''
-      })
+      console.error('解析选项失败:', e)
+      // 解析失败时，尝试其他方式处理
+      const optionsStr = row.options
+      if (typeof optionsStr === 'string') {
+        // 尝试直接将字符串作为选项（如"A选项|B选项|C选项|D选项"）
+        const separators = ['|', ';', ',', '，', '\n', '\r\n']
+        let bestSeparator = '|'
+        let maxParts = 1
+        
+        // 找到最佳分隔符
+        separators.forEach(sep => {
+          const parts = optionsStr.split(sep)
+          if (parts.length > maxParts) {
+            maxParts = parts.length
+            bestSeparator = sep
+          }
+        })
+        
+        const optionsArray = optionsStr.split(bestSeparator)
+        // 清空当前选项
+        Object.keys(optionsObject).forEach(key => {
+          optionsObject[key] = ''
+        })
+        // 填充选项
+        optionsArray.forEach((option, index) => {
+          if (option && option.trim()) {
+            const optionKey = String.fromCharCode(65 + index) // A, B, C, D, E
+            if (optionKey in optionsObject) {
+              optionsObject[optionKey] = option.trim()
+            }
+          }
+        })
+      } else {
+        // 其他情况，使用默认空选项
+        Object.keys(optionsObject).forEach(key => {
+          optionsObject[key] = ''
+        })
+      }
     }
   } else {
     // 没有选项，使用默认空选项
@@ -596,15 +679,18 @@ watch(() => form.options, (newOptions) => {
   if (newOptions) {
     try {
       const parsed = JSON.parse(newOptions)
-      if (typeof parsed === 'object') {
+      if (typeof parsed === 'object' && parsed !== null) {
         // 清空当前选项
         Object.keys(optionsObject).forEach(key => {
           optionsObject[key] = ''
         })
-        // 填充解析后的选项
+        // 填充解析后的选项，确保键为大写
         Object.entries(parsed).forEach(([key, value]) => {
           if (typeof value === 'string') {
-            optionsObject[key] = value
+            const normalizedKey = key.toUpperCase()
+            if (normalizedKey in optionsObject) {
+              optionsObject[normalizedKey] = value
+            }
           }
         })
       }
