@@ -197,7 +197,7 @@ onMounted(() => {
   if (savedUser) {
     const parsedUser = JSON.parse(savedUser)
     loginForm.username = parsedUser.username || ''
-    loginForm.password = parsedUser.password || ''
+    // 不自动填充密码，只填充用户名，提高安全性
     rememberMe.value = true
   }
   
@@ -230,12 +230,11 @@ const handleLogin = async () => {
     
     loading.value = false
     
-    // 处理记住我功能
+    // 处理记住我功能 - 只保存用户名，不保存密码，提高安全性
     if (rememberMe.value) {
       // 保存用户信息到本地存储
       localStorage.setItem('rememberedUser', JSON.stringify({
-        username: loginForm.username,
-        password: loginForm.password
+        username: loginForm.username
       }))
     } else {
       // 清除记住的用户信息
