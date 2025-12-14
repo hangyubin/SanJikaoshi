@@ -8,53 +8,11 @@
         <el-card class="stat-card">
           <div class="stat-content">
             <div class="stat-info">
-              <p class="stat-label">总用户数</p>
+              <p class="stat-label">总用户数(注册人数)</p>
               <h3 class="stat-value">{{ totalUserCount }}</h3>
             </div>
             <div class="stat-icon user-icon">
               <el-icon><User /></el-icon>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      
-      <el-col :span="8">
-        <el-card class="stat-card">
-          <div class="stat-content">
-            <div class="stat-info">
-              <p class="stat-label">普通用户人数</p>
-              <h3 class="stat-value">{{ studentCount }}</h3>
-            </div>
-            <div class="stat-icon student-icon">
-              <el-icon><Avatar /></el-icon>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      
-      <el-col :span="8">
-        <el-card class="stat-card">
-          <div class="stat-content">
-            <div class="stat-info">
-              <p class="stat-label">管理员人数</p>
-              <h3 class="stat-value">{{ adminCount }}</h3>
-            </div>
-            <div class="stat-icon admin-icon">
-              <el-icon><Setting /></el-icon>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      
-      <el-col :span="8">
-        <el-card class="stat-card">
-          <div class="stat-content">
-            <div class="stat-info">
-              <p class="stat-label">注册人数</p>
-              <h3 class="stat-value">{{ registeredCount }}</h3>
-            </div>
-            <div class="stat-icon register-icon">
-              <el-icon><Plus /></el-icon>
             </div>
           </div>
         </el-card>
@@ -69,6 +27,20 @@
             </div>
             <div class="stat-icon online-icon">
               <el-icon><VideoPlay /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">管理员人数</p>
+              <h3 class="stat-value">{{ adminCount }}</h3>
+            </div>
+            <div class="stat-icon admin-icon">
+              <el-icon><Setting /></el-icon>
             </div>
           </div>
         </el-card>
@@ -100,16 +72,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Avatar, Setting, Plus, VideoPlay } from '@element-plus/icons-vue'
+import { User, Setting, VideoPlay } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
-// 统计数据
-const totalUserCount = ref(150)
-const studentCount = ref(120)
-const adminCount = ref(10)
-const registeredCount = ref(150) // 注册人数，初始值与总用户数相同
-const onlineCount = ref(25) // 在线人数
+// 统计数据，初始值设为空，等待API获取
+const totalUserCount = ref(0)
+const adminCount = ref(0)
+const onlineCount = ref(0)
 
 const navigateTo = (path: string) => {
   router.push(`/dashboard/${path}`)
@@ -262,16 +232,8 @@ const navigateTo = (path: string) => {
   background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
 }
 
-.student-icon {
-  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-}
-
 .admin-icon {
   background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
-}
-
-.register-icon {
-  background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
 }
 
 .online-icon {
