@@ -249,12 +249,18 @@ const generateDepartmentCode = (name: string): string => {
   // 移除空格，转换为小写
   const cleanedName = name.trim().toLowerCase()
   
+  // 添加内儿科的特殊映射
+  if (cleanedName === '内儿科') {
+    return 'NEK'
+  }
+  
   // 简化的拼音缩写映射，使用更直观的缩写
   const pinyinMap: Record<string, string> = {
     // 一级科室
     '内科': 'NK',
     '外科': 'WK',
     '儿科': 'EK',
+    '内儿科': 'NEK', // 新增内儿科映射
     '妇产科': 'FCK',
     '眼科': 'YK',
     '耳鼻喉科': 'EBHK',
@@ -324,16 +330,19 @@ const generateDepartmentCode = (name: string): string => {
   }
   
   // 1. 优先匹配完整科室名称
-  for (const [fullName, code] of Object.entries(pinyinMap)) {
-    if (cleanedName === fullName) {
-      return code
-    }
+  if (pinyinMap[cleanedName]) {
+    return pinyinMap[cleanedName]
   }
   
-  // 2. 匹配科室名称包含的关键词
-  for (const [keyword, code] of Object.entries(pinyinMap)) {
+  // 2. 匹配科室名称包含的关键词，优先匹配最长的关键词
+  // 将关键词按长度排序，优先匹配更长的关键词
+  const sortedKeywords = Object.keys(pinyinMap).sort((a, b) => b.length - a.length)
+  for (const keyword of sortedKeywords) {
     if (cleanedName.includes(keyword)) {
-      return code
+      const code = pinyinMap[keyword]
+      if (code) {
+        return code
+      }
     }
   }
   
@@ -353,7 +362,8 @@ const generateDepartmentCode = (name: string): string => {
           // 这里使用简单的拼音首字母映射，实际项目中可以使用pinyin库
           const pinyinFirstLetterMap: Record<string, string> = {
             '一': 'Y', '乙': 'Y', '二': 'E', '三': 'S', '四': 'S', '五': 'W',
-            '六': 'L', '七': 'Q', '八': 'B', '九': 'J', '十': 'S'
+            '六': 'L', '七': 'Q', '八': 'B', '九': 'J', '十': 'S',
+            '内': 'N', '儿': 'E', '科': 'K' // 新增常用字的拼音首字母
           }
           const pinyinChar = char as string
           code += pinyinFirstLetterMap[pinyinChar] || pinyinChar.charAt(0).toUpperCase()
@@ -458,19 +468,11 @@ const handleSubmit = async () => {
     
     let response
     if (dialogType.value === 'add') {
-      // 新增科室，使用POST请求，明确不设置Content-Type
-      response = await axios.post('/departments', requestData, {
-        headers: {
-          'Content-Type': undefined // 明确不设置Content-Type，让浏览器自动处理
-        }
-      })
+      // 新增科室，使用POST请求，不设置特殊headers
+      response = await axios.post('/departments', requestData)
     } else {
-      // 编辑科室，使用PUT请求
-      response = await axios.put(`/departments/${form.id}`, requestData, {
-        headers: {
-          'Content-Type': undefined // 明确不设置Content-Type，让浏览器自动处理
-        }
-      })
+      // 编辑科室，使用PUT请求，不设置特殊headers
+      response = await axios.put(`/departments/${form.id}`, requestData)
     }
     
     // 检查响应数据，使用更宽松的判断条件

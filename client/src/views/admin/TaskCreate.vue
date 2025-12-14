@@ -18,18 +18,16 @@
               <el-select v-model="taskForm.type" placeholder="请选择任务类型">
                 <el-option label="模拟考试" :value="1"></el-option>
                 <el-option label="正式考试" :value="2"></el-option>
-                <el-option label="练习任务" :value="3"></el-option>
               </el-select>
             </el-form-item>
             
-            <el-form-item label="考试题库" prop="paperId">
-              <el-select v-model="taskForm.paperId" placeholder="请选择考试题库" filterable>
-                <el-option 
-                  v-for="paper in papers" 
-                  :key="paper.id" 
-                  :label="paper.name" 
-                  :value="paper.id"></el-option>
-              </el-select>
+            <el-form-item label="题库状态">
+              <div class="question-bank-status">
+                <div class="status-item">单选题: <span class="status-value">{{ questionCounts[1] || 0 }}</span>题</div>
+                <div class="status-item">多选题: <span class="status-value">{{ questionCounts[2] || 0 }}</span>题</div>
+                <div class="status-item">是非题: <span class="status-value">{{ questionCounts[3] || 0 }}</span>题</div>
+                <div class="status-item">总计: <span class="status-value">{{ totalQuestionsCount }}</span>题</div>
+              </div>
             </el-form-item>
             
             <el-form-item label="考试时长(分钟)" prop="duration">
@@ -101,7 +99,7 @@
                 :min="0" 
                 :max="100" 
                 :step="5"
-                @change="updateQuestionTypeDistribution"></el-slider>
+                @change="(value: number) => updateQuestionTypeDistribution(type.value, value)"></el-slider>
               <span class="distribution-value">{{ questionTypeDistribution[type.value] }}%</span>
             </div>
           </div>
@@ -149,7 +147,6 @@ const taskForm = reactive({
   id: '',
   name: '',
   type: 1,
-  paperId: '',
   duration: 60,
   startTime: '',
   endTime: '',
@@ -163,8 +160,12 @@ const taskForm = reactive({
 // 科室列表
 const departments = ref<any[]>([])
 
-// 题库列表
-const papers = ref<any[]>([])
+// 各题型数量
+const questionCounts = ref<Record<number, number>>({
+  1: 0, // 单选题数量
+  2: 0, // 多选题数量
+  3: 0  // 是非题数量
+})
 
 // 题型列表
 const questionTypes = ref([
@@ -175,9 +176,9 @@ const questionTypes = ref([
 
 // 题型分配比例
 const questionTypeDistribution = reactive<Record<number, number>>({
-  1: 40, // 单选题比例
-  2: 40, // 多选题比例
-  3: 20 // 是非题比例
+  1: 100, // 单选题比例，默认100%
+  2: 0, // 多选题比例，默认0%
+  3: 0  // 是非题比例，默认0%
 })
 
 // 计算总题型比例
@@ -185,10 +186,55 @@ const totalQuestionTypeRatio = computed(() => {
   return Object.values(questionTypeDistribution).reduce((sum, ratio) => sum + ratio, 0)
 })
 
-// 更新题型分配比例
-const updateQuestionTypeDistribution = () => {
-  // 这里可以添加逻辑，确保题型比例总和为100%
-  // 目前简化处理，允许总和不等于100%
+// 计算总题数
+const totalQuestionsCount = computed(() => {
+  return Object.values(questionCounts.value).reduce((sum, count) => sum + count, 0)
+})
+
+// 更新题型分配比例，确保总和为100%
+const updateQuestionTypeDistribution = (type: number, value: number) => {
+  // 计算剩余可分配比例
+  const remaining = 100 - value
+  
+  // 重新分配其他题型的比例
+  const otherTypes = questionTypes.value.filter(t => t.value !== type)
+  if (otherTypes.length > 0) {
+    // 平均分配剩余比例
+    const avgRatio = remaining / otherTypes.length
+    otherTypes.forEach(t => {
+      // 确保questionTypeDistribution中存在该题型的键
+      questionTypeDistribution[t.value] = Math.round(avgRatio / 5) * 5 // 保持5的倍数
+    })
+    
+    // 调整最后一个题型，确保总和为100%
+    const finalTotal = otherTypes.reduce((sum, t) => sum + (questionTypeDistribution[t.value] || 0), 0) + value
+    if (finalTotal !== 100) {
+      const lastType = otherTypes[otherTypes.length - 1]
+      if (lastType) {
+        // 确保questionTypeDistribution中存在该题型的键
+        questionTypeDistribution[lastType.value] = (questionTypeDistribution[lastType.value] || 0) + (100 - finalTotal)
+      }
+    }
+  }
+}
+
+// 获取题库中各题型的数量
+const fetchQuestionCounts = async () => {
+  try {
+    const response = await axios.get('/questions/count')
+    const counts = response.data || {}
+    questionCounts.value[1] = counts.single || counts[1] || 0
+    questionCounts.value[2] = counts.multiple || counts[2] || 0
+    questionCounts.value[3] = counts.trueFalse || counts[3] || 0
+  } catch (error) {
+    console.error('获取题型数量失败:', error)
+    // 如果获取失败，尝试使用默认值
+    questionCounts.value = {
+      1: 50,
+      2: 30,
+      3: 20
+    }
+  }
 }
 
 // 表单验证规则
@@ -198,9 +244,6 @@ const taskRules = reactive<FormRules>({
   ],
   type: [
     { required: true, message: '请选择任务类型', trigger: 'change' }
-  ],
-  paperId: [
-    { required: true, message: '请选择考试题库', trigger: 'change' }
   ],
   totalQuestions: [
     { required: true, message: '请输入总题数', trigger: 'blur' }
@@ -223,17 +266,6 @@ const taskRules = reactive<FormRules>({
 })
 
 
-
-// 获取题库列表
-const fetchPapers = async () => {
-  try {
-    const res = await axios.get('/papers')
-    papers.value = res.data.records || res.data || []
-  } catch (error) {
-    console.error('获取题库列表失败:', error)
-    ElMessage.error('获取题库列表失败')
-  }
-}
 
 // 获取科室列表
 const fetchDepartments = async () => {
@@ -270,8 +302,6 @@ const fetchDepartments = async () => {
   }
 }
 
-
-
 // 提交表单
 const handleSubmit = async () => {
   if (!taskFormRef.value) return
@@ -303,6 +333,10 @@ const handleReset = () => {
   if (taskFormRef.value) {
     taskFormRef.value.resetFields()
   }
+  // 重置题型比例
+  questionTypeDistribution[1] = 100
+  questionTypeDistribution[2] = 0
+  questionTypeDistribution[3] = 0
 }
 
 // 取消操作
@@ -312,8 +346,8 @@ const handleCancel = () => {
 
 // 组件挂载时获取数据
 onMounted(() => {
-  fetchPapers()
   fetchDepartments()
+  fetchQuestionCounts()
 })
 </script>
 
@@ -376,6 +410,25 @@ onMounted(() => {
   margin-top: 10px;
   font-weight: 600;
   color: #303133;
+}
+
+/* 题库状态样式 */
+.question-bank-status {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.status-item {
+  font-size: 14px;
+  color: #606266;
+}
+
+.status-value {
+  font-weight: 600;
+  color: #667eea;
+  margin-left: 5px;
 }
 
 /* 滑块样式 */

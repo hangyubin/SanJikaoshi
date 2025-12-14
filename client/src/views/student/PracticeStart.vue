@@ -96,6 +96,14 @@
     <!-- 操作按钮 -->
     <div class="action-buttons">
       <el-button 
+        type="default" 
+        @click="prevQuestion"
+        :disabled="loading || currentIndex === 0"
+      >
+        上一题
+      </el-button>
+      
+      <el-button 
           type="info" 
           @click="showResult = !showResult"
         >
@@ -392,88 +400,58 @@ const fetchPracticeQuestions = async () => {
     
     // 尝试多种参数组合，确保兼容性
     let questionsData: any[] = []
+    let responseData: any = null
     
-    // 尝试1：使用page和type参数（标准RESTful）
-    try {
-      const response1 = await axios.get('/questions', {
-        params: {
-          page: 1,
-          pageSize: questionCount,
-          type: backendQuestionType
-        }
-      })
-      
-      // 处理不同的返回格式
-      if (response1.data && response1.data.records) {
-        questionsData = response1.data.records
-      } else if (Array.isArray(response1.data)) {
-        questionsData = response1.data
-      } else if (response1.data && response1.data.data) {
-        questionsData = response1.data.data
-      }
-    } catch (e1) {
-      console.log('尝试1失败，尝试2：使用pageNum参数')
-      
-      // 尝试2：使用pageNum参数
+    console.log(`尝试获取练习题，题型: ${backendQuestionType}, 数量: ${questionCount}`)
+    
+    // 尝试多种API端点和参数组合
+    const apiEndpoints = [
+      // 标准RESTful端点
+      { url: '/questions', params: { page: 1, pageSize: questionCount, type: backendQuestionType } },
+      // 使用pageNum参数
+      { url: '/questions', params: { pageNum: 1, pageSize: questionCount, type: backendQuestionType } },
+      // 不使用分页
+      { url: '/questions', params: { type: backendQuestionType } },
+      // 使用/api前缀
+      { url: '/api/questions', params: { page: 1, pageSize: questionCount, type: backendQuestionType } },
+      // 使用/api前缀，不使用分页
+      { url: '/api/questions', params: { type: backendQuestionType } },
+      // 练习专用端点
+      { url: '/practice/questions', params: { type: backendQuestionType, count: questionCount } },
+      // 直接获取所有题目
+      { url: '/questions/all', params: {} }
+    ]
+    
+    // 尝试所有端点，直到成功获取题目
+    for (const endpoint of apiEndpoints) {
       try {
-        const response2 = await axios.get('/questions', {
-          params: {
-            pageNum: 1,
-            pageSize: questionCount,
-            type: backendQuestionType
-          }
-        })
+        console.log(`尝试API端点: ${endpoint.url}，参数:`, endpoint.params)
+        const response = await axios.get(endpoint.url, { params: endpoint.params })
+        responseData = response.data
+        console.log(`API响应:`, responseData)
         
-        if (response2.data && response2.data.records) {
-          questionsData = response2.data.records
-        } else if (Array.isArray(response2.data)) {
-          questionsData = response2.data
-        } else if (response2.data && response2.data.data) {
-          questionsData = response2.data.data
+        // 处理不同的返回格式
+        if (responseData.records) {
+          questionsData = responseData.records
+          console.log(`从records字段获取到 ${questionsData.length} 道题目`)
+        } else if (Array.isArray(responseData)) {
+          questionsData = responseData
+          console.log(`直接从响应获取到 ${questionsData.length} 道题目`)
+        } else if (responseData.data) {
+          questionsData = responseData.data
+          console.log(`从data字段获取到 ${questionsData.length} 道题目`)
+        } else if (responseData.list) {
+          questionsData = responseData.list
+          console.log(`从list字段获取到 ${questionsData.length} 道题目`)
         }
-      } catch (e2) {
-        console.log('尝试2失败，尝试3：获取所有题目')
         
-        // 尝试3：获取所有题目，不使用分页
-        try {
-          const response3 = await axios.get('/questions', {
-            params: {
-              type: backendQuestionType
-            }
-          })
-          
-          if (response3.data && response3.data.records) {
-            questionsData = response3.data.records
-          } else if (Array.isArray(response3.data)) {
-            questionsData = response3.data
-          } else if (response3.data && response3.data.data) {
-            questionsData = response3.data.data
-          }
-        } catch (e3) {
-          console.log('尝试3失败，尝试4：使用API前缀')
-          
-          // 尝试4：使用/api前缀
-          try {
-            const response4 = await axios.get('/api/questions', {
-              params: {
-                page: 1,
-                pageSize: questionCount,
-                type: backendQuestionType
-              }
-            })
-            
-            if (response4.data && response4.data.records) {
-              questionsData = response4.data.records
-            } else if (Array.isArray(response4.data)) {
-              questionsData = response4.data
-            } else if (response4.data && response4.data.data) {
-              questionsData = response4.data.data
-            }
-          } catch (e4) {
-            console.error('所有尝试都失败:', e4)
-            throw new Error('无法获取题目，请检查API配置')
-          }
+        if (questionsData.length > 0) {
+          console.log(`成功获取题目，跳出循环`)
+          break
         }
+      } catch (e: any) {
+        console.log(`API端点 ${endpoint.url} 失败:`, e.message)
+        continue
       }
     }
     
@@ -486,9 +464,16 @@ const fetchPracticeQuestions = async () => {
     // 如果没有获取到题目，显示提示信息
     if (questions.value.length === 0) {
       ElMessage.warning('暂无相关题型的练习题，请联系管理员添加')
+      console.log('未获取到任何题目')
     } else {
       console.log(`成功获取 ${questions.value.length} 道题目`)
-    }
+      // 打印题目详情，便于调试
+      questions.value.forEach((q, index) => {
+        console.log(`题目 ${index + 1}:`, q.content)
+        console.log(`选项:`, q.options)
+        console.log(`正确答案:`, q.answer || q.correctAnswer)
+      })
+    }  
   } catch (error: any) {
     console.error('获取练习题失败:', error)
     ElMessage.error(`获取练习题失败：${error.message || '请检查网络连接或联系管理员'}`)
@@ -501,7 +486,7 @@ const fetchPracticeQuestions = async () => {
 
 // 选择选项
 const selectOption = (optionKey: string) => {
-  if (showResult) return
+  if (showResult.value) return
   
   if (questionType === 2) {
     // 多选题，支持多选
@@ -520,6 +505,23 @@ const selectOption = (optionKey: string) => {
   } else {
     // 单选题或是非题，只能选择一个
     userAnswers.value[currentIndex.value] = optionKey
+    
+    // 直接显示结果
+    showResult.value = true
+    
+    // 检查是否答对
+    const isCorrect = userAnswers.value[currentIndex.value] === correctOptions.value[0]
+    if (!isCorrect) {
+      ElMessage.warning('答错了，看看解析吧！')
+    }
+  }
+}
+
+// 上一题
+const prevQuestion = () => {
+  if (currentIndex.value > 0) {
+    currentIndex.value--
+    showResult.value = false
   }
 }
 

@@ -204,7 +204,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '@/utils/axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 
 // 真实题目数据
@@ -289,18 +289,69 @@ const getDifficultyText = (difficulty: number) => {
   }
 }
 
-// 解析选项
+// 解析选项，支持多种格式
 const parseOptions = (options: string) => {
   if (!options) return {};
+  
+  // 1. 尝试JSON解析（主要格式）
   try {
     const parsed = JSON.parse(options);
     if (typeof parsed === 'object' && parsed !== null) {
       return parsed;
     }
   } catch (e) {
-    // 解析失败，返回空对象
+    // JSON解析失败，尝试其他格式
   }
-  return {};
+  
+  // 2. 移除不安全的eval()解析，跳过这种格式
+  // 这种格式不常见，跳过以避免安全风险
+  
+  
+  // 3. 尝试按分隔符分割（如"选项A|选项B|选项C|选项D"）
+  const separators = ['|', ';', ',', '，', '\n', '\r\n', '\t'];
+  let bestSeparator = '|';
+  let maxParts = 1;
+  
+  // 找到最佳分隔符
+  separators.forEach(sep => {
+    const parts = options.split(sep);
+    if (parts.length > maxParts) {
+      maxParts = parts.length;
+      bestSeparator = sep;
+    }
+  });
+  
+  // 使用最佳分隔符分割
+  const optionArray = options.split(bestSeparator);
+  if (optionArray.length > 1) {
+    const result: Record<string, string> = {};
+    optionArray.forEach((option, index) => {
+      const trimmedOption = option.trim();
+      if (trimmedOption) {
+        const key = String.fromCharCode(65 + index); // A, B, C, D...
+        result[key] = trimmedOption;
+      }
+    });
+    return result;
+  }
+  
+  // 4. 尝试正则匹配（如"A. 选项A B. 选项B"）
+  const regexOptions: Record<string, string> = {};
+  const regex = /([A-E])\s*[.:]\s*([^A-E]*)/g;
+  let match;
+  while ((match = regex.exec(options)) !== null) {
+    // 确保match[1]和match[2]都存在
+    if (match[1] && match[2]) {
+      regexOptions[match[1]] = match[2].trim();
+    }
+  }
+  
+  if (Object.keys(regexOptions).length > 0) {
+    return regexOptions;
+  }
+  
+  // 5. 最后尝试直接作为单个选项
+  return { A: options.trim() };
 }
 
 // 获取科目列表
@@ -314,7 +365,7 @@ const fetchSubjects = async () => {
   }
 }
 
-// 获取题目列表
+// 获取题目列表，增强处理多种返回格式
 const fetchQuestions = async () => {
   try {
     const params = {
@@ -325,15 +376,69 @@ const fetchQuestions = async () => {
       type: searchForm.type,
       difficulty: searchForm.difficulty
     }
-    const res = await axios.get('/questions', { params })
-    questions.value = res.data.records
-    total.value = res.data.total
-  } catch (error) {
+    
+    // 尝试多种API端点
+    const apiEndpoints = [
+      '/questions',
+      '/api/questions',
+      '/questions/all',
+      '/api/questions/all'
+    ]
+    
+    let questionsData: any[] = []
+    let totalCount: number = 0
+    let success = false
+    
+    // 尝试所有端点，直到成功获取数据
+    for (const endpoint of apiEndpoints) {
+      try {
+        const res = await axios.get(endpoint, { params })
+        const responseData = res.data
+        
+        // 处理不同的返回格式
+        if (responseData.records) {
+          // 分页格式，如 { records: [...], total: 100 }
+          questionsData = responseData.records
+          totalCount = responseData.total || questionsData.length
+          success = true
+          break
+        } else if (Array.isArray(responseData)) {
+          // 直接返回数组格式
+          questionsData = responseData
+          totalCount = questionsData.length
+          success = true
+          break
+        } else if (responseData.data && Array.isArray(responseData.data)) {
+          // 嵌套数据格式，如 { data: [...] }
+          questionsData = responseData.data
+          totalCount = questionsData.length
+          success = true
+          break
+        } else if (responseData.list && Array.isArray(responseData.list)) {
+          // list字段格式，如 { list: [...] }
+          questionsData = responseData.list
+          totalCount = responseData.total || questionsData.length
+          success = true
+          break
+        }
+      } catch (e: any) {
+        console.log(`API端点 ${endpoint} 失败:`, e.message)
+        continue
+      }
+    }
+    
+    if (success) {
+      questions.value = questionsData
+      total.value = totalCount
+      console.log(`成功获取 ${questionsData.length} 道题目，共 ${totalCount} 道`)
+    } else {
+      throw new Error('所有API端点都返回了不支持的数据格式')
+    }
+  } catch (error: any) {
     console.error('获取题目列表失败:', error)
-    // 清除模拟数据，只使用真实API调用
     questions.value = []
     total.value = 0
-    ElMessage.error('获取题目列表失败')
+    ElMessage.error(`获取题目列表失败：${error.message || '请检查网络连接或联系管理员'}`)
   }
 }
 
@@ -742,13 +847,26 @@ const handleSubmit = async () => {
 // 删除题目
 const handleDelete = async (row: any) => {
   try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要删除题目 "${row.content || row.title || '未知'}" 吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
     // 删除题目
     await axios.delete(`/questions/${row.id}`)
     ElMessage.success('删除题目成功')
     fetchQuestions() // 重新加载题目列表
-  } catch (error) {
-    console.error('删除题目失败:', error)
-    ElMessage.error('删除题目失败')
+  } catch (error: any) {
+    if (error.name !== 'Cancel') {
+      console.error('删除题目失败:', error)
+      ElMessage.error('删除题目失败')
+    }
   }
 }
 

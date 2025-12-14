@@ -207,7 +207,7 @@
             <li>4. 多选题正确答案格式：A,B,C（逗号分隔）</li>
             <li>5. 支持选项E-F（可选）</li>
             <li>6. 解析为可选字段</li>
-            <li>7. 支持XLSX、XLS格式，最大10MB</li>
+            <li>7. 支持XLSX、XLS、CSV、TXT、MD格式，最大10MB</li>
           </ul>
         </el-card>
         
@@ -217,11 +217,11 @@
             action="#"
             :show-file-list="false"
             :before-upload="handleImport"
-            accept=".xlsx,.xls"
+            accept=".xlsx,.xls,.csv,.txt,.md"
           >
             <el-button type="primary">选择文件</el-button>
             <div class="el-upload__tip">
-              支持 XLSX、XLS 格式，文件大小不超过 10MB
+              支持 XLSX、XLS、CSV、TXT、MD 格式，文件大小不超过 10MB
             </div>
           </el-upload>
         </el-form-item>
@@ -251,7 +251,16 @@
                 {{ scope.row.title.substring(0, 30) }}...
               </template>
             </el-table-column>
-            <el-table-column prop="correctAnswer" label="正确答案" width="120"></el-table-column>
+            <el-table-column label="正确答案" width="120" v-if="showAnswers">
+              <template #default="scope">
+                {{ scope.row.correctAnswer }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="120">
+              <template #default>
+                <el-button type="info" size="small" @click="toggleAnswerVisibility">{{ showAnswers ? '隐藏答案' : '查看答案' }}</el-button>
+              </template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="80">
               <template #default="scope">
                 <el-tag :type="scope.row.status === 'valid' ? 'success' : 'danger'">
@@ -411,6 +420,13 @@ const importError = ref<any[]>([])
 const importLoading = ref(false)
 // 导入历史记录
 const importHistory = ref<any[]>([])
+// 是否显示正确答案
+const showAnswers = ref(false)
+
+// 切换答案可见性
+const toggleAnswerVisibility = () => {
+  showAnswers.value = !showAnswers.value
+}
 
 // 检查是否是今日新增的题目
 const isToday = (dateString: string) => {
@@ -745,13 +761,14 @@ const handleImport = (file: any) => {
     return false
   }
   
-  // 验证文件类型
-  const fileType = file.type
-  const isXlsx = fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  const isXls = fileType === 'application/vnd.ms-excel'
+  // 获取文件扩展名
+  const fileName = file.name
+  const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
   
-  if (!isXlsx && !isXls) {
-    ElMessage.error('请上传 XLSX、XLS 格式的文件!')
+  // 验证文件类型
+  const allowedExtensions = ['.xlsx', '.xls', '.csv', '.txt', '.md']
+  if (!allowedExtensions.includes(fileExtension)) {
+    ElMessage.error('请上传 XLSX、XLS、CSV、TXT 或 MD 格式的文件!')
     return false
   }
   
@@ -762,17 +779,48 @@ const handleImport = (file: any) => {
   const reader = new FileReader()
   reader.onload = (e) => {
     try {
-      // 获取文件数据
-      const data = new Uint8Array(e.target?.result as ArrayBuffer)
-      const workbook = XLSX.read(data, { type: 'array' })
-      if (workbook.SheetNames.length === 0) {
-        throw new Error('Excel文件中没有工作表')
-      }
-      const firstSheetName = workbook.SheetNames[0] as string
-      const worksheet = workbook.Sheets[firstSheetName] as XLSX.WorkSheet
+      let jsonData: any[] = []
       
-      // 解析为JSON格式
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+      if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+        // Excel文件解析
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const workbook = XLSX.read(data, { type: 'array' })
+        if (workbook.SheetNames.length === 0) {
+          throw new Error('Excel文件中没有工作表')
+        }
+        const firstSheetName = workbook.SheetNames[0] as string
+        const worksheet = workbook.Sheets[firstSheetName] as XLSX.WorkSheet
+        jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+      } else if (fileExtension === '.csv') {
+        // CSV文件解析
+        const text = e.target?.result as string
+        // 简单的CSV解析，按行和逗号分割
+        jsonData = text.split('\n').map(line => {
+          // 处理CSV中的引号和逗号
+          const result = []
+          let current = ''
+          let inQuotes = false
+          
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i]
+            if (char === '"') {
+              inQuotes = !inQuotes
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim())
+              current = ''
+            } else {
+              current += char
+            }
+          }
+          result.push(current.trim())
+          return result
+        }).filter(row => row.some(cell => cell !== ''))
+      } else {
+        // TXT/MD文件解析
+        const text = e.target?.result as string
+        // 简单的文本解析，按行分割
+        jsonData = text.split('\n').map(line => [line.trim()]).filter(row => row[0] !== '')
+      }
       
       // 生成预览数据
       generatePreview(jsonData)
@@ -783,7 +831,12 @@ const handleImport = (file: any) => {
       ElMessage.error('文件解析失败，请检查文件格式是否正确')
     }
   }
-  reader.readAsArrayBuffer(file)
+  
+  if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+    reader.readAsArrayBuffer(file)
+  } else {
+    reader.readAsText(file, 'utf-8')
+  }
   
   return false // 阻止自动上传
 }
@@ -925,21 +978,57 @@ const handleImportSubmit = async () => {
     // 显示加载状态
     importLoading.value = true
     
+    // 获取文件扩展名
+    const fileName = importForm.file.name
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+    
     // 解析文件进行完整验证
     const reader = new FileReader()
-    reader.readAsArrayBuffer(importForm.file)
     
     reader.onload = async (e) => {
       try {
-        // 解析文件
-        const data = new Uint8Array(e.target?.result as ArrayBuffer)
-        const workbook = XLSX.read(data, { type: 'array' })
-        if (workbook.SheetNames.length === 0) {
-          throw new Error('Excel文件中没有工作表')
+        let jsonData: any[] = []
+        
+        if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+          // Excel文件解析
+          const data = new Uint8Array(e.target?.result as ArrayBuffer)
+          const workbook = XLSX.read(data, { type: 'array' })
+          if (workbook.SheetNames.length === 0) {
+            throw new Error('Excel文件中没有工作表')
+          }
+          const firstSheetName = workbook.SheetNames[0] as string
+          const worksheet = workbook.Sheets[firstSheetName] as XLSX.WorkSheet
+          jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+        } else if (fileExtension === '.csv') {
+          // CSV文件解析
+          const text = e.target?.result as string
+          // 简单的CSV解析，按行和逗号分割
+          jsonData = text.split('\n').map(line => {
+            // 处理CSV中的引号和逗号
+            const result = []
+            let current = ''
+            let inQuotes = false
+            
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i]
+              if (char === '"') {
+                inQuotes = !inQuotes
+              } else if (char === ',' && !inQuotes) {
+                result.push(current.trim())
+                current = ''
+              } else {
+                current += char
+              }
+            }
+            result.push(current.trim())
+            return result
+          }).filter(row => row.some(cell => cell !== ''))
+        } else {
+          // TXT/MD文件解析
+          const text = e.target?.result as string
+          // 简单的文本解析，按行分割
+          jsonData = text.split('\n').map(line => [line.trim()]).filter(row => row[0] !== '')
         }
-        const firstSheetName = workbook.SheetNames[0] as string
-        const worksheet = workbook.Sheets[firstSheetName] as XLSX.WorkSheet
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
         
         // 完整数据验证
         const validationErrors = validateImportData(jsonData)
@@ -956,7 +1045,13 @@ const handleImportSubmit = async () => {
           formData.append('file', importForm.file)
         }
         
-                await axios.post('/questions/import/batch', formData, {
+        // 根据文件类型选择不同的API端点
+        let apiUrl = '/questions/import/batch'
+        if (fileExtension === '.txt' || fileExtension === '.md') {
+          apiUrl = '/questions/import/txt'
+        }
+        
+        await axios.post(apiUrl, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -981,6 +1076,13 @@ const handleImportSubmit = async () => {
         ElMessage.error(`导入失败：${error.response?.data?.message || '服务器错误'}`)
         importLoading.value = false
       }
+    }
+    
+    // 根据文件类型选择不同的读取方式
+    if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+      reader.readAsArrayBuffer(importForm.file)
+    } else {
+      reader.readAsText(importForm.file, 'utf-8')
     }
     
     reader.onerror = (error) => {
