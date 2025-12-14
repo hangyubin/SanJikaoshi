@@ -2,6 +2,62 @@
   <div class="question-management">
     <h1>题目管理</h1>
     
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" style="margin-bottom: 20px;">
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">总题目数</p>
+              <h3 class="stat-value">{{ total }}</h3>
+            </div>
+            <div class="stat-icon total-icon">
+              <el-icon><DocumentCopy /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">单选题</p>
+              <h3 class="stat-value">{{ singleChoiceCount }}</h3>
+            </div>
+            <div class="stat-icon single-icon">
+              <el-icon><CircleClose /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">多选题</p>
+              <h3 class="stat-value">{{ multipleChoiceCount }}</h3>
+            </div>
+            <div class="stat-icon multiple-icon">
+              <el-icon><Check /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">是非题</p>
+              <h3 class="stat-value">{{ trueFalseCount }}</h3>
+            </div>
+            <div class="stat-icon truefalse-icon">
+              <el-icon><RefreshRight /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+    
     <!-- 搜索和筛选 -->
     <el-card class="search-card">
       <el-form :model="searchForm" label-width="80px" inline>
@@ -37,15 +93,6 @@
         </el-form-item>
         <el-form-item>
           <el-button type="warning" @click="handleGenerateTemplate">生成模板</el-button>
-          <el-upload
-            class="upload-demo"
-            action=""
-            :show-file-list="false"
-            :before-upload="handleBatchImport"
-            accept=".xlsx,.xls,.csv"
-          >
-            <el-button type="info">Excel/CSV批量导入</el-button>
-          </el-upload>
           <el-upload
             class="upload-demo"
             action=""
@@ -205,11 +252,18 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import axios from '@/utils/axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, DocumentCopy, CircleClose, Check, RefreshRight } from '@element-plus/icons-vue'
+import { parseQuestions } from '@/utils/parseQuestions'
 
 // 真实题目数据
 const questions = ref<any[]>([])
 const subjects = ref<any[]>([])
+
+// 统计数据
+const total = ref(0)
+const singleChoiceCount = ref(0)
+const multipleChoiceCount = ref(0)
+const trueFalseCount = ref(0)
 
 const searchForm = reactive({
   content: '',
@@ -220,7 +274,6 @@ const searchForm = reactive({
 
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(0)
 
 // 对话框
 const dialogVisible = ref(false)
@@ -430,7 +483,14 @@ const fetchQuestions = async () => {
     if (success) {
       questions.value = questionsData
       total.value = totalCount
+      
+      // 计算不同类型题目的数量
+      singleChoiceCount.value = questionsData.filter(q => q.type === 1).length
+      multipleChoiceCount.value = questionsData.filter(q => q.type === 2).length
+      trueFalseCount.value = questionsData.filter(q => q.type === 3).length
+      
       console.log(`成功获取 ${questionsData.length} 道题目，共 ${totalCount} 道`)
+      console.log(`单选题：${singleChoiceCount.value} 道，多选题：${multipleChoiceCount.value} 道，是非题：${trueFalseCount.value} 道`)
     } else {
       throw new Error('所有API端点都返回了不支持的数据格式')
     }
@@ -438,6 +498,9 @@ const fetchQuestions = async () => {
     console.error('获取题目列表失败:', error)
     questions.value = []
     total.value = 0
+    singleChoiceCount.value = 0
+    multipleChoiceCount.value = 0
+    trueFalseCount.value = 0
     ElMessage.error(`获取题目列表失败：${error.message || '请检查网络连接或联系管理员'}`)
   }
 }
@@ -507,6 +570,13 @@ const handleGenerateTemplate = async () => {
 // 文本文件导入
 const handleTextFileImport = async (file: any) => {
   try {
+    // 检查文件类型
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!['.txt', '.md'].includes(fileExtension)) {
+      ElMessage.error('请上传 .txt 或 .md 格式的文本文件');
+      return false;
+    }
+    
     // 检查文件大小（不超过10MB）
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
@@ -514,118 +584,91 @@ const handleTextFileImport = async (file: any) => {
       return false;
     }
     
-    const formData = new FormData();
-    formData.append('file', file);
+    // 读取文件内容
+    ElMessage.info('正在读取文件内容...');
+    const text = await file.text();
     
-    // 直接上传文件到后端，由后端处理解析
-    let res;
-    try {
-      // 尝试标准端点
-      res = await axios.post('/api/questions/import/txt', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-    } catch (e1) {
-      try {
-        // 尝试简化端点
-        res = await axios.post('/questions/import/txt', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      } catch (e2) {
-        // 尝试兼容原批量导入端点
-        res = await axios.post('/questions/import', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      }
+    // 使用前端解析器解析题目
+    ElMessage.info('正在解析题目...');
+    const parsedQuestions = parseQuestions(text);
+    
+    if (parsedQuestions.length === 0) {
+      ElMessage.error('未解析到题目，请检查文件格式是否正确。\n提示：请确保题目格式为 "1. 题目内容：(A)" 且选项为 "A. 选项内容" 格式');
+      return false;
     }
     
-    const result = res.data;
-    ElMessage.success(`文本文件导入成功：共导入${result.success || result.length || 0}条`);
-    fetchQuestions(); // 重新加载题目列表
-  } catch (error) {
+    // 检查解析质量
+    const validQuestions = parsedQuestions.filter(q => q.content && Object.keys(q.options).length > 0);
+    if (validQuestions.length === 0) {
+      ElMessage.error('解析到的题目缺少内容或选项，请检查文件格式');
+      return false;
+    }
+    
+    // 显示解析结果，让用户确认
+    ElMessage.success(`成功解析 ${validQuestions.length} 道题目，准备导入`);
+    
+    // 将题目转换为系统API要求的格式
+    const questionsToImport = validQuestions.map(q => ({
+      subjectId: form.subjectId || '1', // 使用表单选择的科目或默认值
+      type: q.type,
+      difficulty: q.difficulty,
+      content: q.content,
+      options: JSON.stringify(q.options), // 转换为JSON字符串
+      answer: q.answer,
+      analysis: q.analysis || '',
+      score: q.score
+    }));
+    
+    // 批量导入题目
+    ElMessage.info('正在导入题目，请稍候...');
+    let successCount = 0;
+    
+    try {
+      // 尝试批量导入
+      let res;
+      try {
+        // 尝试标准端点
+        res = await axios.post('/questions/batch', questionsToImport);
+        successCount = res.data.success || res.data.length || validQuestions.length;
+      } catch (e1) {
+        try {
+          // 尝试简化端点
+          res = await axios.post('/api/questions/batch', questionsToImport);
+          successCount = res.data.success || res.data.length || validQuestions.length;
+        } catch (e2) {
+          // 尝试逐个导入
+          ElMessage.info('批量导入失败，尝试逐个导入...');
+          successCount = 0;
+          for (const question of questionsToImport) {
+            try {
+              await axios.post('/questions', question);
+              successCount++;
+            } catch (e) {
+              console.error('单个题目导入失败:', e);
+            }
+          }
+        }
+      }
+      
+      ElMessage.success(`文本文件导入成功：共导入${successCount}条，失败${validQuestions.length - successCount}条`);
+      fetchQuestions(); // 重新加载题目列表
+    } catch (error: any) {
+      console.error('导入题目失败:', error);
+      ElMessage.error(`导入题目失败：${error.message || '请检查网络连接或后端服务'}`);
+      return false;
+    }
+  } catch (error: any) {
     console.error('文本文件导入失败:', error);
-    ElMessage.error('文本文件导入失败，请检查文件格式或后端接口');
+    if (error.message.includes('Not Found')) {
+      ElMessage.error('文本文件导入功能未启用，请联系管理员');
+    } else {
+      ElMessage.error(`文本文件导入失败：${error.message || '请检查文件格式是否正确'}`);
+    }
   }
   return false; // 阻止自动上传
 };
 
-// Excel批量导入题目
-const handleBatchImport = async (file: any) => {
-  try {
-    // 检查文件类型
-    const fileName = file.name;
-    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
-    
-    if (!allowedExtensions.includes(fileExtension)) {
-      ElMessage.error('请上传 XLSX、XLS 或 CSV 格式的文件!');
-      return false;
-    }
-    
-    // 检查文件大小（不超过10MB）
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      ElMessage.error('文件大小不能超过 10MB!');
-      return false;
-    }
-    
-    const formData = new FormData()
-    formData.append('file', file)
-    
-    let res;
-    try {
-      // 尝试标准端点
-      res = await axios.post('/api/questions/import/batch', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-    } catch (e1) {
-      try {
-        // 尝试简化端点
-        res = await axios.post('/questions/import', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      } catch (e2) {
-        try {
-          // 尝试CSV专用端点
-          res = await axios.post('/questions/import/csv', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-        } catch (e3) {
-          // 尝试最简化端点
-          res = await axios.post('/import', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-        }
-      }
-    }
-    
-    const result = res.data;
-    ElMessage.success(`${fileExtension === '.csv' ? 'CSV' : 'Excel'}批量导入完成：成功${result.success || result.length || 0}条`);
-    fetchQuestions(); // 重新加载题目列表
-  } catch (error: any) {
-    console.error('批量导入失败:', error);
-    // 检查错误信息，显示更友好的提示
-    if (error.response?.data?.message?.includes('XLSX、XLS')) {
-      ElMessage.error('后端仅支持 XLSX、XLS 格式的文件，请使用 Excel 文件导入!');
-    } else {
-      ElMessage.error('批量导入失败，请检查文件格式或后端接口');
-    }
-  }
-  return false; // 阻止自动上传
-}
+
 
 // 添加题目
 const handleAdd = () => {
@@ -668,101 +711,25 @@ const handleEdit = (row: any) => {
     score: row.score
   })
   
-  // 解析并填充选项
+  // 清空当前选项
+  Object.keys(optionsObject).forEach(key => {
+    optionsObject[key] = ''
+  })
+  
+  // 使用现有的parseOptions函数解析选项，确保与表格显示一致
   if (row.options) {
-    try {
-      const parsedOptions = JSON.parse(row.options)
-      if (typeof parsedOptions === 'object' && parsedOptions !== null) {
-        // 清空当前选项
-        Object.keys(optionsObject).forEach(key => {
-          optionsObject[key] = ''
-        })
-        // 填充解析后的选项
-        Object.entries(parsedOptions).forEach(([key, value]) => {
-          if (typeof value === 'string') {
-            // 处理不同大小写的选项键，确保A-E格式
-            const normalizedKey = key.toUpperCase()
-            // 只处理A-E范围内的选项
-            if (/^[A-E]$/.test(normalizedKey)) {
-              optionsObject[normalizedKey] = value
-            }
-          }
-        })
-        // 兼容旧格式：如果没有解析到选项，尝试其他格式
-        if (Object.values(optionsObject).every(val => val === '')) {
-          // 尝试直接将字符串作为选项（如"A选项|B选项|C选项|D选项"）
-          const optionsStr = row.options
-          if (typeof optionsStr === 'string') {
-            // 尝试多种分隔符
-            const separators = ['|', ';', ',', '，', '\n', '\r\n']
-            let bestSeparator = '|'
-            let maxParts = 1
-            
-            // 找到最佳分隔符
-            separators.forEach(sep => {
-              const parts = optionsStr.split(sep)
-              if (parts.length > maxParts) {
-                maxParts = parts.length
-                bestSeparator = sep
-              }
-            })
-            
-            const optionsArray = optionsStr.split(bestSeparator)
-            optionsArray.forEach((option, index) => {
-              if (option && option.trim()) {
-                const optionKey = String.fromCharCode(65 + index) // A, B, C, D, E
-                if (optionKey in optionsObject) {
-                  optionsObject[optionKey] = option.trim()
-                }
-              }
-            })
-          }
+    const parsedOptions = parseOptions(row.options)
+    
+    // 填充解析后的选项
+    Object.entries(parsedOptions).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        // 处理不同大小写的选项键，确保A-E格式
+        const normalizedKey = key.toUpperCase()
+        // 只处理A-E范围内的选项
+        if (/^[A-E]$/.test(normalizedKey)) {
+          optionsObject[normalizedKey] = value
         }
       }
-    } catch (e) {
-      console.error('解析选项失败:', e)
-      // 解析失败时，尝试其他方式处理
-      const optionsStr = row.options
-      if (typeof optionsStr === 'string') {
-        // 尝试直接将字符串作为选项（如"A选项|B选项|C选项|D选项"）
-        const separators = ['|', ';', ',', '，', '\n', '\r\n']
-        let bestSeparator = '|'
-        let maxParts = 1
-        
-        // 找到最佳分隔符
-        separators.forEach(sep => {
-          const parts = optionsStr.split(sep)
-          if (parts.length > maxParts) {
-            maxParts = parts.length
-            bestSeparator = sep
-          }
-        })
-        
-        const optionsArray = optionsStr.split(bestSeparator)
-        // 清空当前选项
-        Object.keys(optionsObject).forEach(key => {
-          optionsObject[key] = ''
-        })
-        // 填充选项
-        optionsArray.forEach((option, index) => {
-          if (option && option.trim()) {
-            const optionKey = String.fromCharCode(65 + index) // A, B, C, D, E
-            if (optionKey in optionsObject) {
-              optionsObject[optionKey] = option.trim()
-            }
-          }
-        })
-      } else {
-        // 其他情况，使用默认空选项
-        Object.keys(optionsObject).forEach(key => {
-          optionsObject[key] = ''
-        })
-      }
-    }
-  } else {
-    // 没有选项，使用默认空选项
-    Object.keys(optionsObject).forEach(key => {
-      optionsObject[key] = ''
     })
   }
   
@@ -920,6 +887,99 @@ onMounted(() => {
   margin-top: 5px;
   font-size: 12px;
   color: #909399;
+}
+/* 统计卡片样式 */
+.stat-card {
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+}
+
+.stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #909399;
+  margin: 0 0 8px 0;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #303133;
+  margin: 0;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  color: white;
+}
+
+.total-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.single-icon {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+}
+
+.multiple-icon {
+  background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+}
+
+.truefalse-icon {
+  background: linear-gradient(135deg, #e6a23c 0%, #f3d19e 100%);
+}
+
+/* 选项列表样式 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.option-key {
+  font-weight: bold;
+  color: #409eff;
+  min-width: 20px;
+}
+
+.option-value {
+  color: #606266;
+}
+
+.empty-text {
+  color: #909399;
+  font-style: italic;
 }
 </style>
 

@@ -227,7 +227,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   User, Document, EditPen, DocumentCopy, Star, 
-  WarningFilled, OfficeBuilding, 
+  WarningFilled, Plus, 
   FolderOpened, Link, VideoPlay, Download 
 } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
@@ -280,27 +280,22 @@ const fileTypeMap = {
 const adminQuickActions = ref([
   {
     id: 1,
-    text: '添加用户',
+    text: '用户管理',
     icon: User,
-    path: '/dashboard/user-management'
+    path: '/dashboard/student-list'
   },
+
   {
     id: 2,
-    text: '管理题目',
-    icon: EditPen,
+    text: '题库管理',
+    icon: DocumentCopy,
     path: '/dashboard/paper-management'
   },
-  { 
-    id: 3, 
-    text: '创建考试', 
-    icon: DocumentCopy, 
-    path: '/dashboard/task-create' 
-  },
   {
-    id: 4,
-    text: '管理科室',
-    icon: OfficeBuilding,
-    path: '/dashboard/department-management'
+    id: 3,
+    text: '创建考试',
+    icon: Plus,
+    path: '/dashboard/task-create'
   },
 
   {

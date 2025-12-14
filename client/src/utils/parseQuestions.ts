@@ -11,43 +11,62 @@ interface Question {
 }
 
 /**
- * 解析单选题文本
+ * 解析单选题文本（支持带答案和不带答案两种格式）
  * @param text 单选题文本
  * @returns 解析后的题目数组
  */
 export const parseQuestions = (text: string): Question[] => {
   const questions: Question[] = [];
   
-  // 按题目拆分文本
-  const questionRegex = /(\d+)\.\s+(.+?)\s+(A\..+?)(?=\n(?:\d+\.|$))/gs;
-  let match;
+  // 简化解析逻辑，逐行处理
+  const lines = text.split('\n');
+  let currentQuestion: Question | null = null;
   
-  while ((match = questionRegex.exec(text)) !== null) {
-    const [, , content, optionsText] = match;
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
     
-    // 解析选项
-    const options: Record<string, string> = {};
-    const optionRegex = /([A-E])\.\s+(.+?)(?=\n[A-E]\.|$)/gs;
-    let optionMatch;
-    
-    if (optionsText) {
-      while ((optionMatch = optionRegex.exec(optionsText)) !== null) {
-        const [, letter, optionContent] = optionMatch;
-        if (letter && optionContent) {
-          options[letter] = optionContent.trim();
-        }
+    // 匹配题目编号行：支持多种格式，如 "1. 题目内容：(B)"、"1. 题目内容？A" 或 "1. 题目内容"
+    const questionMatch = line.match(/^(\d+)\.\s+(.+?)(?:\s*[:：？]\s*\(?([A-E])\)?)?$/);
+    if (questionMatch) {
+      // 保存上一题
+      if (currentQuestion) {
+        questions.push(currentQuestion);
       }
+      
+      // 开始新题目
+      currentQuestion = {
+        content: questionMatch[2]?.trim() || '',
+        options: {},
+        answer: questionMatch[3] || '', // 提取答案，如果存在的话
+        type: 1, // 单选题
+        difficulty: 2, // 中等难度
+        score: 10 // 默认10分
+      };
+      continue;
     }
     
-    // 暂时将答案设为空，需要手动填写
-    questions.push({
-      content: content?.trim() || '',
-      options,
-      answer: '', // 正确答案需要手动填写
-      type: 1, // 单选题
-      difficulty: 2, // 中等难度
-      score: 10 // 默认10分
-    });
+    // 匹配选项行：例如 "A. 选项内容"
+    const optionMatch = line.match(/^([A-E])\.\s+(.+)$/);
+    if (optionMatch && currentQuestion) {
+      const [, letter, optionContent] = optionMatch;
+      if (letter && optionContent) {
+        currentQuestion.options[letter] = optionContent;
+      }
+      continue;
+    }
+    
+    // 匹配答案行：例如 "答案：B" 或 "正确答案：B" 或 "正确选项：B"
+    const answerMatch = line.match(/^(答案|正确答案|正确选项)[:：]\s*([A-E])$/);
+    if (answerMatch && currentQuestion) {
+      currentQuestion.answer = answerMatch[2] || '';
+      continue;
+    }
+  }
+  
+  // 保存最后一题
+  if (currentQuestion) {
+    questions.push(currentQuestion);
   }
   
   return questions;

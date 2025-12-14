@@ -184,11 +184,22 @@ const userForm = reactive({
   jobTitle: ''
 })
 
-// 科室列表
-const departments = ref<any[]>([])
-
 // 用户角色
 const userRole = ref<string>('')
+
+// 固定科室列表
+const departments = ref([
+  { id: 1, name: '内儿科' },
+  { id: 2, name: '外科' },
+  { id: 3, name: '妇产科' },
+  { id: 4, name: '护理部' },
+  { id: 5, name: 'B超室' },
+  { id: 6, name: '放射科' },
+  { id: 7, name: '检验科' },
+  { id: 8, name: '药剂科' },
+  { id: 9, name: '中医科' },
+  { id: 10, name: '康复科' }
+])
 
 // 计算属性：是否为系统管理员
 const isSystemAdmin = computed(() => {
@@ -236,7 +247,7 @@ const rules = reactive<FormRules>({
     { required: true, message: '请选择性别', trigger: 'change' }
   ],
   department: [
-    { required: true, message: '请输入科室', trigger: 'blur' }
+    { required: true, message: '请选择科室', trigger: 'change' }
   ],
   jobTitle: [
     { required: false, message: '请输入职称', trigger: 'blur' }
@@ -271,42 +282,6 @@ const fetchUserInfo = async () => {
     userForm.avatar = 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
     userRole.value = 'ROLE_ADMIN'
     selectedSystemAvatar.value = userForm.avatar
-  }
-}
-
-// 获取科室列表
-const fetchDepartments = async () => {
-  try {
-    // 调用后端API获取科室列表，不使用分页
-    const response = await axios.get('/departments', {
-      params: {
-        pageSize: 1000 // 获取足够多的科室，确保能显示所有科室
-      }
-    })
-    const responseData = response.data
-    // 处理不同的返回格式
-    if (responseData && typeof responseData === 'object') {
-      // 如果是分页格式，取records字段
-      if (responseData.records) {
-        departments.value = responseData.records
-      } else if (Array.isArray(responseData)) {
-        // 如果直接是数组格式，直接使用
-        departments.value = responseData
-      } else {
-        // 其他情况，使用空数组
-        departments.value = []
-      }
-    } else if (Array.isArray(responseData)) {
-      // 直接数组格式
-      departments.value = responseData
-    } else {
-      // 无效数据，使用空数组
-      departments.value = []
-    }
-  } catch (error) {
-    console.error('获取科室列表失败:', error)
-    // 如果API调用失败，使用空数组
-    departments.value = []
   }
 }
 
@@ -408,7 +383,6 @@ const confirmAvatarChange = async () => {
 // 初始化
 onMounted(async () => {
   await fetchUserInfo()
-  await fetchDepartments()
 })
 </script>
 
