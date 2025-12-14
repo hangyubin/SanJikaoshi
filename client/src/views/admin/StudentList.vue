@@ -43,7 +43,7 @@
           <template #default="scope">
             <!-- 系统管理员admin不能被任何账号操作 -->
             <el-button 
-              type="info" 
+              type="danger" 
               size="small" 
               @click="handleResetPassword(scope.row)"
               :disabled="scope.row.username === 'admin'"
@@ -82,6 +82,10 @@
         </el-form-item>
         <el-form-item label="新密码">
           <el-input v-model="resetPasswordForm.newPassword" type="password" placeholder="请输入新密码"></el-input>
+          <div class="password-hint">
+            <el-icon class="hint-icon"><WarningFilled /></el-icon>
+            <span>友情提示：密码长度至少6个字符，建议包含字母和数字</span>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -96,7 +100,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElIcon } from 'element-plus'
+import { WarningFilled } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
 import { getRoleType, getRoleLabel } from '@/utils/roleConfig'
 
@@ -231,6 +236,25 @@ const handleCurrentChange = (current: number) => {
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+/* 密码提示样式 */
+.password-hint {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.hint-icon {
+  color: #ffc107;
+  font-size: 16px;
 }
 </style>
 

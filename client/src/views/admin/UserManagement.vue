@@ -45,6 +45,34 @@
           </div>
         </el-card>
       </el-col>
+      
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">注册人数</p>
+              <h3 class="stat-value">{{ registeredCount }}</h3>
+            </div>
+            <div class="stat-icon register-icon">
+              <el-icon><Plus /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      
+      <el-col :span="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label">在线人数</p>
+              <h3 class="stat-value">{{ onlineCount }}</h3>
+            </div>
+            <div class="stat-icon online-icon">
+              <el-icon><VideoPlay /></el-icon>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
     </el-row>
     
     <!-- 功能导航 -->
@@ -72,7 +100,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Avatar, Setting } from '@element-plus/icons-vue'
+import { User, Avatar, Setting, Plus, VideoPlay } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -80,6 +108,8 @@ const router = useRouter()
 const totalUserCount = ref(150)
 const studentCount = ref(120)
 const adminCount = ref(10)
+const registeredCount = ref(150) // 注册人数，初始值与总用户数相同
+const onlineCount = ref(25) // 在线人数
 
 const navigateTo = (path: string) => {
   router.push(`/dashboard/${path}`)
@@ -238,6 +268,14 @@ const navigateTo = (path: string) => {
 
 .admin-icon {
   background: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
+}
+
+.register-icon {
+  background: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
+}
+
+.online-icon {
+  background: linear-gradient(135deg, #909399 0%, #a6a9ad 100%);
 }
 
 /* 导航卡片 */

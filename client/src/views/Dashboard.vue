@@ -528,6 +528,30 @@ onMounted(() => {
 .welcome-info {
   flex: 1;
   z-index: 1;
+  min-width: 0; /* 确保flex子元素能正确收缩 */
+}
+
+.user-info-tags {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: nowrap; /* 强制标签在同一排显示 */
+  overflow-x: auto; /* 允许水平滚动 */
+  padding-bottom: 5px;
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.user-info-tags::-webkit-scrollbar {
+  height: 4px;
+}
+
+.user-info-tags::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.user-info-tags::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .welcome-info h1 {
