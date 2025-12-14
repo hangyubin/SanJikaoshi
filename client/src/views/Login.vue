@@ -51,13 +51,38 @@
           class="login-form"
         >
           <el-form-item label="用户名" prop="username">
-            <el-input
-              v-model="loginForm.username"
-              placeholder="请输入用户名"
-              prefix-icon="User"
-              size="large"
-              class="custom-input"
-            ></el-input>
+            <div class="username-input-container">
+              <el-input
+                v-model="loginForm.username"
+                placeholder="请输入用户名"
+                prefix-icon="User"
+                size="large"
+                class="custom-input"
+                @focus="showAccountSelect = true"
+                @input="showAccountSelect = true"
+              ></el-input>
+              <!-- 账号选择下拉框 -->
+              <div 
+                v-if="showAccountSelect && rememberedAccounts.length > 0" 
+                class="account-select-dropdown"
+              >
+                <div 
+                  v-for="(account, index) in rememberedAccounts" 
+                  :key="index"
+                  class="account-item"
+                  @click="selectAccount(account)"
+                >
+                  <el-icon class="account-icon"><User /></el-icon>
+                  <span class="account-name">{{ account }}</span>
+                  <el-icon 
+                    class="delete-icon"
+                    @click.stop="removeAccount(index)"
+                  >
+                    <CircleClose />
+                  </el-icon>
+                </div>
+              </div>
+            </div>
           </el-form-item>
           
           <el-form-item label="密码" prop="password">
@@ -121,10 +146,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import { CircleClose } from '@element-plus/icons-vue'
 import axios from '@/utils/axios'
 
 const router = useRouter()
@@ -161,6 +187,11 @@ const loginRules = reactive<FormRules>({
 
 const rememberMe = ref(false)
 
+// 记住的账号列表
+const rememberedAccounts = ref<string[]>([])
+// 显示账号下拉框
+const showAccountSelect = ref(false)
+
 // 验证码相关
 const captchaQuestion = ref<string>('')
 const captchaAnswer = ref<string>('')
@@ -192,17 +223,40 @@ onMounted(() => {
     Object.assign(hospitalInfo, parsedInfo)
   }
   
-  // 读取记住的用户信息
-  const savedUser = localStorage.getItem('rememberedUser')
-  if (savedUser) {
-    const parsedUser = JSON.parse(savedUser)
-    loginForm.username = parsedUser.username || ''
-    // 不自动填充密码，只填充用户名，提高安全性
-    rememberMe.value = true
+  // 读取记住的账号列表
+  const savedAccounts = localStorage.getItem('rememberedAccounts')
+  if (savedAccounts) {
+    rememberedAccounts.value = JSON.parse(savedAccounts)
+  }
+  
+  // 读取最后一次登录的用户名
+  const lastLoginUser = localStorage.getItem('lastLoginUser')
+  if (lastLoginUser) {
+    loginForm.username = lastLoginUser
   }
   
   // 初始化验证码
   generateCaptcha()
+  
+  // 添加点击事件监听器，点击页面其他区域关闭账号选择下拉框
+  const handleClickOutside = (event: MouseEvent) => {
+    const usernameContainer = document.querySelector('.username-input-container') as HTMLElement
+    const dropdown = document.querySelector('.account-select-dropdown') as HTMLElement
+    
+    if (usernameContainer && dropdown) {
+      if (!usernameContainer.contains(event.target as Node)) {
+        showAccountSelect.value = false
+      }
+    }
+  }
+  
+  // 监听点击事件
+  document.addEventListener('click', handleClickOutside)
+  
+  // 组件卸载时移除事件监听器
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
 })
 
 
@@ -230,15 +284,27 @@ const handleLogin = async () => {
     
     loading.value = false
     
-    // 处理记住我功能 - 只保存用户名，不保存密码，提高安全性
+    // 保存最后一次登录的用户名
+    localStorage.setItem('lastLoginUser', loginForm.username)
+    
+    // 处理记住账号列表功能
     if (rememberMe.value) {
-      // 保存用户信息到本地存储
-      localStorage.setItem('rememberedUser', JSON.stringify({
-        username: loginForm.username
-      }))
-    } else {
-      // 清除记住的用户信息
-      localStorage.removeItem('rememberedUser')
+      // 获取当前记住的账号列表
+      let accounts = localStorage.getItem('rememberedAccounts')
+      let accountList: string[] = accounts ? JSON.parse(accounts) : []
+      
+      // 确保账号不重复，并将当前账号移到列表最前面
+      accountList = accountList.filter(account => account !== loginForm.username)
+      accountList.unshift(loginForm.username)
+      
+      // 最多保存10个账号
+      if (accountList.length > 10) {
+        accountList = accountList.slice(0, 10)
+      }
+      
+      // 保存更新后的账号列表
+      localStorage.setItem('rememberedAccounts', JSON.stringify(accountList))
+      rememberedAccounts.value = accountList
     }
     
     // 保存token和完整的用户信息到localStorage
@@ -278,6 +344,29 @@ const handleLogin = async () => {
 
 const handleRegisterRedirect = () => {
   router.push('/register')
+}
+
+// 选择账号
+const selectAccount = (account: string) => {
+  loginForm.username = account
+  showAccountSelect.value = false
+  // 自动聚焦到密码输入框
+  const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement
+  if (passwordInput) {
+    passwordInput.focus()
+  }
+}
+
+// 删除账号
+const removeAccount = (index: number) => {
+  // 从列表中删除账号
+  rememberedAccounts.value.splice(index, 1)
+  // 更新localStorage
+  localStorage.setItem('rememberedAccounts', JSON.stringify(rememberedAccounts.value))
+  // 如果删除的是当前输入的账号，清空输入框
+  if (rememberedAccounts.value.length === 0) {
+    showAccountSelect.value = false
+  }
 }
 </script>
 
@@ -556,6 +645,87 @@ const handleRegisterRedirect = () => {
 .custom-input:focus {
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* 用户名输入容器 */
+.username-input-container {
+  position: relative;
+  width: 100%;
+}
+
+/* 账号选择下拉框 */
+.account-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 5px;
+  z-index: 1000;
+  overflow: hidden;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* 账号列表项 */
+.account-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f5f7fa;
+}
+
+.account-item:last-child {
+  border-bottom: none;
+}
+
+.account-item:hover {
+  background-color: #f5f7fa;
+}
+
+/* 账号图标 */
+.account-icon {
+  margin-right: 10px;
+  color: #667eea;
+  font-size: 16px;
+}
+
+/* 账号名称 */
+.account-name {
+  flex: 1;
+  font-size: 14px;
+  color: #303133;
+}
+
+/* 删除图标 */
+.delete-icon {
+  color: #909399;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.delete-icon:hover {
+  color: #f56c6c;
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.account-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.account-select-dropdown::-webkit-scrollbar-thumb {
+  background: #dcdfe6;
+  border-radius: 3px;
+}
+
+.account-select-dropdown::-webkit-scrollbar-track {
+  background: #f5f7fa;
 }
 
 /* 验证码样式 */
